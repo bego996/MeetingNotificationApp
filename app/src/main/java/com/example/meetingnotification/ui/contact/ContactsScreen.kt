@@ -18,6 +18,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -31,9 +34,35 @@ object SavedContactsDestination: NavigationDestination {
 
 
 @Composable
+fun SavedContacts(
+    navigateToSearchContactScreen: () -> Unit,
+    onCancelClicked: () -> Unit,
+    modifier: Modifier
+){
+    val isActive by remember { mutableStateOf(false)}
+
+    if (isActive){
+        EmptyListScreen(
+            modifier = modifier,
+            navigateToSearchContactScreen = navigateToSearchContactScreen,
+            onCancelClicked = onCancelClicked
+        )
+    }else{
+        FilledListscreen(
+            modifier = modifier,
+            onCancelClicked = onCancelClicked,
+            navigateToSearchContactScreen = navigateToSearchContactScreen
+        )
+    }
+
+}
+
+
+@Composable
 fun EmptyListScreen(
     modifier: Modifier,
-    navigateToSearchContactScreen: () -> Unit
+    navigateToSearchContactScreen: () -> Unit,
+    onCancelClicked: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -59,7 +88,7 @@ fun EmptyListScreen(
             ) {
                 OutlinedButton(
                     modifier = Modifier.weight(1f),
-                    onClick = { /*TODO*/ },
+                    onClick = onCancelClicked,
                 ) {
                     Text(text = "Cancel")
                 }
@@ -81,15 +110,11 @@ fun EmptyListScreen(
 }
 
 
-
-
-
-
-
-@Preview
 @Composable
 fun FilledListscreen(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onCancelClicked: () -> Unit,
+    navigateToSearchContactScreen: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -155,14 +180,14 @@ fun FilledListscreen(
             ) {
                 OutlinedButton(
                     modifier = Modifier.weight(1f),
-                    onClick = { /*TODO*/ },
+                    onClick = onCancelClicked,
                 ) {
                     Text(text = "Cancel")
                 }
                 Spacer(modifier = Modifier.weight(1f))
                 IconButton(
                     modifier = Modifier.weight(1f),
-                    onClick = { /*TODO*/ }
+                    onClick = navigateToSearchContactScreen
                 ) {
                     Icon(
                         imageVector = Icons.Default.AddCircle,

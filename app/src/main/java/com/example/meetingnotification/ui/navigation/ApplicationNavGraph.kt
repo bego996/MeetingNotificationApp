@@ -9,7 +9,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.meetingnotification.ui.AppViewModelProvider
+import com.example.meetingnotification.ui.contact.ContactsSearchScreenViewModel
 import com.example.meetingnotification.ui.contact.EmptyListScreen
+import com.example.meetingnotification.ui.contact.SavedContacts
 
 import com.example.meetingnotification.ui.contact.SavedContactsDestination
 import com.example.meetingnotification.ui.contact.SearchContactDestination
@@ -24,7 +26,7 @@ import com.example.meetingnotification.ui.home.HomeScreenViewModel
 fun MettingNavHost(
     navController: NavHostController,
     modifier: Modifier = Modifier,
-    viewModel: HomeScreenViewModel
+    viewModel: ContactsSearchScreenViewModel
 ) {
     NavHost(
         navController = navController,
@@ -34,19 +36,35 @@ fun MettingNavHost(
         composable(route = HomeDestination.route) {
             HomeScreen(
                 modifier = Modifier.background(Color.Magenta),
-                navigateToSavedContacts = { navController.navigate(SavedContactsDestination.route) },
-                viewModel = viewModel
+                navigateToSavedContacts = { navController.navigate(SavedContactsDestination.route) }
             )
         }
         composable(route = SavedContactsDestination.route) {
-            EmptyListScreen (
+            SavedContacts (
                 modifier = Modifier.background(Color.DarkGray),
-                navigateToSearchContactScreen = {navController.navigate(SearchContactDestination.route)}
+                navigateToSearchContactScreen = {navController.navigate(SearchContactDestination.route)},
+                onCancelClicked = {
+                    navController.navigate(HomeDestination.route){
+                        popUpTo(navController.graph.startDestinationId){
+                            inclusive = true
+                        }
+                        launchSingleTop = true //sinleTop nicht erforderlich , außer wenn home destination zwei mal am backstacks ein kann.
+                    }
+                }
             )
         }
         composable(route = SearchContactDestination.route) {
             SearchListScreen(
-                modifier = Modifier.background(Color.DarkGray)
+                modifier = Modifier.background(Color.DarkGray),
+                viewModel = viewModel,
+                onCancelCLicked = {
+                    navController.navigate(HomeDestination.route){
+                        popUpTo(navController.graph.startDestinationId){
+                            inclusive = false
+                        }
+                        launchSingleTop = true //sinleTop nicht erforderlich , außer wenn home destination zwei mal am backstacks ein kann.
+                    }
+                }
             )
         }
     }

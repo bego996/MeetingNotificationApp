@@ -2,6 +2,7 @@ package com.example.meetingnotification.ui.contact
 
 
 
+import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -48,22 +49,19 @@ object SearchContactDestination: NavigationDestination{
 @Composable
 fun SearchListScreen(
     modifier: Modifier = Modifier,
-    viewModel: ContactsSearchScreenViewModel = viewModel(factory = AppViewModelProvider.Factory)
+    viewModel: ContactsSearchScreenViewModel,
+    onCancelCLicked : () -> Unit
 ) {
     var text by remember { mutableStateOf("") }
 
     var uiState = viewModel.contactsUiState.collectAsState()
 
-    val contactBuffer0 = viewModel.getContacts().observeAsState(listOf())
+    val contactBuffer = viewModel.getContacts().observeAsState(listOf())
 
 
     var contactIdsRadioDepency by remember { mutableStateOf(listOf<MutablePairs>()) }
 
-    contactIdsRadioDepency = contactBuffer0.value.map { contact -> MutablePairs(contact.id, false) }
-
-
-
-
+    contactIdsRadioDepency = contactBuffer.value.map { contact -> MutablePairs(contact.id, false) }
 
 
 
@@ -100,7 +98,7 @@ fun SearchListScreen(
         LazyColumn(
             modifier = Modifier.weight(1f)
         ) {
-            items(contactBuffer0.value) { contact ->
+            items(contactBuffer.value) { contact ->
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
@@ -139,14 +137,14 @@ fun SearchListScreen(
             ) {
                 OutlinedButton(
                     modifier = Modifier.weight(1f),
-                    onClick = { /*TODO*/ },
+                    onClick = onCancelCLicked,
                 ) {
                     Text(text = "Cancel")
                 }
                 Spacer(modifier = Modifier.weight(1f))
                 IconButton(
                     modifier = Modifier.weight(1f),
-                    onClick = { /*TODO*/ }
+                    onClick = {}
                 ) {
                     Icon(
                         imageVector = Icons.Default.AddCircle,

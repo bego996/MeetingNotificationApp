@@ -21,7 +21,7 @@ import com.example.meetingnotification.ui.home.HomeScreenViewModel
 
 class MainActivity : AppCompatActivity()  {
 
-    val contactBuffer by viewModels<HomeScreenViewModel> {HomeScreenViewModel.Factory}
+    val contactBuffer by viewModels<ContactsSearchScreenViewModel> {ContactsSearchScreenViewModel.Factory}
 
 
     companion object {
@@ -35,8 +35,6 @@ class MainActivity : AppCompatActivity()  {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_CONTACTS), REQUEST_CODE_CONTACTS_READ)
         }else{
             contactBuffer.loadContacts(this)
-            contactBuffer.isLoaded = true
-            Log.d("Loger","Contactbuffer is loaded = ${contactBuffer.isLoaded}")
         }
 
         setContent {

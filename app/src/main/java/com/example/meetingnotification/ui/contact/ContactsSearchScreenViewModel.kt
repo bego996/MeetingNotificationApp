@@ -12,15 +12,18 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import com.example.meetingnotification.ui.MeetingNotificationApplication
 import com.example.meetingnotification.ui.data.Contact
 import com.example.meetingnotification.ui.data.ContactRepository
-import com.example.meetingnotification.ui.home.HomeScreenViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
+
+
 class ContactsSearchScreenViewModel(contactRepository: ContactRepository) : ViewModel() {
 
-    var contacts = MutableLiveData<List<Contact>>()
+    private val contactsWriteOnly = MutableLiveData<List<Contact>>()
+    val contactsReadOnly : LiveData<List<Contact>> get() = contactsWriteOnly
+
 
     companion object {
         val Factory: ViewModelProvider.Factory = object : ViewModelProvider.Factory {
@@ -118,11 +121,11 @@ class ContactsSearchScreenViewModel(contactRepository: ContactRepository) : View
             }
             cursor.close()
         }
-        contacts.postValue(contactList)
+        contactsWriteOnly.postValue(contactList)
     }
 
     fun getContacts(): LiveData<List<Contact>> {
-        return contacts
+        return contactsReadOnly
     }
 
 

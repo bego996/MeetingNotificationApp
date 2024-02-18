@@ -38,27 +38,12 @@ object HomeDestination : NavigationDestination{
 }
 
 
+
+
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier,
-               navigateToSavedContacts: () -> Unit,
-               viewModel: HomeScreenViewModel
+               navigateToSavedContacts: () -> Unit
 ) {
-
-    var uiState = viewModel.contactsUiState.collectAsState()
-
-    var contactBuffer0 = viewModel.contacts.observeAsState()
-
-    var contactBuffer0isLoaded = viewModel.isLoaded
-
-    var contactIdsRadioDepency by remember { mutableStateOf(listOf<MutablePairs>())}
-
-
-    Log.d("Loger","Homescreen contactBuffer size = ${contactBuffer0.value?.size}")
-    Log.d("Loger","Contactbuffer is loaded Homescreen = ${contactBuffer0isLoaded}")
-
-
-
-
     Column(
         modifier = modifier
             .fillMaxSize()
