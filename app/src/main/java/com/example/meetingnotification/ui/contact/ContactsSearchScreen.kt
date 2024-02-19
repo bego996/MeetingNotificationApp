@@ -30,13 +30,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.meetingnotification.ui.AppViewModelProvider
+import com.example.meetingnotification.ui.data.Contact
 import com.example.meetingnotification.ui.navigation.NavigationDestination
+import kotlinx.coroutines.launch
 
 
 object SearchContactDestination: NavigationDestination{
@@ -52,17 +56,28 @@ fun SearchListScreen(
     viewModel: ContactsSearchScreenViewModel,
     onCancelCLicked : () -> Unit
 ) {
-    var text by remember { mutableStateOf("") }
+    val coroutineScope = rememberCoroutineScope()
+
+    var text by rememberSaveable { mutableStateOf("") }
 
     var uiState = viewModel.contactsUiState.collectAsState()
 
     val contactBuffer = viewModel.getContacts().observeAsState(listOf())
 
+    var contactBufferSorted by rememberSaveable { mutableStateOf(contactBuffer.value)}
 
-    var contactIdsRadioDepency by remember { mutableStateOf(listOf<MutablePairs>()) }
+    var contactIdsRadioDepency by rememberSaveable { mutableStateOf(listOf<MutablePairs>()) }
 
-    contactIdsRadioDepency = contactBuffer.value.map { contact -> MutablePairs(contact.id, false) }
+    LaunchedEffect(contactBuffer.value){
+        contactIdsRadioDepency = contactBuffer.value.map { contact -> MutablePairs(contact.id, false) }
+    }
 
+    contactBufferSorted = if (text == ""){
+        contactBuffer.value
+    }else{
+        contactBuffer.value
+            .filter { it.firstName.contains(text,true)}
+    }
 
 
     Column(
@@ -86,6 +101,7 @@ fun SearchListScreen(
                     .size(55.dp),
                 value = text,
                 onValueChange = { newText ->
+
                     text = newText
                 },
                 placeholder = { Text("Enter Search Options") },
@@ -93,12 +109,12 @@ fun SearchListScreen(
             )
         }
         Spacer(modifier = Modifier.height(16.dp)) // Add some spacing between the search bar and LazyColumn
-        Text(text = "Name | Surname | Sex | Number | Titlee", modifier = Modifier.fillMaxWidth())
+        Text(text = "Name | Surname | Sex | Number | Title", modifier = Modifier.fillMaxWidth())
         Spacer(modifier = Modifier.height(16.dp))
         LazyColumn(
             modifier = Modifier.weight(1f)
         ) {
-            items(contactBuffer.value) { contact ->
+            items(contactBufferSorted) { contact ->
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
@@ -144,7 +160,7 @@ fun SearchListScreen(
                 Spacer(modifier = Modifier.weight(1f))
                 IconButton(
                     modifier = Modifier.weight(1f),
-                    onClick = {}
+                    onClick = { TODO() }
                 ) {
                     Icon(
                         imageVector = Icons.Default.AddCircle,

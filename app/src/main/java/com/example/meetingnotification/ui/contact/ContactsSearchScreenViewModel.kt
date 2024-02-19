@@ -5,10 +5,13 @@ import android.content.Context
 import android.provider.ContactsContract
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
+import com.example.meetingnotification.ui.AppViewModelProvider
 import com.example.meetingnotification.ui.MeetingNotificationApplication
 import com.example.meetingnotification.ui.data.Contact
 import com.example.meetingnotification.ui.data.ContactRepository
@@ -19,29 +22,10 @@ import kotlinx.coroutines.flow.stateIn
 
 
 
-class ContactsSearchScreenViewModel(contactRepository: ContactRepository) : ViewModel() {
-
-    private val contactsWriteOnly = MutableLiveData<List<Contact>>()
-    val contactsReadOnly : LiveData<List<Contact>> get() = contactsWriteOnly
-
-
-    companion object {
-        val Factory: ViewModelProvider.Factory = object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(
-                modelClass: Class<T>,
-                extras: CreationExtras
-            ): T {
-                // Get the Application object from extras
-                val application =
-                    checkNotNull(extras[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY])
-                // Create a SavedStateHandle for this ViewModel from extras
-                return ContactsSearchScreenViewModel(
-                    (application as MeetingNotificationApplication).myRepository,
-                ) as T
-            }
-        }
-    }
+class ContactsSearchScreenViewModel(
+    private val contactRepository: ContactRepository,
+    savedStateHandle: SavedStateHandle
+) : ViewModel() {
 
     val contactsUiState: StateFlow<ContactsUiState2> =
         contactRepository.getAllContactsStream().map { ContactsUiState2(it) }
@@ -50,6 +34,16 @@ class ContactsSearchScreenViewModel(contactRepository: ContactRepository) : View
                 started = SharingStarted.WhileSubscribed(5_000L),
                 initialValue = ContactsUiState2()
             )
+
+    private val contactsWriteOnly = MutableLiveData<List<Contact>>()
+    val contactsReadOnly : LiveData<List<Contact>> get() = contactsWriteOnly
+
+
+    suspend fun addContactToDatabase(contact: Contact){
+        contactRepository.insertItem(contact)
+    }
+
+
 
     @SuppressLint("Range")
     fun loadContacts(context: Context) {
@@ -127,16 +121,5 @@ class ContactsSearchScreenViewModel(contactRepository: ContactRepository) : View
     fun getContacts(): LiveData<List<Contact>> {
         return contactsReadOnly
     }
-
-
-    /*
-        suspend fun addContactToDatabase(contact: Contact){
-            contactRepository.insertItem(contact)
-        }
-     */
-
-
 }
-
-
 data class ContactsUiState2(val contactList: List<Contact> = listOf())

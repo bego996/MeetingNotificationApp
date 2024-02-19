@@ -21,7 +21,7 @@ import com.example.meetingnotification.ui.home.HomeScreenViewModel
 
 class MainActivity : AppCompatActivity()  {
 
-    val contactBuffer by viewModels<ContactsSearchScreenViewModel> {ContactsSearchScreenViewModel.Factory}
+    private val contactBuffer by viewModels<ContactsSearchScreenViewModel> {AppViewModelProvider.Factory}
 
 
     companion object {
