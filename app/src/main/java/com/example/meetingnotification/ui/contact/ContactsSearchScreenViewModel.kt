@@ -36,14 +36,16 @@ class ContactsSearchScreenViewModel(
             )
 
     private val contactsWriteOnly = MutableLiveData<List<Contact>>()
-    val contactsReadOnly : LiveData<List<Contact>> get() = contactsWriteOnly
+    private val contactsReadOnly : LiveData<List<Contact>> get() = contactsWriteOnly
 
 
-    suspend fun addContactToDatabase(contact: Contact){
-        contactRepository.insertItem(contact)
+    suspend fun addContactsToDatabase(contactList: List<Contact>, compareIds : List<Int>){
+        for (id in compareIds) {
+           contactList.firstOrNull{contact -> contact.id == id}?.let { matchingContact ->
+               contactRepository.insertItem(matchingContact)
+           }
+        }
     }
-
-
 
     @SuppressLint("Range")
     fun loadContacts(context: Context) {

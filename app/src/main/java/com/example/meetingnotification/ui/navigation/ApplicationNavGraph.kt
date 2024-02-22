@@ -64,7 +64,8 @@ fun MettingNavHost(
                         }
                         launchSingleTop = true //sinleTop nicht erforderlich , außer wenn home destination zwei mal am backstacks ein kann.
                     }
-                }
+                },
+                navigateToSavedContacts = { navController.popBackStack()}
             )
         }
     }

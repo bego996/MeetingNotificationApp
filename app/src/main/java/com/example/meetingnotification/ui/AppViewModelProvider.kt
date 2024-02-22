@@ -5,6 +5,7 @@ import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.meetingnotification.ui.contact.ContactsScreenViewModel
 import com.example.meetingnotification.ui.contact.ContactsSearchScreenViewModel
 import com.example.meetingnotification.ui.home.HomeScreenViewModel
 
@@ -20,6 +21,11 @@ object AppViewModelProvider {
             ContactsSearchScreenViewModel(
                 inventoryApplication().container.contactRepository,
                 this.createSavedStateHandle()
+            )
+        }
+        initializer {
+            ContactsScreenViewModel(
+                inventoryApplication().container.contactRepository
             )
         }
     }

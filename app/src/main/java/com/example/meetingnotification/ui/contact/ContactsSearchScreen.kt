@@ -2,7 +2,7 @@ package com.example.meetingnotification.ui.contact
 
 
 
-import android.util.Log
+
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -31,14 +32,11 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.meetingnotification.ui.AppViewModelProvider
-import com.example.meetingnotification.ui.data.Contact
 import com.example.meetingnotification.ui.navigation.NavigationDestination
 import kotlinx.coroutines.launch
 
@@ -54,29 +52,32 @@ object SearchContactDestination: NavigationDestination{
 fun SearchListScreen(
     modifier: Modifier = Modifier,
     viewModel: ContactsSearchScreenViewModel,
-    onCancelCLicked : () -> Unit
+    onCancelCLicked : () -> Unit,
+    navigateToSavedContacts : () -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
 
-    var text by rememberSaveable { mutableStateOf("") }
-
-    var uiState = viewModel.contactsUiState.collectAsState()
+    val uiState = viewModel.contactsUiState.collectAsState()
 
     val contactBuffer = viewModel.getContacts().observeAsState(listOf())
 
-    var contactBufferSorted by rememberSaveable { mutableStateOf(contactBuffer.value)}
+    var text by remember { mutableStateOf("")}
 
-    var contactIdsRadioDepency by rememberSaveable { mutableStateOf(listOf<MutablePairs>()) }
+    var contactBufferSorted by remember { mutableStateOf(contactBuffer.value)}
+
+    var contactIdsRadioDepency by remember { mutableStateOf(listOf<MutablePairs>()) }
 
     LaunchedEffect(contactBuffer.value){
         contactIdsRadioDepency = contactBuffer.value.map { contact -> MutablePairs(contact.id, false) }
     }
 
-    contactBufferSorted = if (text == ""){
-        contactBuffer.value
-    }else{
-        contactBuffer.value
-            .filter { it.firstName.contains(text,true)}
+    LaunchedEffect(text){
+        contactBufferSorted = if (text == ""){
+            contactBuffer.value
+        }else{
+            contactBuffer.value
+                .filter { it.firstName.contains(text,true)}
+        }
     }
 
 
@@ -125,20 +126,28 @@ fun SearchListScreen(
                         text = "${contact.firstName} | ${contact.lastName} | ${contact.sex} | ${contact.phone} | ${contact.title} |",
                         modifier = Modifier.weight(1f)
                     )
-                    RadioButton(
-                        selected = contactIdsRadioDepency.firstOrNull { pair ->
-                            pair.first == contact.id
-                        }?.second ?: false,
-                        onClick = {
-                            val updateList = contactIdsRadioDepency.toMutableList()
-                            val index = updateList.indexOfFirst { it.first == contact.id }
-                            if (index != -1) {
-                                updateList[index] =
-                                    MutablePairs(contact.id, !updateList[index].second)
+                    if (!uiState.value.contactList.contains(contact)){
+                        RadioButton(
+                            selected = contactIdsRadioDepency.firstOrNull { pair ->
+                                pair.first == contact.id
+                            }?.second ?: false,
+                            onClick = {
+                                val updateList = contactIdsRadioDepency.toMutableList()
+                                val index = updateList.indexOfFirst { it.first == contact.id }
+                                if (index != -1) {
+                                    updateList[index] =
+                                        MutablePairs(contact.id, !updateList[index].second)
+                                }
+                                contactIdsRadioDepency = updateList
                             }
-                            contactIdsRadioDepency = updateList
-                        }
-                    )
+                        )
+                    }else{
+                        Icon(
+                            imageVector = Icons.Filled.Check,
+                            contentDescription = "Häckchen",
+                            tint = Color.Black
+                        )
+                    }
                 }
             }
         }
@@ -160,7 +169,15 @@ fun SearchListScreen(
                 Spacer(modifier = Modifier.weight(1f))
                 IconButton(
                     modifier = Modifier.weight(1f),
-                    onClick = { TODO() }
+                    onClick = {
+                        contactBufferSorted.isNotEmpty().and(contactIdsRadioDepency.any {it.second}).let {
+                            val idToMap = contactIdsRadioDepency.filter {it.second}.map {it.first}
+                            coroutineScope.launch {
+                                viewModel.addContactsToDatabase(contactBufferSorted,idToMap)
+                                navigateToSavedContacts()
+                            }
+                        }
+                    }
                 ) {
                     Icon(
                         imageVector = Icons.Default.AddCircle,
