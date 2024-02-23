@@ -11,5 +11,4 @@ class AppDataContainer(private val  context: Context) : AppContainer{
     override val contactRepository: ContactRepository by lazy {
         OfflineContactRepository(ContactDatabase.getDatabase(context).contactDao())
     }
-
 }

@@ -1,6 +1,5 @@
 package com.example.meetingnotification.ui.contact
 
-import androidx.compose.material3.Icon
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,8 +12,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -147,14 +146,6 @@ fun FilledListscreen(
                         horizontalArrangement = Arrangement.Start,
                     ) {
                         Text(text = "${contact.sex} | ${contact.title} | ${contact.firstName} | ${contact.lastName} | ${contact.phone}")
-                        IconButton(
-                            onClick = { /*TODO*/ })
-                        {
-                            Icon(
-                                imageVector = Icons.Default.Build,
-                                contentDescription = "edit icon"
-                            )
-                        }
                         IconButton(
                             onClick = {
                                 coroutineScope.launch {
