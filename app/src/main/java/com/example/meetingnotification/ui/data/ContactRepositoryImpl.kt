@@ -7,8 +7,8 @@ class ContactRepositoryImpl : ContactRepository {
 
     // Dummy-Kontaktliste
     private val dummyContacts = listOf(
-        Contact(1, "Mr", "John", "Doe", 'M', "1234567890"),
-        Contact(2, "Ms", "Jane", "Doe", 'F', "0987654321")
+        Contact(1, "Mr", "John", "Doe", 'M', "1234567890","dssd"),
+        Contact(2, "Ms", "Jane", "Doe", 'F', "0987654321","dsdsd")
         // Fügen Sie weitere Dummy-Kontakte nach Bedarf hinzu
     )
 

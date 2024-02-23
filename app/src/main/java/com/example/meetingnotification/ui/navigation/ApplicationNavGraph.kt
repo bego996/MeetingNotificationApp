@@ -4,22 +4,18 @@ import androidx.compose.foundation.background
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.meetingnotification.ui.AppViewModelProvider
+import com.example.meetingnotification.ui.contact.BeforeTemplateDestination
+import com.example.meetingnotification.ui.contact.ContactCheckScreen
 import com.example.meetingnotification.ui.contact.ContactsSearchScreenViewModel
-import com.example.meetingnotification.ui.contact.EmptyListScreen
 import com.example.meetingnotification.ui.contact.SavedContacts
-
 import com.example.meetingnotification.ui.contact.SavedContactsDestination
 import com.example.meetingnotification.ui.contact.SearchContactDestination
 import com.example.meetingnotification.ui.contact.SearchListScreen
-
 import com.example.meetingnotification.ui.home.HomeDestination
 import com.example.meetingnotification.ui.home.HomeScreen
-import com.example.meetingnotification.ui.home.HomeScreenViewModel
 
 
 @Composable
@@ -36,7 +32,14 @@ fun MettingNavHost(
         composable(route = HomeDestination.route) {
             HomeScreen(
                 modifier = Modifier.background(Color.Magenta),
-                navigateToSavedContacts = { navController.navigate(SavedContactsDestination.route) }
+                navigateToSavedContacts = { navController.navigate(SavedContactsDestination.route)},
+                navigateToTemplateScreen = {navController.navigate(BeforeTemplateDestination.route)}
+            )
+        }
+        composable(route = BeforeTemplateDestination.route){
+            ContactCheckScreen(
+                modifier = Modifier.background(Color.Cyan),
+                onCancelClicked = {navController.popBackStack()}
             )
         }
         composable(route = SavedContactsDestination.route) {

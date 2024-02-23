@@ -1,4 +1,4 @@
 <resources>
     <string name="app_name">MeetingNotification</string>
-
+    <string name="defaultMessage">Sehr geehrte%1$s %2$s %3$s%4$s ihr Termin findet am %5$s um %6$s statt. Mit freundlichen Grüßen</string>
 </resources>

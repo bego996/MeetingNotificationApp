@@ -11,5 +11,6 @@ data class Contact(
     val firstName: String,
     val lastName: String,
     val sex: Char,
-    val phone: String
+    val phone: String,
+    val message: String
 )

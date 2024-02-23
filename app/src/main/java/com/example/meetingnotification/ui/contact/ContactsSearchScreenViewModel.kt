@@ -7,12 +7,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.CreationExtras
-import com.example.meetingnotification.ui.AppViewModelProvider
-import com.example.meetingnotification.ui.MeetingNotificationApplication
+import com.example.meetingnotification.ui.R
 import com.example.meetingnotification.ui.data.Contact
 import com.example.meetingnotification.ui.data.ContactRepository
 import kotlinx.coroutines.flow.SharingStarted
@@ -101,6 +97,15 @@ class ContactsSearchScreenViewModel(
                                 ContactsContract.CommonDataKinds.Phone.NUMBER
                             )
                         )
+                        val isMale =  sex.lowercase() == "m"
+                        val defaultMessage = context.resources.getString(
+                            R.string.defaultMessage,
+                            if (isMale) "r" else "",
+                            if (isMale) "Herr" else "Frau",
+                            if (title != "none") "$title " else "",
+                            surname,
+                            "25.3",
+                            "13:20")
                         contactList.add(
                             Contact(
                                 id.toInt(),
@@ -108,7 +113,8 @@ class ContactsSearchScreenViewModel(
                                 firstname,
                                 surname,
                                 sex[0].uppercaseChar(),
-                                phoneNumber
+                                phoneNumber,
+                                defaultMessage
                             )
                         )  // 'Contact' ist Ihre Datenklasse
                     }

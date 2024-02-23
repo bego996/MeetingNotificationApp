@@ -9,8 +9,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -18,14 +19,26 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.meetingnotification.ui.AppViewModelProvider
+import com.example.meetingnotification.ui.navigation.NavigationDestination
+
+object BeforeTemplateDestination : NavigationDestination{
+    override val route = "beforeTemplate"
+}
 
 @Composable
-@Preview
-fun ContactCheckScreen(){
+fun ContactCheckScreen(
+    modifier: Modifier,
+    onCancelClicked : () -> Unit,
+    viewModel: ContactCheckBeforeSubmitViewModel = viewModel(factory = AppViewModelProvider.Factory)
+){
+    val uiState = viewModel.contactUiState.collectAsState()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -43,7 +56,7 @@ fun ContactCheckScreen(){
             modifier = Modifier
                 .weight(1f),
             content = {
-                item {
+                items(uiState.value.contactUiState) { contact ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth(),
@@ -51,7 +64,7 @@ fun ContactCheckScreen(){
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Daniel | Prettner | Dr. Dipl.  | 04576374",
+                            text = "${contact.firstName} | ${contact.lastName} | ${contact.title} | ${contact.phone}",
                             modifier = Modifier.weight(5f)
                         )
                         IconButton(
@@ -59,34 +72,7 @@ fun ContactCheckScreen(){
                             onClick = { /*TODO*/ }
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Build,
-                                contentDescription = null)
-                        }
-                        RadioButton(
-                            selected = false,
-                            modifier = Modifier.weight(1f),
-                            onClick = { /*TODO*/ })
-                        Text(
-                            text = "2 Days Left",
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Start,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Daniel | Prettner | Dr. | 04576374",
-                            modifier = Modifier.weight(5f)
-                        )
-                        IconButton(
-                            modifier = Modifier.weight(1f),
-                            onClick = { /*TODO*/ }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Build,
+                                imageVector = Icons.Default.Email,
                                 contentDescription = null)
                         }
                         RadioButton(
@@ -108,7 +94,7 @@ fun ContactCheckScreen(){
                 modifier = Modifier.fillMaxWidth()
             ) {
                 OutlinedButton(
-                    onClick = { /*TODO*/ },
+                    onClick = onCancelClicked,
                     modifier = Modifier.weight(1f)) {
                   Text(text = "Cancel")
                 }
@@ -119,7 +105,7 @@ fun ContactCheckScreen(){
                     Text(text = "DeclineAll")
                 }
                 Button(
-                    onClick = { /*TODO*/ },
+                    onClick = {},
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(text = "SubmitAll")
@@ -127,7 +113,5 @@ fun ContactCheckScreen(){
 
             }
         }
-
-
     }
 }
