@@ -21,11 +21,13 @@ class ContactCheckBeforeSubmitViewModel(
                 initialValue = ContactsUiState3()
             )
 
-
+    suspend fun updateContact(contact: Contact){
+        repository.updateItem(contact)
+    }
 
 
 
 
 }
-
+data class MutablePairs2(var first: Int, var second: Boolean)
 data class ContactsUiState3(val contactUiState: List<Contact> = listOf())

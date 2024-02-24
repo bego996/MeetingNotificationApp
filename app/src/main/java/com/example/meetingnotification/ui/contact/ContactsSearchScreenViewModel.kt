@@ -130,4 +130,5 @@ class ContactsSearchScreenViewModel(
         return contactsReadOnly
     }
 }
+data class MutablePairs(var first: Int, var second: Boolean)
 data class ContactsUiState2(val contactList: List<Contact> = listOf())

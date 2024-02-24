@@ -1,8 +1,10 @@
 package com.example.meetingnotification.ui
 
+import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
@@ -10,13 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import android.Manifest
-import android.util.Log
-
-import androidx.activity.viewModels
 import com.example.meetingnotification.ui.contact.ContactsSearchScreenViewModel
-import com.example.meetingnotification.ui.contact.SearchListScreen
-import com.example.meetingnotification.ui.home.HomeScreenViewModel
 
 
 class MainActivity : AppCompatActivity()  {
@@ -44,6 +40,7 @@ class MainActivity : AppCompatActivity()  {
                 color = Color.Green
             ) {
                 NotificationApp(viewModel = contactBuffer)
+                //TemplateOverwatch()
             }
         }
     }

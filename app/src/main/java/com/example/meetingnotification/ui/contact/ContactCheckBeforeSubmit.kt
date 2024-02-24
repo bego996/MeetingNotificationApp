@@ -11,21 +11,33 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.meetingnotification.ui.AppViewModelProvider
+import com.example.meetingnotification.ui.data.Contact
 import com.example.meetingnotification.ui.navigation.NavigationDestination
+import kotlinx.coroutines.launch
 
 object BeforeTemplateDestination : NavigationDestination{
     override val route = "beforeTemplate"
@@ -38,6 +50,14 @@ fun ContactCheckScreen(
     viewModel: ContactCheckBeforeSubmitViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ){
     val uiState = viewModel.contactUiState.collectAsState()
+
+    val coroutineScope = rememberCoroutineScope()
+
+    var templateIdDepencys by remember { mutableStateOf(listOf<MutablePairs2>())}
+
+    LaunchedEffect(uiState.value){
+        templateIdDepencys = uiState.value.contactUiState.map { MutablePairs2(it.id,false)}
+    }
 
     Column(
         modifier = Modifier
@@ -69,11 +89,19 @@ fun ContactCheckScreen(
                         )
                         IconButton(
                             modifier = Modifier.weight(1f),
-                            onClick = { /*TODO*/ }
+                            onClick = {
+                                val updatedList = templateIdDepencys.toMutableList()
+                                val index = updatedList.indexOf(updatedList.firstOrNull{it.first == contact.id} ?: -1)
+                                if (index != -1){
+                                    updatedList[index] = MutablePairs2(contact.id,!updatedList[index].second)
+                                }
+                                templateIdDepencys = updatedList
+                            }
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Email,
-                                contentDescription = null)
+                                contentDescription = null
+                            )
                         }
                         RadioButton(
                             selected = false,
@@ -82,6 +110,17 @@ fun ContactCheckScreen(
                         Text(
                             text = "2 Days Left",
                             modifier = Modifier.weight(1f)
+                        )
+                    }
+                    if (templateIdDepencys.firstOrNull{ it.first == contact.id}?.second == true) {
+                        TemplateOverwatch(
+                            contact.message,
+                            sendMessageToUpdateContact = {s ->
+                                coroutineScope.launch {
+                                    val updatedContact = Contact(contact.id,contact.title,contact.firstName,contact.lastName,contact.sex,contact.phone,s)
+                                    viewModel.updateContact(updatedContact)
+                                }
+                            }
                         )
                     }
                 }
@@ -113,5 +152,38 @@ fun ContactCheckScreen(
 
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TemplateOverwatch(
+    receiveMessage : String,
+    sendMessageToUpdateContact: (String) -> Unit
+){
+    var defaultText by remember { mutableStateOf(receiveMessage)}
+
+    Column {
+        Row {
+            TextField(
+                value = defaultText ,
+                modifier = Modifier.weight(1f),
+                onValueChange = { newText ->
+                    defaultText = newText
+                }
+            )
+            IconButton(
+                onClick = {
+                    sendMessageToUpdateContact(defaultText)
+                }
+            ) {
+               Icon(
+                   imageVector = Icons.Filled.Check,
+                   contentDescription = null,
+                   tint = Color.Red
+               )
+            }
+        }
+
     }
 }

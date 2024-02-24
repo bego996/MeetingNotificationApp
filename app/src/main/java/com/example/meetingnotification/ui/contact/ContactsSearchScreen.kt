@@ -189,5 +189,3 @@ fun SearchListScreen(
         }
     }
 }
-
-data class MutablePairs(var first: Int, var second: Boolean)
