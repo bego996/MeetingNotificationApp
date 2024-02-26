@@ -50,13 +50,11 @@ fun ContactCheckScreen(
     calenderEvents : List<EventDateTitle>,
     viewModel: ContactCheckBeforeSubmitViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ){
-    val uiState = viewModel.contactUiState.collectAsState()
-
     val coroutineScope = rememberCoroutineScope()
 
-    val  contactsZipedWithDate by viewModel.calenderStateConnectedToContacts
+    val uiState = viewModel.contactUiState.collectAsState()
 
-    var calenderUiState = viewModel.getCalenderState().collectAsState()
+    val  contactsZipedWithDate by viewModel.calenderStateConnectedToContacts
 
     var templateIdDepencys by remember { mutableStateOf(listOf<MutablePairs2>())}
 
@@ -73,9 +71,6 @@ fun ContactCheckScreen(
             viewModel.zipDatesToContacts(uiState.value.contactUiState)
         }
     }
-
-
-
 
     Column(
         modifier = Modifier
@@ -164,7 +159,7 @@ fun ContactCheckScreen(
                     Text(text = "DeclineAll")
                 }
                 Button(
-                    onClick = {},
+                    onClick = {/*TODO*/},
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(text = "SubmitAll")

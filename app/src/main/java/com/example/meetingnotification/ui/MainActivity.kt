@@ -26,18 +26,9 @@ class MainActivity : AppCompatActivity()  {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        checkAndRequestPermissions()
 
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_CONTACTS), REQUEST_CODE_CONTACTS_READ)
-        }else{
-            contactBuffer.loadContacts(this)
-        }
 
-        if (ContextCompat.checkSelfPermission(this,Manifest.permission.READ_CALENDAR) != PackageManager.PERMISSION_GRANTED){
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_CALENDAR), REQUEST_CODE_KALENDER_READ)
-        }else{
-            contactBuffer.loadCalender(this)
-        }
 
         setContent {
             Surface(
@@ -50,13 +41,27 @@ class MainActivity : AppCompatActivity()  {
             }
         }
     }
+
+
+    private fun checkAndRequestPermissions(){
+        if (!isPermissionGranted(Manifest.permission.READ_CONTACTS)) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_CONTACTS), REQUEST_CODE_CONTACTS_READ)
+        }else if (!isPermissionGranted(Manifest.permission.READ_CALENDAR)){
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_CALENDAR), REQUEST_CODE_CONTACTS_READ)
+        }else{
+            contactBuffer.loadContacts(this)
+            contactBuffer.loadCalender(this)
+        }
+    }
+
+    private fun isPermissionGranted(permission : String) : Boolean{
+        return ContextCompat.checkSelfPermission(this,permission) == PackageManager.PERMISSION_GRANTED
+    }
+
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_CODE_CONTACTS_READ && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            contactBuffer.loadContacts(this)
-        }
-        if (requestCode == REQUEST_CODE_KALENDER_READ && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED){
-            contactBuffer.loadCalender(this)
+        if ((requestCode == REQUEST_CODE_CONTACTS_READ || requestCode == REQUEST_CODE_KALENDER_READ) && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            checkAndRequestPermissions()
         }
     }
 }
