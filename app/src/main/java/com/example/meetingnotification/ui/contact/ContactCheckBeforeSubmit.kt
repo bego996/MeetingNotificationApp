@@ -47,17 +47,35 @@ object BeforeTemplateDestination : NavigationDestination{
 fun ContactCheckScreen(
     modifier: Modifier,
     onCancelClicked : () -> Unit,
-    viewModel: ContactCheckBeforeSubmitViewModel = viewModel(factory = AppViewModelProvider.Factory)
+    calenderEvents : List<EventDateTitle>,
+    viewModel: ContactCheckBeforeSubmitViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ){
     val uiState = viewModel.contactUiState.collectAsState()
 
     val coroutineScope = rememberCoroutineScope()
+
+    val  contactsZipedWithDate by viewModel.calenderStateConnectedToContacts
+
+    var calenderUiState = viewModel.getCalenderState().collectAsState()
 
     var templateIdDepencys by remember { mutableStateOf(listOf<MutablePairs2>())}
 
     LaunchedEffect(uiState.value){
         templateIdDepencys = uiState.value.contactUiState.map { MutablePairs2(it.id,false)}
     }
+
+    LaunchedEffect(Unit){
+        viewModel.loadCalenderData(calenderEvents)
+    }
+
+    LaunchedEffect(uiState.value.contactUiState.size){
+        if (uiState.value.contactUiState.isNotEmpty()) {
+            viewModel.zipDatesToContacts(uiState.value.contactUiState)
+        }
+    }
+
+
+
 
     Column(
         modifier = Modifier
@@ -108,7 +126,9 @@ fun ContactCheckScreen(
                             modifier = Modifier.weight(1f),
                             onClick = { /*TODO*/ })
                         Text(
-                            text = "2 Days Left",
+                            text =  contactsZipedWithDate.firstOrNull { it.contactId == contact.id}?.let {
+                                         viewModel.getDayDuration(it.date)
+                            } ?: "Undefined",
                             modifier = Modifier.weight(1f)
                         )
                     }

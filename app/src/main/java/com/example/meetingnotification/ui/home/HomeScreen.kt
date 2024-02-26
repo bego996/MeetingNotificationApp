@@ -72,7 +72,7 @@ fun HomeScreen(modifier: Modifier = Modifier,
             Button(
                 onClick = navigateToTemplateScreen
                 ) {
-                Text("Check Template before Sending")
+                Text("Check Template before Send")
             }
             Spacer(modifier = Modifier.height(16.dp))
             Button(

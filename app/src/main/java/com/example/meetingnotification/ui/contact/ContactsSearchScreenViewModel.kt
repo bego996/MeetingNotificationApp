@@ -2,6 +2,7 @@ package com.example.meetingnotification.ui.contact
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.provider.CalendarContract
 import android.provider.ContactsContract
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -15,7 +16,9 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
 
 
 class ContactsSearchScreenViewModel(
@@ -32,14 +35,16 @@ class ContactsSearchScreenViewModel(
             )
 
     private val contactsWriteOnly = MutableLiveData<List<Contact>>()
-    private val contactsReadOnly : LiveData<List<Contact>> get() = contactsWriteOnly
+    private val contactsReadOnly: LiveData<List<Contact>> get() = contactsWriteOnly
+
+    private var calenderEvents = listOf<EventDateTitle>()
 
 
-    suspend fun addContactsToDatabase(contactList: List<Contact>, compareIds : List<Int>){
+    suspend fun addContactsToDatabase(contactList: List<Contact>, compareIds: List<Int>) {
         for (id in compareIds) {
-           contactList.firstOrNull{contact -> contact.id == id}?.let { matchingContact ->
-               contactRepository.insertItem(matchingContact)
-           }
+            contactList.firstOrNull { contact -> contact.id == id }?.let { matchingContact ->
+                contactRepository.insertItem(matchingContact)
+            }
         }
     }
 
@@ -97,7 +102,7 @@ class ContactsSearchScreenViewModel(
                                 ContactsContract.CommonDataKinds.Phone.NUMBER
                             )
                         )
-                        val isMale =  sex.lowercase() == "m"
+                        val isMale = sex.lowercase() == "m"
                         val defaultMessage = context.resources.getString(
                             R.string.defaultMessage,
                             if (isMale) "r" else "",
@@ -105,7 +110,8 @@ class ContactsSearchScreenViewModel(
                             if (title != "none") "$title " else "",
                             surname,
                             "25.3",
-                            "13:20")
+                            "13:20"
+                        )
                         contactList.add(
                             Contact(
                                 id.toInt(),
@@ -126,9 +132,52 @@ class ContactsSearchScreenViewModel(
         contactsWriteOnly.postValue(contactList)
     }
 
+    @SuppressLint("Range")
+    fun loadCalender(context: Context) {
+        val eventList = mutableListOf<EventDateTitle>()
+        val contentResolver = context.contentResolver
+
+        val cursor = contentResolver.query(
+            CalendarContract.Events.CONTENT_URI,
+            null,
+            null,
+            null,
+            CalendarContract.Events.TITLE + " ASC"
+        )
+
+        if (cursor != null && cursor.count > 0) {
+            while (cursor.moveToNext()) {
+                val title = cursor.getString(cursor.getColumnIndex(CalendarContract.Events.TITLE))
+
+                val startTimeMilis =
+                    cursor.getLong(cursor.getColumnIndex(CalendarContract.Events.DTSTART))
+
+                val startEvent = Instant.ofEpochMilli(startTimeMilis)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDateTime()
+
+                eventList.add(
+                    EventDateTitle(
+                        startEvent,
+                        title
+                    )
+                )
+            }
+            cursor.close()
+        }
+        calenderEvents = eventList
+    }
+
     fun getContacts(): LiveData<List<Contact>> {
         return contactsReadOnly
     }
+
+    fun getCalender() : List<EventDateTitle>{
+        return calenderEvents
+    }
 }
+
 data class MutablePairs(var first: Int, var second: Boolean)
 data class ContactsUiState2(val contactList: List<Contact> = listOf())
+
+data class EventDateTitle(val eventDate: LocalDateTime, val eventName: String)

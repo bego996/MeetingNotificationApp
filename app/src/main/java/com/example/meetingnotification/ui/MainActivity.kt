@@ -19,9 +19,9 @@ class MainActivity : AppCompatActivity()  {
 
     private val contactBuffer by viewModels<ContactsSearchScreenViewModel> {AppViewModelProvider.Factory}
 
-
     companion object {
         private const val REQUEST_CODE_CONTACTS_READ = 1
+        private const val REQUEST_CODE_KALENDER_READ = 2
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,6 +31,12 @@ class MainActivity : AppCompatActivity()  {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_CONTACTS), REQUEST_CODE_CONTACTS_READ)
         }else{
             contactBuffer.loadContacts(this)
+        }
+
+        if (ContextCompat.checkSelfPermission(this,Manifest.permission.READ_CALENDAR) != PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_CALENDAR), REQUEST_CODE_KALENDER_READ)
+        }else{
+            contactBuffer.loadCalender(this)
         }
 
         setContent {
@@ -48,6 +54,9 @@ class MainActivity : AppCompatActivity()  {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_CODE_CONTACTS_READ && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             contactBuffer.loadContacts(this)
+        }
+        if (requestCode == REQUEST_CODE_KALENDER_READ && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+            contactBuffer.loadCalender(this)
         }
     }
 }

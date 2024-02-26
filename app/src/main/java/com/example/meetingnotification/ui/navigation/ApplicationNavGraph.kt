@@ -39,7 +39,8 @@ fun MettingNavHost(
         composable(route = BeforeTemplateDestination.route){
             ContactCheckScreen(
                 modifier = Modifier.background(Color.Cyan),
-                onCancelClicked = {navController.popBackStack()}
+                onCancelClicked = {navController.popBackStack()},
+                calenderEvents = viewModel.getCalender()
             )
         }
         composable(route = SavedContactsDestination.route) {

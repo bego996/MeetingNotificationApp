@@ -57,7 +57,6 @@ fun SavedContacts(
             viewModel
         )
     }
-
 }
 
 @Composable
