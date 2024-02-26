@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -31,9 +32,11 @@ class ContactCheckBeforeSubmitViewModel(
 
     private val calenderState: StateFlow<List<EventDateTitle>> = _calenderState
 
-    private val _calenderStateConnectedToContacts = mutableStateOf<List<ContactZippedWithDate>>(emptyList())
+    private val _calenderStateConnectedToContacts =
+        mutableStateOf<List<ContactZippedWithDate>>(emptyList())
 
-    val calenderStateConnectedToContacts: State<List<ContactZippedWithDate>>  = _calenderStateConnectedToContacts
+    val calenderStateConnectedToContacts: State<List<ContactZippedWithDate>> =
+        _calenderStateConnectedToContacts
 
 
     suspend fun updateContact(contact: Contact) {
@@ -46,9 +49,10 @@ class ContactCheckBeforeSubmitViewModel(
 
     private fun getCalenderState(): List<EventDateTitle> = calenderState.value
 
-    fun getDayDuration(meetingDate: String) : String{
+    fun getDayDuration(meetingDate: String): String {
         val meetingDateFormat = DateTimeFormatter.ofPattern("dd.MM.yyyy")
-        val daysBeetweenNowAndMeetingDate = LocalDate.now().until(LocalDate.parse(meetingDate,meetingDateFormat)).days
+        val daysBeetweenNowAndMeetingDate =
+            LocalDate.now().until(LocalDate.parse(meetingDate, meetingDateFormat)).days
         return "$daysBeetweenNowAndMeetingDate Days Left"
     }
 
@@ -56,13 +60,16 @@ class ContactCheckBeforeSubmitViewModel(
     //2024-03-17T12:30
     fun zipDatesToContacts(contacts: List<Contact>) {
         val dates = getCalenderState()
-        val listZiped = mutableListOf<ContactZippedWithDate>()
+        val listZipped = mutableListOf<ContactZippedWithDate>()
         val outputFormatterDate = DateTimeFormatter.ofPattern("dd.MM.yyyy")
 
         for (contact in contacts) {
             dates.firstOrNull {
-                it.eventName.split(" ")[0] == contact.firstName.split(" ")[0] && it.eventName.split(" ")[1] == contact.lastName }?.let { date ->
-                listZiped.add(
+                it.eventName.split(" ")[0] == contact.firstName.split(" ")[0] && it.eventName.split(
+                    " "
+                )[1] == contact.lastName
+            }?.let { date ->
+                listZipped.add(
                     ContactZippedWithDate(
                         contact.id,
                         date.eventDate.toLocalDate().format(outputFormatterDate),
@@ -71,8 +78,35 @@ class ContactCheckBeforeSubmitViewModel(
                 )
             }
         }
-        _calenderStateConnectedToContacts.value = listZiped
+        _calenderStateConnectedToContacts.value = listZipped
+        updateContactsMessageAfterZippingItWithDates(listZipped,contacts)
     }
+
+    fun updateContactsMessageAfterZippingItWithDates(zippedDateToContacts : MutableList<ContactZippedWithDate>,contactList : List<Contact>){
+        zippedDateToContacts.isNotEmpty().let {
+            viewModelScope.launch {
+                for (zipValue in zippedDateToContacts) {
+                    contactList.firstOrNull { it.id == zipValue.contactId }?.let { contact ->
+                        repository.updateItem(
+                            Contact(
+                                id = contact.id,
+                                title = contact.title,
+                                firstName = contact.firstName,
+                                lastName = contact.lastName,
+                                sex = contact.sex,
+                                phone = contact.phone,
+                                message = updateMessageWithCorrectDateTime(contact.message,zipValue.date,zipValue.time)
+                            )
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+private fun updateMessageWithCorrectDateTime(originMessage: String, dateReplacement: String, timeReplacement: String): String {
+    return originMessage.replace("dd.MM.yyyy", dateReplacement).replace("HH:mm", timeReplacement)
 }
 
 data class ContactZippedWithDate(val contactId: Int, val date: String, val time: String)

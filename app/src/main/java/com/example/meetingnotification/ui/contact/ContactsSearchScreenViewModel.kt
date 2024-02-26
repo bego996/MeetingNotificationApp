@@ -109,8 +109,8 @@ class ContactsSearchScreenViewModel(
                             if (isMale) "Herr" else "Frau",
                             if (title != "none") "$title " else "",
                             surname,
-                            "25.3",
-                            "13:20"
+                            "dd.MM.yyyy",
+                            "HH:mm"
                         )
                         contactList.add(
                             Contact(
