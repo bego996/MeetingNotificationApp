@@ -22,12 +22,13 @@ import com.example.meetingnotification.ui.home.HomeScreen
 fun MettingNavHost(
     navController: NavHostController,
     modifier: Modifier = Modifier,
-    viewModel: ContactsSearchScreenViewModel
+    viewModel: ContactsSearchScreenViewModel,
+    startSmsReceiver : () -> Unit
 ) {
     NavHost(
         navController = navController,
         startDestination = HomeDestination.route,
-        modifier = modifier
+        modifier = modifier,
     ) {
         composable(route = HomeDestination.route) {
             HomeScreen(
@@ -40,7 +41,8 @@ fun MettingNavHost(
             ContactCheckScreen(
                 modifier = Modifier.background(Color.Cyan),
                 onCancelClicked = {navController.popBackStack()},
-                calenderEvents = viewModel.getCalender()
+                calenderEvents = viewModel.getCalender(),
+                onSendSmsClick = startSmsReceiver
             )
         }
         composable(route = SavedContactsDestination.route) {

@@ -49,6 +49,7 @@ fun ContactCheckScreen(
     onCancelClicked : () -> Unit,
     calenderEvents : List<EventDateTitle>,
     viewModel: ContactCheckBeforeSubmitViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    onSendSmsClick : () -> Unit
 ){
     val coroutineScope = rememberCoroutineScope()
 
@@ -159,7 +160,7 @@ fun ContactCheckScreen(
                     Text(text = "DeclineAll")
                 }
                 Button(
-                    onClick = {/*TODO*/},
+                    onClick = onSendSmsClick,
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(text = "SubmitAll")
