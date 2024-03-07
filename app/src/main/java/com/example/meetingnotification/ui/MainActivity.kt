@@ -1,12 +1,8 @@
 package com.example.meetingnotification.ui
 
 import android.Manifest
-import android.app.Activity
-import android.content.BroadcastReceiver
 import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -25,22 +21,33 @@ import com.example.meetingnotification.ui.contact.ContactsSearchScreenViewModel
 
 
 class MainActivity : AppCompatActivity()  {
-    private lateinit var smsService : SmsSendingService
-    private var isBound = false
-
-    private val contactBuffer by viewModels<ContactsSearchScreenViewModel> {AppViewModelProvider.Factory}
-
     companion object {
         private const val REQUEST_CODE_CONTACTS_READ = 1
         private const val REQUEST_CODE_KALENDER_READ = 2
         private const val REQUEST_CODE_SEND_SMS = 3
     }
 
+    private val contactBuffer by viewModels<ContactsSearchScreenViewModel> {AppViewModelProvider.Factory}
+
+    private lateinit var smsService : SmsSendingService
+    private var isSmsServiceBound = false
+
+    private val smsServiceConnection = object : ServiceConnection {
+        override fun onServiceConnected(className: ComponentName, service: IBinder) {
+            val binder = service as SmsSendingService.LocalBinder
+            smsService = binder.getService()
+            isSmsServiceBound = true
+            println("serviceConnected()")
+        }
+        override fun onServiceDisconnected(arg0: ComponentName) {
+            isSmsServiceBound = false
+            println("serviceDisconected()")
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         checkAndRequestPermissions()
-        registerReceiver(smsSentReceiver, IntentFilter("SMS_SENT"))
-
         setContent {
             Surface(
                 modifier = Modifier
@@ -49,76 +56,39 @@ class MainActivity : AppCompatActivity()  {
             ) {
                 NotificationApp(
                     viewModel = contactBuffer,
-                    activateSendSmsReceiver = {startServiceAndBind()})
+                    activateSendSmsReceiver = {/*startServiceAndBind()*/})
             }
         }
     }
 
-    private val smsSentReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            if (resultCode == Activity.RESULT_OK){
-                if (isBound){
-                    smsService.sendNextMessage(this@MainActivity)
-                }
-            }
-        }
-    }
 
-    private fun startServiceAndBind() {
-        val serviceIntent = Intent(this, SmsSendingService::class.java)
-        startService(serviceIntent)
-        bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE)
-    }
-
-    private val serviceConnection = object : ServiceConnection {
-        override fun onServiceConnected(className: ComponentName, service: IBinder) {
-            val binder = service as SmsSendingService.LocalBinder
-            smsService = binder.getService()
-            isBound = true
-
-            smsService.addMessageToQueue("036462723","Test1")
-            smsService.addMessageToQueue("0364372","Test2")
-            smsService.addMessageToQueue("0362733","Test3")
-
-            if (isBound){
-                smsService.sendNextMessage(this@MainActivity)
-            }
-
-            println("serviceConnected()")
-        }
-
-        override fun onServiceDisconnected(arg0: ComponentName) {
-            isBound = false
-        }
-    }
 
     override fun onStart() {
         super.onStart()
-        println("started")
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        if (isBound) {
-            unbindService(serviceConnection)
-            isBound = false
+        Intent(this,SmsSendingService::class.java).also { intent ->
+            bindService(intent,smsServiceConnection, BIND_AUTO_CREATE)
         }
-        println("destroyed")
+        println("onStart() - MainActivity")
     }
-
     override fun onResume() {
         super.onResume()
         println("resumed")
     }
-
-    override fun onStop() {
-        super.onStop()
-        println("paused")
-    }
-
     override fun onPause() {
         super.onPause()
         println("paused")
+    }
+    override fun onStop() {
+        super.onStop()
+        if (isSmsServiceBound) {
+            unbindService(smsServiceConnection)
+            isSmsServiceBound = false
+        }
+        println("onStop() - MainActivity")
+    }
+    override fun onDestroy() {
+        super.onDestroy()
+        println("onDestroy() - MainActivity")
     }
 
     private fun checkAndRequestPermissions(){
