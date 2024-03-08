@@ -20,16 +20,16 @@ import com.example.meetingnotification.ui.Services.SmsSendingService
 import com.example.meetingnotification.ui.contact.ContactsSearchScreenViewModel
 
 
-class MainActivity : AppCompatActivity()  {
+class MainActivity : AppCompatActivity() {
     companion object {
         private const val REQUEST_CODE_CONTACTS_READ = 1
         private const val REQUEST_CODE_KALENDER_READ = 2
         private const val REQUEST_CODE_SEND_SMS = 3
     }
 
-    private val contactBuffer by viewModels<ContactsSearchScreenViewModel> {AppViewModelProvider.Factory}
+    private val contactBuffer by viewModels<ContactsSearchScreenViewModel> { AppViewModelProvider.Factory }
 
-    private lateinit var smsService : SmsSendingService
+    private lateinit var smsService: SmsSendingService
     private var isSmsServiceBound = false
 
     private val smsServiceConnection = object : ServiceConnection {
@@ -37,8 +37,10 @@ class MainActivity : AppCompatActivity()  {
             val binder = service as SmsSendingService.LocalBinder
             smsService = binder.getService()
             isSmsServiceBound = true
+            contactBuffer.insertServiceToBag(smsService, isSmsServiceBound)
             println("serviceConnected()")
         }
+
         override fun onServiceDisconnected(arg0: ComponentName) {
             isSmsServiceBound = false
             println("serviceDisconected()")
@@ -56,28 +58,40 @@ class MainActivity : AppCompatActivity()  {
             ) {
                 NotificationApp(
                     viewModel = contactBuffer,
-                    activateSendSmsReceiver = {/*startServiceAndBind()*/})
+                    sendMessage = { isSmsServiceBound.takeIf { it }?.let {
+                        smsService.showMessageSendDialog(
+                            this@MainActivity,
+                            smsService.messageQueue.takeIf { it.isNotEmpty() }?.map { it.fullName }.toString()
+                        ){accepted ->
+                            if (accepted){
+                                smsService.sendNextMessage(this@MainActivity)
+                            }
+                        }
+                    } }
+                )
             }
         }
     }
 
-
-
     override fun onStart() {
         super.onStart()
-        Intent(this,SmsSendingService::class.java).also { intent ->
-            bindService(intent,smsServiceConnection, BIND_AUTO_CREATE)
+        Intent(this, SmsSendingService::class.java).also { intent ->
+            bindService(intent, smsServiceConnection, BIND_AUTO_CREATE)
         }
+
         println("onStart() - MainActivity")
     }
+
     override fun onResume() {
         super.onResume()
-        println("resumed")
+        println("onResume() - MainActivity")
     }
+
     override fun onPause() {
         super.onPause()
-        println("paused")
+        println("onPause() - MainActivity")
     }
+
     override fun onStop() {
         super.onStop()
         if (isSmsServiceBound) {
@@ -86,30 +100,49 @@ class MainActivity : AppCompatActivity()  {
         }
         println("onStop() - MainActivity")
     }
+
     override fun onDestroy() {
         super.onDestroy()
         println("onDestroy() - MainActivity")
     }
 
-    private fun checkAndRequestPermissions(){
+    private fun checkAndRequestPermissions() {
         if (!isPermissionGranted(Manifest.permission.READ_CONTACTS)) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_CONTACTS), REQUEST_CODE_CONTACTS_READ)
-        }else if (!isPermissionGranted(Manifest.permission.READ_CALENDAR)){
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_CALENDAR), REQUEST_CODE_CONTACTS_READ)
-        }else if (!isPermissionGranted(Manifest.permission.SEND_SMS)){
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.SEND_SMS), REQUEST_CODE_SEND_SMS)
-        }
-        else{
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.READ_CONTACTS),
+                REQUEST_CODE_CONTACTS_READ
+            )
+        } else if (!isPermissionGranted(Manifest.permission.READ_CALENDAR)) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.READ_CALENDAR),
+                REQUEST_CODE_CONTACTS_READ
+            )
+        } else if (!isPermissionGranted(Manifest.permission.SEND_SMS)) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.SEND_SMS),
+                REQUEST_CODE_SEND_SMS
+            )
+        } else {
             contactBuffer.loadContacts(this)
             contactBuffer.loadCalender(this)
         }
     }
 
-    private fun isPermissionGranted(permission : String) : Boolean{
-        return ContextCompat.checkSelfPermission(this,permission) == PackageManager.PERMISSION_GRANTED
+    private fun isPermissionGranted(permission: String): Boolean {
+        return ContextCompat.checkSelfPermission(
+            this,
+            permission
+        ) == PackageManager.PERMISSION_GRANTED
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if ((requestCode == REQUEST_CODE_CONTACTS_READ || requestCode == REQUEST_CODE_KALENDER_READ) || requestCode == REQUEST_CODE_SEND_SMS && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             checkAndRequestPermissions()

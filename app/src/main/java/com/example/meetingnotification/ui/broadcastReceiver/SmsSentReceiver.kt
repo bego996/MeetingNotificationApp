@@ -1,4 +1,4 @@
-package com.example.meetingnotification.ui.TBroadcastReceiver
+package com.example.meetingnotification.ui.broadcastReceiver
 
 import android.app.Activity
 import android.content.BroadcastReceiver

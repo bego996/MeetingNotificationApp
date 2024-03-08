@@ -11,11 +11,11 @@ import com.example.meetingnotification.ui.navigation.MettingNavHost
 fun NotificationApp(
     navController: NavHostController = rememberNavController(),
     viewModel: ContactsSearchScreenViewModel,
-    activateSendSmsReceiver : () -> Unit
+    sendMessage : () -> Unit
 ) {
     MettingNavHost(
         navController = navController,
         viewModel = viewModel,
-        startSmsReceiver = activateSendSmsReceiver
+        onSendMessage = sendMessage
     )
 }

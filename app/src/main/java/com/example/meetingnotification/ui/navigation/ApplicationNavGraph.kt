@@ -23,7 +23,7 @@ fun MettingNavHost(
     navController: NavHostController,
     modifier: Modifier = Modifier,
     viewModel: ContactsSearchScreenViewModel,
-    startSmsReceiver : () -> Unit
+    onSendMessage : () -> Unit
 ) {
     NavHost(
         navController = navController,
@@ -34,7 +34,8 @@ fun MettingNavHost(
             HomeScreen(
                 modifier = Modifier.background(Color.Magenta),
                 navigateToSavedContacts = { navController.navigate(SavedContactsDestination.route)},
-                navigateToTemplateScreen = {navController.navigate(BeforeTemplateDestination.route)}
+                navigateToTemplateScreen = {navController.navigate(BeforeTemplateDestination.route)},
+                onSendMessagesClicked = onSendMessage
             )
         }
         composable(route = BeforeTemplateDestination.route){
@@ -42,7 +43,7 @@ fun MettingNavHost(
                 modifier = Modifier.background(Color.Cyan),
                 onCancelClicked = {navController.popBackStack()},
                 calenderEvents = viewModel.getCalender(),
-                onSendSmsClick = startSmsReceiver
+                smsSendService = viewModel.getServiceFromBag()
             )
         }
         composable(route = SavedContactsDestination.route) {

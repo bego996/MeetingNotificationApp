@@ -10,6 +10,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.meetingnotification.ui.R
+import com.example.meetingnotification.ui.Services.SmsSendingService
 import com.example.meetingnotification.ui.data.Contact
 import com.example.meetingnotification.ui.data.ContactRepository
 import kotlinx.coroutines.flow.SharingStarted
@@ -31,14 +32,14 @@ class ContactsSearchScreenViewModel(
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5_000L),
-                initialValue = ContactsUiState2()
-            )
+                initialValue = ContactsUiState2())
 
     private val contactsWriteOnly = MutableLiveData<List<Contact>>()
     private val contactsReadOnly: LiveData<List<Contact>> get() = contactsWriteOnly
 
     private var calenderEvents = listOf<EventDateTitle>()
 
+    private var bagForServices = listOf<SmsSendingService>()
 
     suspend fun addContactsToDatabase(contactList: List<Contact>, compareIds: List<Int>) {
         for (id in compareIds) {
@@ -131,6 +132,9 @@ class ContactsSearchScreenViewModel(
         }
         contactsWriteOnly.postValue(contactList)
     }
+    fun getContacts(): LiveData<List<Contact>> {
+        return contactsReadOnly
+    }
 
     @SuppressLint("Range")
     fun loadCalender(context: Context) {
@@ -167,13 +171,17 @@ class ContactsSearchScreenViewModel(
         }
         calenderEvents = eventList
     }
-
-    fun getContacts(): LiveData<List<Contact>> {
-        return contactsReadOnly
-    }
-
     fun getCalender() : List<EventDateTitle>{
         return calenderEvents
+    }
+
+    fun insertServiceToBag(service : SmsSendingService,isActive : Boolean){
+        if (!bagForServices.contains(service) && isActive){
+            bagForServices = listOf(service)
+        }
+    }
+    fun getServiceFromBag() : SmsSendingService {
+        return bagForServices[0]
     }
 }
 

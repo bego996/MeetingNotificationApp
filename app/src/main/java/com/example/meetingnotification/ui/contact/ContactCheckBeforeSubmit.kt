@@ -35,39 +35,41 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.meetingnotification.ui.AppViewModelProvider
+import com.example.meetingnotification.ui.Services.SmsSendingService
 import com.example.meetingnotification.ui.data.Contact
 import com.example.meetingnotification.ui.navigation.NavigationDestination
 import kotlinx.coroutines.launch
 
-object BeforeTemplateDestination : NavigationDestination{
+object BeforeTemplateDestination : NavigationDestination {
     override val route = "beforeTemplate"
 }
 
 @Composable
 fun ContactCheckScreen(
     modifier: Modifier,
-    onCancelClicked : () -> Unit,
-    calenderEvents : List<EventDateTitle>,
-    viewModel: ContactCheckBeforeSubmitViewModel = viewModel(factory = AppViewModelProvider.Factory),
-    onSendSmsClick : () -> Unit
-){
+    onCancelClicked: () -> Unit,
+    calenderEvents: List<EventDateTitle>,
+    smsSendService: SmsSendingService,
+    viewModel: ContactCheckBeforeSubmitViewModel = viewModel(factory = AppViewModelProvider.Factory)
+) {
     val coroutineScope = rememberCoroutineScope()
 
     val uiState = viewModel.contactUiState.collectAsState()
 
-    val  contactsZipedWithDate by viewModel.calenderStateConnectedToContacts
+    val contactsZipedWithDate by viewModel.calenderStateConnectedToContacts
 
-    var templateIdDepencys by remember { mutableStateOf(listOf<MutablePairs2>())}
+    var templateIdDepencys by remember { mutableStateOf(listOf<MutablePairs2>()) }
 
-    LaunchedEffect(uiState.value){
-        templateIdDepencys = uiState.value.contactUiState.map { MutablePairs2(it.id,false)}
+    LaunchedEffect(uiState.value) {
+        templateIdDepencys = uiState.value.contactUiState.map { MutablePairs2(it.id, false) }
     }
 
-    LaunchedEffect(Unit){
+    LaunchedEffect(Unit) {
         viewModel.loadCalenderData(calenderEvents)
+        viewModel.addSmsServiceInList(smsSendService)
     }
 
-    LaunchedEffect(uiState.value.contactUiState.size){
+    LaunchedEffect(uiState.value.contactUiState.size) {
         if (uiState.value.contactUiState.isNotEmpty()) {
             viewModel.zipDatesToContacts(uiState.value.contactUiState)
         }
@@ -105,9 +107,12 @@ fun ContactCheckScreen(
                             modifier = Modifier.weight(1f),
                             onClick = {
                                 val updatedList = templateIdDepencys.toMutableList()
-                                val index = updatedList.indexOf(updatedList.firstOrNull{it.first == contact.id} ?: -1)
-                                if (index != -1){
-                                    updatedList[index] = MutablePairs2(contact.id,!updatedList[index].second)
+                                val index =
+                                    updatedList.indexOf(updatedList.firstOrNull { it.first == contact.id }
+                                        ?: -1)
+                                if (index != -1) {
+                                    updatedList[index] =
+                                        MutablePairs2(contact.id, !updatedList[index].second)
                                 }
                                 templateIdDepencys = updatedList
                             }
@@ -122,25 +127,34 @@ fun ContactCheckScreen(
                             modifier = Modifier.weight(1f),
                             onClick = { /*TODO*/ })
                         Text(
-                            text =  contactsZipedWithDate.firstOrNull { it.contactId == contact.id}?.let {
-                                         viewModel.getDayDuration(it.date)
-                            } ?: "Undefined",
+                            text = contactsZipedWithDate.firstOrNull { it.contactId == contact.id }
+                                ?.let {
+                                    viewModel.getDayDuration(it.date)
+                                } ?: "Undefined",
                             modifier = Modifier.weight(1f)
                         )
                     }
-                    if (templateIdDepencys.firstOrNull{ it.first == contact.id}?.second == true) {
+                    if (templateIdDepencys.firstOrNull { it.first == contact.id }?.second == true) {
                         TemplateOverwatch(
                             contact.message,
-                            sendMessageToUpdateContact = {s ->
+                            sendMessageToUpdateContact = { s ->
                                 coroutineScope.launch {
-                                    val updatedContact = Contact(contact.id,contact.title,contact.firstName,contact.lastName,contact.sex,contact.phone,s)
+                                    val updatedContact = Contact(
+                                        contact.id,
+                                        contact.title,
+                                        contact.firstName,
+                                        contact.lastName,
+                                        contact.sex,
+                                        contact.phone,
+                                        s
+                                    )
                                     viewModel.updateContact(updatedContact)
                                 }
                             }
                         )
                     }
                 }
-        })
+            })
         Spacer(modifier = Modifier.height(16.dp))
         Column(
             modifier = Modifier.fillMaxWidth()
@@ -150,8 +164,9 @@ fun ContactCheckScreen(
             ) {
                 OutlinedButton(
                     onClick = onCancelClicked,
-                    modifier = Modifier.weight(1f)) {
-                  Text(text = "Cancel")
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(text = "Cancel")
                 }
                 Button(
                     onClick = { /*TODO*/ },
@@ -160,7 +175,11 @@ fun ContactCheckScreen(
                     Text(text = "DeclineAll")
                 }
                 Button(
-                    onClick = onSendSmsClick,
+                    onClick = {
+                        viewModel.getSmsService().addMessageToQueue("04637283", "Test 1","Horst Bernd")
+                        viewModel.getSmsService().addMessageToQueue("046372832", "Test 2","Robert Wurst")
+                        //viewModel.getSmsService().addMessageToQueue("0362733", "Test jetzt!","Werner Pice")
+                    },
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(text = "SubmitAll")
@@ -174,15 +193,15 @@ fun ContactCheckScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TemplateOverwatch(
-    receiveMessage : String,
+    receiveMessage: String,
     sendMessageToUpdateContact: (String) -> Unit
-){
-    var defaultText by remember { mutableStateOf(receiveMessage)}
+) {
+    var defaultText by remember { mutableStateOf(receiveMessage) }
 
     Column {
         Row {
             TextField(
-                value = defaultText ,
+                value = defaultText,
                 modifier = Modifier.weight(1f),
                 onValueChange = { newText ->
                     defaultText = newText
@@ -193,11 +212,11 @@ fun TemplateOverwatch(
                     sendMessageToUpdateContact(defaultText)
                 }
             ) {
-               Icon(
-                   imageVector = Icons.Filled.Check,
-                   contentDescription = null,
-                   tint = Color.Red
-               )
+                Icon(
+                    imageVector = Icons.Filled.Check,
+                    contentDescription = null,
+                    tint = Color.Red
+                )
             }
         }
 

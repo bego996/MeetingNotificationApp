@@ -34,7 +34,8 @@ object HomeDestination : NavigationDestination{
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier,
                navigateToSavedContacts: () -> Unit,
-               navigateToTemplateScreen: () -> Unit
+               navigateToTemplateScreen: () -> Unit,
+               onSendMessagesClicked : () -> Unit
 ) {
     Column(
         modifier = modifier
@@ -76,7 +77,7 @@ fun HomeScreen(modifier: Modifier = Modifier,
             }
             Spacer(modifier = Modifier.height(16.dp))
             Button(
-                onClick = { /*TODO*/ },
+                onClick = onSendMessagesClicked,
                 colors = ButtonDefaults.buttonColors(
                     contentColor = Color.White,
                     containerColor = Color.Red

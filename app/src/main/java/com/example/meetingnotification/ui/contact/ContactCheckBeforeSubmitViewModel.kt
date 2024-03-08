@@ -4,6 +4,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.meetingnotification.ui.Services.SmsSendingService
 import com.example.meetingnotification.ui.data.Contact
 import com.example.meetingnotification.ui.data.ContactRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,6 +40,13 @@ class ContactCheckBeforeSubmitViewModel(
         _calenderStateConnectedToContacts
 
 
+    private var smsService = listOf<SmsSendingService>()
+
+    fun addSmsServiceInList(service: SmsSendingService){
+        smsService = listOf(service)
+    }
+
+    fun getSmsService() : SmsSendingService = smsService[0]
     suspend fun updateContact(contact: Contact) {
         repository.updateItem(contact)
     }
