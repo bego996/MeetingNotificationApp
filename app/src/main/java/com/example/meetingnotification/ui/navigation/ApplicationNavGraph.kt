@@ -43,7 +43,7 @@ fun MettingNavHost(
                 modifier = Modifier.background(Color.Cyan),
                 onCancelClicked = {navController.popBackStack()},
                 calenderEvents = viewModel.getCalender(),
-                smsSendService = viewModel.getServiceFromBag()
+                sendContactsToSmsService = {viewModel.insertContactsToSmsQueue(it)}
             )
         }
         composable(route = SavedContactsDestination.route) {

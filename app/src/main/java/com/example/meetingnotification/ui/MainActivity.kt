@@ -16,11 +16,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.example.meetingnotification.ui.Services.ServiceAction
 import com.example.meetingnotification.ui.Services.SmsSendingService
+import com.example.meetingnotification.ui.Services.SmsSendingServiceInteractor
+import com.example.meetingnotification.ui.contact.ContactReadyForSms
 import com.example.meetingnotification.ui.contact.ContactsSearchScreenViewModel
 
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
     companion object {
         private const val REQUEST_CODE_CONTACTS_READ = 1
         private const val REQUEST_CODE_KALENDER_READ = 2
@@ -37,10 +40,8 @@ class MainActivity : AppCompatActivity() {
             val binder = service as SmsSendingService.LocalBinder
             smsService = binder.getService()
             isSmsServiceBound = true
-            contactBuffer.insertServiceToBag(smsService, isSmsServiceBound)
             println("serviceConnected()")
         }
-
         override fun onServiceDisconnected(arg0: ComponentName) {
             isSmsServiceBound = false
             println("serviceDisconected()")
@@ -49,7 +50,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         checkAndRequestPermissions()
+        contactBuffer.smsServiceInteractor = this //service interface mit viewmodel koppeln.
+
         setContent {
             Surface(
                 modifier = Modifier
@@ -72,14 +76,22 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-
     override fun onStart() {
         super.onStart()
         Intent(this, SmsSendingService::class.java).also { intent ->
             bindService(intent, smsServiceConnection, BIND_AUTO_CREATE)
         }
-
         println("onStart() - MainActivity")
+    }
+
+    override fun performServiceAction(action: ServiceAction,vararg contacts : List<ContactReadyForSms>) {
+        if (isSmsServiceBound && action == ServiceAction.PushContact && contacts.isNotEmpty()){
+            val allContacts = mutableListOf<ContactReadyForSms>()
+            contacts.forEach { contact ->
+                allContacts.addAll(contact)
+            }
+            smsService.addMessageToQueue(allContacts)
+        }
     }
 
     override fun onResume() {
@@ -103,6 +115,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        contactBuffer.smsServiceInteractor = null
         println("onDestroy() - MainActivity")
     }
 

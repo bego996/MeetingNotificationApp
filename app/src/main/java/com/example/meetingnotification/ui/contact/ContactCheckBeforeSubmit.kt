@@ -35,7 +35,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.meetingnotification.ui.AppViewModelProvider
-import com.example.meetingnotification.ui.Services.SmsSendingService
 import com.example.meetingnotification.ui.data.Contact
 import com.example.meetingnotification.ui.navigation.NavigationDestination
 import kotlinx.coroutines.launch
@@ -46,11 +45,11 @@ object BeforeTemplateDestination : NavigationDestination {
 
 @Composable
 fun ContactCheckScreen(
-    modifier: Modifier,
     onCancelClicked: () -> Unit,
     calenderEvents: List<EventDateTitle>,
-    smsSendService: SmsSendingService,
-    viewModel: ContactCheckBeforeSubmitViewModel = viewModel(factory = AppViewModelProvider.Factory)
+    sendContactsToSmsService: (List<ContactReadyForSms>) -> Unit,
+    viewModel: ContactCheckBeforeSubmitViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    modifier: Modifier
 ) {
     val coroutineScope = rememberCoroutineScope()
 
@@ -66,7 +65,6 @@ fun ContactCheckScreen(
 
     LaunchedEffect(Unit) {
         viewModel.loadCalenderData(calenderEvents)
-        viewModel.addSmsServiceInList(smsSendService)
     }
 
     LaunchedEffect(uiState.value.contactUiState.size) {
@@ -176,9 +174,14 @@ fun ContactCheckScreen(
                 }
                 Button(
                     onClick = {
-                        viewModel.getSmsService().addMessageToQueue("04637283", "Test 1","Horst Bernd")
-                        viewModel.getSmsService().addMessageToQueue("046372832", "Test 2","Robert Wurst")
-                        //viewModel.getSmsService().addMessageToQueue("0362733", "Test jetzt!","Werner Pice")
+                        viewModel.updateListReadyForSms(
+                            listOf(
+                                ContactReadyForSms("046374854","Test1","Horst Willig"),
+                                ContactReadyForSms("04623727836","Test2","Bernd Schauer"),
+                                ContactReadyForSms("0365262534","Test2","Ivan Potric")
+                            )
+                        )
+                        sendContactsToSmsService(viewModel.getContactsReadyForSms())
                     },
                     modifier = Modifier.weight(1f)
                 ) {

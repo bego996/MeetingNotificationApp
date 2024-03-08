@@ -6,11 +6,11 @@ import android.provider.CalendarContract
 import android.provider.ContactsContract
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.meetingnotification.ui.R
-import com.example.meetingnotification.ui.Services.SmsSendingService
+import com.example.meetingnotification.ui.Services.ServiceAction
+import com.example.meetingnotification.ui.Services.SmsSendingServiceInteractor
 import com.example.meetingnotification.ui.data.Contact
 import com.example.meetingnotification.ui.data.ContactRepository
 import kotlinx.coroutines.flow.SharingStarted
@@ -23,8 +23,7 @@ import java.time.ZoneId
 
 
 class ContactsSearchScreenViewModel(
-    private val contactRepository: ContactRepository,
-    savedStateHandle: SavedStateHandle
+    private val contactRepository: ContactRepository
 ) : ViewModel() {
 
     val contactsUiState: StateFlow<ContactsUiState2> =
@@ -39,7 +38,10 @@ class ContactsSearchScreenViewModel(
 
     private var calenderEvents = listOf<EventDateTitle>()
 
-    private var bagForServices = listOf<SmsSendingService>()
+    var smsServiceInteractor : SmsSendingServiceInteractor? = null
+    fun insertContactsToSmsQueue(contacts : List<ContactReadyForSms>){
+        smsServiceInteractor?.performServiceAction(ServiceAction.PushContact,contacts)
+    }
 
     suspend fun addContactsToDatabase(contactList: List<Contact>, compareIds: List<Int>) {
         for (id in compareIds) {
@@ -174,18 +176,7 @@ class ContactsSearchScreenViewModel(
     fun getCalender() : List<EventDateTitle>{
         return calenderEvents
     }
-
-    fun insertServiceToBag(service : SmsSendingService,isActive : Boolean){
-        if (!bagForServices.contains(service) && isActive){
-            bagForServices = listOf(service)
-        }
-    }
-    fun getServiceFromBag() : SmsSendingService {
-        return bagForServices[0]
-    }
 }
-
 data class MutablePairs(var first: Int, var second: Boolean)
 data class ContactsUiState2(val contactList: List<Contact> = listOf())
-
 data class EventDateTitle(val eventDate: LocalDateTime, val eventName: String)

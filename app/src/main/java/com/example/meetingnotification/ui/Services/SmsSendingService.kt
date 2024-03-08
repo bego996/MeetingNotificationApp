@@ -12,6 +12,7 @@ import android.os.IBinder
 import android.telephony.SmsManager
 import android.widget.Toast
 import com.example.meetingnotification.ui.broadcastReceiver.SmsSentReceiver
+import com.example.meetingnotification.ui.contact.ContactReadyForSms
 
 class SmsSendingService : Service() {
     private lateinit var receiver: SmsSentReceiver
@@ -40,11 +41,16 @@ class SmsSendingService : Service() {
         super.onDestroy()
     }
 
-    fun addMessageToQueue(phoneNumber: String, message: String, fullName: String) {
-        messageQueue.add(SmsMessage(phoneNumber, message, fullName))
+    fun addMessageToQueue(contactInformation: List<ContactReadyForSms>) {
+        val contactMaper = contactInformation.map { SmsMessage(it.phoneNumber, it.message, it.fullName) }
+        contactMaper.forEach { contact ->
+            if (!messageQueue.contains(contact)){
+                messageQueue.add(contact)
+            }
+        }
     }
 
-     fun sendNextMessage(context: Context) {
+    fun sendNextMessage(context: Context) {
         println("sendNextMessage is called()")
         if (messageQueue.isNotEmpty()) {
             val nextMessage = messageQueue.removeFirst()

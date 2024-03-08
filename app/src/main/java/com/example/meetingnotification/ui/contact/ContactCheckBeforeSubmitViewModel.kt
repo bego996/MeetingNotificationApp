@@ -1,10 +1,11 @@
 package com.example.meetingnotification.ui.contact
 
 import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.meetingnotification.ui.Services.SmsSendingService
 import com.example.meetingnotification.ui.data.Contact
 import com.example.meetingnotification.ui.data.ContactRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,14 +40,14 @@ class ContactCheckBeforeSubmitViewModel(
     val calenderStateConnectedToContacts: State<List<ContactZippedWithDate>> =
         _calenderStateConnectedToContacts
 
+    private var contactListReadyForSms  by mutableStateOf(listOf<ContactReadyForSms>())
 
-    private var smsService = listOf<SmsSendingService>()
+    fun getContactsReadyForSms() : List<ContactReadyForSms> = contactListReadyForSms
 
-    fun addSmsServiceInList(service: SmsSendingService){
-        smsService = listOf(service)
+    fun updateListReadyForSms(contacts : List<ContactReadyForSms>){
+        contactListReadyForSms = contacts
     }
 
-    fun getSmsService() : SmsSendingService = smsService[0]
     suspend fun updateContact(contact: Contact) {
         repository.updateItem(contact)
     }
@@ -63,7 +64,6 @@ class ContactCheckBeforeSubmitViewModel(
             LocalDate.now().until(LocalDate.parse(meetingDate, meetingDateFormat)).days
         return "$daysBeetweenNowAndMeetingDate Days Left"
     }
-
 
     //2024-03-17T12:30
     fun zipDatesToContacts(contacts: List<Contact>) {
@@ -90,7 +90,7 @@ class ContactCheckBeforeSubmitViewModel(
         updateContactsMessageAfterZippingItWithDates(listZipped,contacts)
     }
 
-    fun updateContactsMessageAfterZippingItWithDates(zippedDateToContacts : MutableList<ContactZippedWithDate>,contactList : List<Contact>){
+    private fun updateContactsMessageAfterZippingItWithDates(zippedDateToContacts : MutableList<ContactZippedWithDate>, contactList : List<Contact>){
         zippedDateToContacts.isNotEmpty().let {
             viewModelScope.launch {
                 for (zipValue in zippedDateToContacts) {
@@ -120,3 +120,4 @@ private fun updateMessageWithCorrectDateTime(originMessage: String, dateReplacem
 data class ContactZippedWithDate(val contactId: Int, val date: String, val time: String)
 data class MutablePairs2(var first: Int, var second: Boolean)
 data class ContactsUiState3(val contactUiState: List<Contact> = listOf())
+data class ContactReadyForSms(val phoneNumber: String,val message: String,val fullName: String)
