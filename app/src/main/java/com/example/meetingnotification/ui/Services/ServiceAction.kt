@@ -1,4 +1,4 @@
-package com.example.meetingnotification.ui.Services
+package com.example.meetingnotification.ui.services
 
 enum class ServiceAction {
     PushContact,

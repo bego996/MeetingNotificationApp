@@ -6,21 +6,25 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 
+// @Database: Markiert diese Klasse als Room-Datenbank
+// entities = [Contact::class]: Enthält die Entität `Contact` (Tabelle in der Datenbank)
+// version = 2: Setzt die aktuelle Version der Datenbank auf 2
+// exportSchema = false: Verhindert, dass das Datenbankschema als JSON-Datei exportiert wird
 @Database(entities = [Contact::class], version = 2, exportSchema = false)
 abstract class ContactDatabase : RoomDatabase() {
 
-    abstract fun contactDao() : ContactDao
+    abstract fun contactDao() : ContactDao  // Deklariert eine abstrakte Methode, die eine Instanz des DAO (Data Access Object) für "Contact" zurückgibt.
 
-    companion object{
-        @Volatile
+    companion object {
+        @Volatile   // Ein Volatile-Attribut (flüchtig) stellt sicher, dass Änderungen an dieser Variablen sofort sichtbar sind, auch bei Zugriffen von mehreren Threads.
         private var Instance : ContactDatabase? = null
 
-        fun getDatabase(context: Context): ContactDatabase {
-            return Instance ?: synchronized(this){
-                Room.databaseBuilder(context, ContactDatabase::class.java,"contact_database")
-                    .fallbackToDestructiveMigration()
-                    .build()
-                    .also { Instance = it}
+        fun getDatabase(context: Context): ContactDatabase {    // Diese Methode ermöglicht den Zugriff auf die einzige Instanz der Datenbank.
+            return Instance ?: synchronized(this) {     // Überprüft, ob die Instanz bereits initialisiert wurde.
+                Room.databaseBuilder(context, ContactDatabase::class.java, "contact_database")      // Wenn noch nicht vorhanden, synchronisiert der Block den Zugriff und initialisiert die Instanz.
+                    .fallbackToDestructiveMigration()   // Nutzt die destruktive Migration als Fallback. Das bedeutet, dass bei einem Versionskonflikt die Datenbank gelöscht und neu erstellt wird.
+                    .build()    // Baut die Datenbank-Instanz und weist sie der `Instance`-Variablen zu.
+                    .also { Instance = it }
             }
         }
     }

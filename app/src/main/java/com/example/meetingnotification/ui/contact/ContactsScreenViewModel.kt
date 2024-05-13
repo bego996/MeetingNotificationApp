@@ -10,26 +10,24 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-class ContactsScreenViewModel(
-    private val contactRepository: ContactRepository
-) : ViewModel(){
+class ContactsScreenViewModel(                             // ViewModel zur Verwaltung der Kontakte in einer UI
+    private val contactRepository: ContactRepository       // Repository, das die Datenquelle für die Kontakte darstellt
+) : ViewModel() {
 
-    val contactsUiState: StateFlow<ContactUiState> =
-        contactRepository.getAllContactsStream().map { ContactUiState(it) }
+    val contactsUiState: StateFlow<ContactUiState> =       // StateFlow zur Bereitstellung des Kontaktzustands in der UI
+        contactRepository.getAllContactsStream().map { ContactUiState(it) } // Holt alle Kontakte aus dem Repository und wandelt sie in ein UI-Format um
             .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5_000L),
-                initialValue = ContactUiState()
+                scope = viewModelScope,                     // Coroutine-Scope des ViewModels für Nebenläufigkeit
+                started = SharingStarted.WhileSubscribed(5_000L), // Teilt Daten für 5 Sekunden nach dem Abbestellen weiter
+                initialValue = ContactUiState()             // Initialwert des StateFlow ist ein leerer Zustand
             )
 
-
-    suspend fun deleteContact(contact: Contact){
-        viewModelScope.launch {
-            contactRepository.deleteItem(contact)
+    suspend fun deleteContact(contact: Contact) {          // Suspendierende Methode zum Löschen eines Kontakts
+        viewModelScope.launch {                            // Startet eine neue Coroutine im Bereich des ViewModels
+            contactRepository.deleteItem(contact)          // Löscht den angegebenen Kontakt aus dem Repository
         }
     }
-
-
-
 }
-data class ContactUiState(val contactUiState: List<Contact> = listOf())
+
+data class ContactUiState(val contactUiState: List<Contact> = listOf()) // Datenklasse zur Darstellung des UI-Zustands mit einer leeren Liste als Standard
+

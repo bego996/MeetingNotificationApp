@@ -4,13 +4,14 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.meetingnotification.ui.contact.ContactsSearchScreenViewModel
 import com.example.meetingnotification.ui.contact.ContactCheckBeforeSubmitViewModel
 import com.example.meetingnotification.ui.contact.ContactsScreenViewModel
-import com.example.meetingnotification.ui.contact.ContactsSearchScreenViewModel
 import com.example.meetingnotification.ui.home.HomeScreenViewModel
 
-object AppViewModelProvider {
 
+//Object um ein viewmodel factory provider zu nutzen.
+object AppViewModelProvider {
     val Factory = viewModelFactory {
         initializer {
             HomeScreenViewModel(
@@ -36,5 +37,5 @@ object AppViewModelProvider {
     }
 }
 
-fun CreationExtras.inventoryApplication(): MeetingNotificationApplication =
-    (this[AndroidViewModelFactory.APPLICATION_KEY] as MeetingNotificationApplication)
+fun CreationExtras.inventoryApplication(): MeetingNotificationApplication = // Funktion, um die Anwendung aus `CreationExtras` zu holen
+    (this[AndroidViewModelFactory.APPLICATION_KEY] as MeetingNotificationApplication) // Holt den Anwendungs-Context und gibt ihn als `MeetingNotificationApplication` zurück

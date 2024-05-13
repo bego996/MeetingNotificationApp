@@ -29,55 +29,54 @@ import com.example.meetingnotification.ui.navigation.NavigationDestination
 import kotlinx.coroutines.launch
 
 
-object SavedContactsDestination : NavigationDestination {
-    override val route = "saved"
+object SavedContactsDestination : NavigationDestination {     // Definiert eine statische Route für "SavedContacts"
+    override val route = "saved"                              // Route-Name: "saved"
 }
 
-
 @Composable
-fun SavedContacts(
-    navigateToSearchContactScreen: () -> Unit,
-    onCancelClicked: () -> Unit,
+fun SavedContacts(                                            // Haupt-Composable für die Anzeige gespeicherter Kontakte
+    navigateToSearchContactScreen: () -> Unit,                // Callback zum Navigieren zum Suchfenster Composable per Navhostcontroller.
+    onCancelClicked: () -> Unit,                              // Callback für "Cancel" Button.
     modifier: Modifier,
-    viewModel: ContactsScreenViewModel = viewModel(factory = AppViewModelProvider.Factory)
+    viewModel: ContactsScreenViewModel = viewModel(factory = AppViewModelProvider.Factory) // Initialisiert das ViewModel mit einer Factory
 ) {
-    val uiState = viewModel.contactsUiState.collectAsState()
+    val uiState = viewModel.contactsUiState.collectAsState()  // Holt den aktuellen Zustand der Kontakte aus der Datenbank Room.
 
-    if (uiState.value.contactUiState.isEmpty()) {
-        EmptyListScreen(
+    if (uiState.value.contactUiState.isEmpty()) {             // Wenn keine Kontakte vorhanden sind
+        EmptyListScreen(                                      // Zeige die leere Liste an (composable).
             modifier = modifier,
             navigateToSearchContactScreen = navigateToSearchContactScreen,
             onCancelClicked = onCancelClicked
         )
     } else {
-        FilledListscreen(
+        FilledListscreen(                                     // Zeige die Liste mit gespeicherten Kontakten an(composable).
             modifier = modifier,
             onCancelClicked = onCancelClicked,
             navigateToSearchContactScreen = navigateToSearchContactScreen,
-            viewModel
+            savedContacts = viewModel
         )
     }
 }
 
 @Composable
-fun EmptyListScreen(
+fun EmptyListScreen(                                          // Composable für den leeren Listenbildschirm
     modifier: Modifier,
-    navigateToSearchContactScreen: () -> Unit,
-    onCancelClicked: () -> Unit
+    navigateToSearchContactScreen: () -> Unit,                // Callback zum Navigieren zum Suchfenster Composable per Navhostcontroller.
+    onCancelClicked: () -> Unit                               // Callback für "Cancel"
 ) {
     Column(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceBetween
+            .fillMaxSize()                                    // Füllt den gesamten verfügbaren Platz
+            .padding(16.dp),                                  // Fügt einen Innenabstand von 16 dp hinzu
+        horizontalAlignment = Alignment.CenterHorizontally,   // Zentriert horizontal
+        verticalArrangement = Arrangement.SpaceBetween        // Platziert Kinder mit gleichmäßigem Abstand
     ) {
         Column(
             modifier = Modifier
-                .fillMaxWidth(),
+                .fillMaxWidth(),                              // Füllt die gesamte Breite
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = "List is empty\npress + to add\nnew contacts")
+            Text(text = "List is empty\npress + to add\nnew contacts")      // Hinweistext für den Benutzer
         }
         Column(
             modifier = Modifier
@@ -89,19 +88,18 @@ fun EmptyListScreen(
             ) {
                 OutlinedButton(
                     modifier = Modifier.weight(1f),
-                    onClick = onCancelClicked,
+                    onClick = onCancelClicked,                // Ruft den "Cancel"-Callback auf
                 ) {
-                    Text(text = "Cancel")
+                    Text(text = "Cancel")                     // Button Beschriftung "Cancel"
                 }
-                Spacer(modifier = Modifier.weight(1f))
-
+                Spacer(modifier = Modifier.weight(1f))        // Platzhalter für Ausgleich
                 IconButton(
                     modifier = Modifier.weight(1f),
-                    onClick = navigateToSearchContactScreen
+                    onClick = navigateToSearchContactScreen   // Navigieren zum Suchfenster Composable per Navhostcontroller.
                 ) {
                     Icon(
-                        imageVector = Icons.Default.AddCircle,
-                        contentDescription = "Add Icon",
+                        imageVector = Icons.Default.AddCircle, // Plus-Icon zur Darstellung "Hinzufügen"
+                        contentDescription = "Add Icon",       // Beschreibender Text für das Icon
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -111,49 +109,49 @@ fun EmptyListScreen(
 }
 
 @Composable
-fun FilledListscreen(
+fun FilledListscreen(                                         // Composable für die Liste mit gespeicherten Kontakten
     modifier: Modifier = Modifier,
-    onCancelClicked: () -> Unit,
-    navigateToSearchContactScreen: () -> Unit,
-    savedContacts: ContactsScreenViewModel
+    onCancelClicked: () -> Unit,                              // Callback für "Cancel"
+    navigateToSearchContactScreen: () -> Unit,                // Callback zum Navigieren zum Suchfenster Composable per Navhostcontroller.
+    savedContacts: ContactsScreenViewModel                    // ViewModel, das die Kontaktliste bereitstellt
 ) {
-    val coroutineScope = rememberCoroutineScope()
+    val coroutineScope = rememberCoroutineScope()             // Coroutine-Umgebung für Nebenläufigkeit
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(10.dp)
+            .padding(10.dp)                                   // Fügt einen Innenabstand von 10 dp hinzu
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.Start
         ) {
-            Text(text = "Sex | Title| Name| Surname| Number| Edit| Delete|")
+            Text(text = "Sex | Title| Name| Surname| Number| Edit| Delete|")    // Überschriften für die Kontaktliste
         }
-        Spacer(modifier = Modifier.height(16.dp))
-        LazyColumn(
+        Spacer(modifier = Modifier.height(16.dp))             // Fügt eine vertikale Lücke von 16 dp hinzu
+        LazyColumn(                                           // LazyColumn um einträge nach unten scrollen zu können.
             modifier = Modifier
                 .weight(1f),
             content = {
-                items(savedContacts.contactsUiState.value.contactUiState) { contact ->
+                items(savedContacts.contactsUiState.value.contactUiState) { contact ->      // Durchläuft die gespeicherten Kontakte
                     Row(
                         modifier = Modifier
                             .fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Start,
                     ) {
-                        Text(text = "${contact.sex} | ${contact.title} | ${contact.firstName} | ${contact.lastName} | ${contact.phone}")
+                        Text(text = "${contact.sex} | ${contact.title} | ${contact.firstName} | ${contact.lastName} | ${contact.phone}")    // Zeigt den Kontakt an
                         IconButton(
                             onClick = {
-                                coroutineScope.launch {
+                                coroutineScope.launch {                 // Startet eine Coroutine zum Löschen des Kontakts
                                     savedContacts.deleteContact(contact)
                                 }
                             })
                         {
                             Icon(
-                                imageVector = Icons.Default.Clear,
-                                contentDescription = "delete icon"
+                                imageVector = Icons.Default.Clear,      // Löschen-Icon
+                                contentDescription = "delete icon"      // Beschreibender Text für das Löschen-Icon
                             )
                         }
                     }
@@ -170,17 +168,17 @@ fun FilledListscreen(
             ) {
                 OutlinedButton(
                     modifier = Modifier.weight(1f),
-                    onClick = onCancelClicked,
+                    onClick = onCancelClicked,                // Ruft den "Cancel"-Callback auf
                 ) {
                     Text(text = "Cancel")
                 }
                 Spacer(modifier = Modifier.weight(1f))
                 IconButton(
                     modifier = Modifier.weight(1f),
-                    onClick = navigateToSearchContactScreen
+                    onClick = navigateToSearchContactScreen   // Ruft Callback zum Navigieren zum Suchfenster Composable per Navhostcontroller.
                 ) {
                     Icon(
-                        imageVector = Icons.Default.AddCircle,
+                        imageVector = Icons.Default.AddCircle, // Plus-Icon zur Darstellung "Hinzufügen"
                         contentDescription = "Add Icon",
                         modifier = Modifier.fillMaxSize()
                     )
@@ -189,6 +187,7 @@ fun FilledListscreen(
         }
     }
 }
+
 
 
 

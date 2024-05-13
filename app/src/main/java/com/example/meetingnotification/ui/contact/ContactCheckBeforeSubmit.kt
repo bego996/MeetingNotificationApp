@@ -40,119 +40,146 @@ import com.example.meetingnotification.ui.navigation.NavigationDestination
 import kotlinx.coroutines.launch
 
 object BeforeTemplateDestination : NavigationDestination {
-    override val route = "beforeTemplate"
+    override val route =
+        "beforeTemplate"                         // Definiert die Route als "beforeTemplate"
 }
 
 @Composable
 fun ContactCheckScreen(
-    onCancelClicked: () -> Unit,
-    calenderEvents: List<EventDateTitle>,
-    sendContactsToSmsService: (List<ContactReadyForSms>) -> Unit,
-    viewModel: ContactCheckBeforeSubmitViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    onCancelClicked: () -> Unit,                                   // Callback für die "Cancel"-Aktion
+    calenderEvents: List<EventDateTitle>,                          // Liste von Kalenderereignissen
+    sendContactsToSmsService: (List<ContactReadyForSms>) -> Unit,  // Callback zum Senden von Kontakten an den SMS-Dienst
+    viewModel: ContactCheckBeforeSubmitViewModel = viewModel(factory = AppViewModelProvider.Factory), // ViewModel, wird mit einem Factory-Objekt erstellt
     modifier: Modifier
 ) {
-    val coroutineScope = rememberCoroutineScope()
-
-    val uiState = viewModel.contactUiState.collectAsState()
-
-    val contactsZipedWithDate by viewModel.calenderStateConnectedToContacts
-
-    var templateIdDepencys by remember { mutableStateOf(listOf<MutablePairs2>()) }
+    val coroutineScope =
+        rememberCoroutineScope()                  // Erstellt eine Coroutine-Umgebung für Nebenläufigkeit
+    val uiState =
+        viewModel.contactUiState.collectAsState()        // Sammelt den Zustand der Kontakte im UI-State
+    val contactsZipedWithDate by viewModel.calenderStateConnectedToContacts // Bekommt Kontakte, die mit Kalenderereignissen verbunden sind
+    var templateIdDepencysMailIcon by remember { mutableStateOf(listOf<MutablePairs2>()) } // Initialisiert die Liste der Template-Abhängigkeiten
+    var templateIdDepencysRadioButton by remember { mutableStateOf(listOf<MutablePairs2>()) } // Initialisiert die Liste der Template-Abhängigkeiten
 
     LaunchedEffect(uiState.value) {
-        templateIdDepencys = uiState.value.contactUiState.map { MutablePairs2(it.id, false) }
+        templateIdDepencysMailIcon = uiState.value.contactUiState.map {
+            MutablePairs2(
+                it.id,
+                false
+            )
+        } // Aktualisiert die Abhängigkeiten mit den IDs der Kontakte
     }
-
     LaunchedEffect(Unit) {
-        viewModel.loadCalenderData(calenderEvents)
+        viewModel.loadCalenderData(calenderEvents)                // Lädt Kalenderdaten in das ViewModel
     }
-
     LaunchedEffect(uiState.value.contactUiState.size) {
         if (uiState.value.contactUiState.isNotEmpty()) {
-            viewModel.zipDatesToContacts(uiState.value.contactUiState)
+            viewModel.zipDatesToContacts(uiState.value.contactUiState) // Verknüpft die geladenen Kontakte mit Kalenderdaten
         }
     }
 
     Column(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(10.dp)
+            .fillMaxSize()                                         // Füllt den gesamten verfügbaren Platz
+            .padding(10.dp)                                        // Fügt einen Innenabstand von 10 dp hinzu
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth(),
-            horizontalArrangement = Arrangement.Start
+            horizontalArrangement = Arrangement.Start             // Startet horizontal am Anfang
         ) {
-            Text("Firstname | Surname | Title | Phone")
+            Text("Firstname | Surname | Title | Phone")           // Zeigt eine Überschrift für die Kontaktliste an
         }
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(16.dp))                 // Fügt eine vertikale Lücke von 16 dp hinzu
         LazyColumn(
             modifier = Modifier
-                .weight(1f),
+                .weight(1f),                                       // Teilt den verfügbaren Platz gleichmäßig
             content = {
-                items(uiState.value.contactUiState) { contact ->
+                items(uiState.value.contactUiState) { contact -> // Durchläuft die Kontakte im UI-State
                     Row(
                         modifier = Modifier
                             .fillMaxWidth(),
                         horizontalArrangement = Arrangement.Start,
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically // Zentriert die Elemente vertikal
                     ) {
                         Text(
-                            text = "${contact.firstName} | ${contact.lastName} | ${contact.title} | ${contact.phone}",
-                            modifier = Modifier.weight(5f)
+                            text = "${contact.firstName} | ${contact.lastName} | ${contact.title} | ${contact.phone}", // Zeigt den Kontakt an
+                            modifier = Modifier.weight(5f)                       // Nimmt 5 Teile des verfügbaren Platzes
                         )
                         IconButton(
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.weight(1f),                       // Nimmt 1 Teil des Platzes ein
                             onClick = {
-                                val updatedList = templateIdDepencys.toMutableList()
+                                val updatedList =
+                                    templateIdDepencysMailIcon.toMutableList()    // Erstellt eine mutable Liste
+                                val index =
+                                    updatedList.indexOf(updatedList.firstOrNull { it.first == contact.id }
+                                        ?: -1)  // Sucht den Index des aktuellen Kontakts
+                                if (index != -1) {
+                                    updatedList[index] = MutablePairs2(
+                                        contact.id,
+                                        !updatedList[index].second
+                                    ) // Ändert den Zustand der Abhängigkeit
+                                }
+                                templateIdDepencysMailIcon = updatedList
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Email, // E-Mail-Icon für das Bearbeiten von Templates
+                                contentDescription = null
+                            )
+                        }
+                        var isContactInCalender by remember { mutableStateOf(false) }
+                        RadioButton(
+                            selected = templateIdDepencysRadioButton.firstOrNull { it.first == contact.id }?.second
+                                ?: false,                                      // Ausgewählt oder nicht.
+                            modifier = Modifier.weight(1f),
+                            enabled = isContactInCalender,
+                            onClick = {
+                                val updatedList = templateIdDepencysRadioButton.toMutableList()
                                 val index =
                                     updatedList.indexOf(updatedList.firstOrNull { it.first == contact.id }
                                         ?: -1)
                                 if (index != -1) {
                                     updatedList[index] =
                                         MutablePairs2(contact.id, !updatedList[index].second)
+                                } else {
+                                    updatedList.add(MutablePairs2(contact.id, true))
                                 }
-                                templateIdDepencys = updatedList
-                            }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Email,
-                                contentDescription = null
-                            )
-                        }
-                        RadioButton(
-                            selected = false,
-                            modifier = Modifier.weight(1f),
-                            onClick = { /*TODO*/ })
+                                templateIdDepencysRadioButton = updatedList
+                            })
                         Text(
-                            text = contactsZipedWithDate.firstOrNull { it.contactId == contact.id }
+                            text = contactsZipedWithDate.firstOrNull { it.contactId == contact.id } // Zeigt das Datum des Kontakts an
                                 ?.let {
-                                    viewModel.getDayDuration(it.date)
-                                } ?: "Undefined",
+                                    isContactInCalender = true
+                                    viewModel.getDayDuration(it.date) // Gibt die Dauer als Zeichenkette zurück
+                                } ?: "Undefined".let {
+                                isContactInCalender = false
+                                it
+                            },                                  // Pfalls first or null nichts findet und null zurückgibt, wird dieser default String gspeichert.
                             modifier = Modifier.weight(1f)
                         )
                     }
-                    if (templateIdDepencys.firstOrNull { it.first == contact.id }?.second == true) {
+                    if (templateIdDepencysMailIcon.firstOrNull { it.first == contact.id }?.second == true) {
                         TemplateOverwatch(
-                            contact.message,
-                            sendMessageToUpdateContact = { s ->
+                            contact.message,                                       // Übergibt die Nachricht des Kontakts
+                            sendMessageToUpdateContact = { s ->                    // Funktion zum Aktualisieren der Nachricht
                                 coroutineScope.launch {
                                     val updatedContact = Contact(
-                                        contact.id,
-                                        contact.title,
-                                        contact.firstName,
-                                        contact.lastName,
-                                        contact.sex,
-                                        contact.phone,
-                                        s
+                                        contact.id,                                // ID des Kontakts
+                                        contact.title,                             // Titel des Kontakts
+                                        contact.firstName,                         // Vorname des Kontakts
+                                        contact.lastName,                          // Nachname des Kontakts
+                                        contact.sex,                               // Geschlecht des Kontakts
+                                        contact.phone,                             // Telefonnummer des Kontakts
+                                        s                                          // Neue Nachricht
                                     )
-                                    viewModel.updateContact(updatedContact)
+                                    viewModel.updateContact(updatedContact)        // Aktualisiert den Kontakt im ViewModel
                                 }
                             }
                         )
                     }
                 }
-            })
+            }
+        )
         Spacer(modifier = Modifier.height(16.dp))
         Column(
             modifier = Modifier.fillMaxWidth()
@@ -161,27 +188,35 @@ fun ContactCheckScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 OutlinedButton(
-                    onClick = onCancelClicked,
+                    onClick = onCancelClicked,                                     // Ruft den onCancelClicked-Callback auf
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text(text = "Cancel")
+                    Text(text = "Cancel")                                          // Beschriftung "Cancel"
                 }
                 Button(
-                    onClick = { /*TODO*/ },
+                    onClick = { /*TODO*/ },                                        // TODO: Implementiere die Ablehnungsfunktion
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(text = "DeclineAll")
                 }
                 Button(
                     onClick = {
-                        viewModel.updateListReadyForSms(
-                            listOf(
-                                ContactReadyForSms("046374854","Test1","Horst Willig"),
-                                ContactReadyForSms("04623727836","Test2","Bernd Schauer"),
-                                ContactReadyForSms("0365262534","Test2","Ivan Potric")
-                            )
-                        )
-                        sendContactsToSmsService(viewModel.getContactsReadyForSms())
+                        val selectedContactsReadyForSMS = mutableListOf<ContactReadyForSms>()
+                        templateIdDepencysRadioButton.isNotEmpty().let {
+                            templateIdDepencysRadioButton.forEach { contactSelected ->
+                                val contactsReadyForSms =
+                                    uiState.value.contactUiState.firstOrNull { it.id == contactSelected.first }
+                                        ?.let {
+                                            ContactReadyForSms(it.phone, it.message, it.firstName)
+                                        }
+
+                                contactsReadyForSms?.let {
+                                    selectedContactsReadyForSMS.add(contactsReadyForSms)
+                                }
+                            }
+                        }
+                        viewModel.updateListReadyForSms(selectedContactsReadyForSMS) // Aktualisiert die Liste der Kontakte für SMS
+                        sendContactsToSmsService(viewModel.getContactsReadyForSms()) // Sendet die Kontakte an den SMS-Service
                     },
                     modifier = Modifier.weight(1f)
                 ) {
@@ -196,32 +231,29 @@ fun ContactCheckScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TemplateOverwatch(
-    receiveMessage: String,
-    sendMessageToUpdateContact: (String) -> Unit
+    receiveMessage: String,                                                        // Die ursprüngliche Nachricht
+    sendMessageToUpdateContact: (String) -> Unit                                   // Callback zum Aktualisieren der Nachricht des Kontakts in der Datenbank.
 ) {
-    var defaultText by remember { mutableStateOf(receiveMessage) }
+    var defaultText by remember { mutableStateOf(receiveMessage) }                 // Initialisiert den Text mit der übergebenen Nachricht
 
     Column {
         Row {
             TextField(
-                value = defaultText,
+                value = defaultText,                                               // Setzt den Textfeld-Wert auf die ursprüngliche Nachricht
                 modifier = Modifier.weight(1f),
                 onValueChange = { newText ->
                     defaultText = newText
-                }
+                }               // Aktualisiert den Text mit jeder Änderung
             )
             IconButton(
-                onClick = {
-                    sendMessageToUpdateContact(defaultText)
-                }
+                onClick = { sendMessageToUpdateContact(defaultText) }              // Ruft die Aktualisierungsfunktion(callback) auf.
             ) {
                 Icon(
-                    imageVector = Icons.Filled.Check,
+                    imageVector = Icons.Filled.Check,                              // Check-Icon zur Bestätigung der Aktualisierung
                     contentDescription = null,
-                    tint = Color.Red
+                    tint = Color.Red                                               // Setzt die Farbe des Icons auf Rot
                 )
             }
         }
-
     }
 }

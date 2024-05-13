@@ -24,18 +24,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.meetingnotification.ui.navigation.NavigationDestination
 
-object HomeDestination : NavigationDestination{
+object HomeDestination : NavigationDestination {
     override val route: String = "home"
 }
 
 
-
-
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier,
-               navigateToSavedContacts: () -> Unit,
-               navigateToTemplateScreen: () -> Unit,
-               onSendMessagesClicked : () -> Unit
+fun HomeScreen(
+    modifier: Modifier = Modifier,
+    navigateToSavedContacts: () -> Unit,
+    navigateToTemplateScreen: () -> Unit,
+    onSendMessagesClicked: () -> Unit
 ) {
     Column(
         modifier = modifier
@@ -72,7 +71,7 @@ fun HomeScreen(modifier: Modifier = Modifier,
         ) {
             Button(
                 onClick = navigateToTemplateScreen
-                ) {
+            ) {
                 Text("Check Template before Send")
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -95,7 +94,7 @@ fun HomeScreen(modifier: Modifier = Modifier,
             verticalArrangement = Arrangement.Bottom
         ) {
             Button(
-                onClick =  navigateToSavedContacts ,
+                onClick = navigateToSavedContacts,
                 colors = ButtonDefaults.buttonColors(
                     contentColor = Color.White
                 )
