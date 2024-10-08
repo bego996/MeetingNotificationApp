@@ -88,11 +88,11 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {     // H
         println("onStart() - MainActivity")                            // Debug-Nachricht
     }
 
-    override fun performServiceAction(action: ServiceAction, vararg contacts: List<ContactReadyForSms>) { // Führt eine Aktion im Dienst aus
+    override fun performServiceAction(action: ServiceAction,  contacts: List<ContactReadyForSms>) { // Führt eine Aktion im Dienst aus
         if (isSmsServiceBound && action == ServiceAction.PushContact && contacts.isNotEmpty()) { // Prüft, ob der Dienst gebunden und die Aktion gültig ist
             val allContacts = mutableListOf<ContactReadyForSms>()                                // Liste für alle Kontakte
             contacts.forEach { contact ->                                                        // Fügt die Kontakte zur Liste hinzu
-                allContacts.addAll(contact)
+                allContacts.add(contact)
             }
             smsService.addMessageToQueue(allContacts)                  // Fügt die Kontakte zur Warteschlange des Dienstes hinzu
         }
