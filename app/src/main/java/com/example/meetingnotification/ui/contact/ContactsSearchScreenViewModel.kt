@@ -50,6 +50,10 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
         smsServiceInteractor?.performServiceAction(ServiceAction.PushContact, contacts)
     }
 
+    fun sendCommandToSendAllMessages(){
+        smsServiceInteractor?.performServiceAction(ServiceAction.SendMessage, listOf())
+    }
+
 
     suspend fun addContactsToDatabase(
         contactList: List<Contact>,

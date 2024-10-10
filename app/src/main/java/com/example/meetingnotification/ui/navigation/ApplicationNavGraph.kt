@@ -22,8 +22,7 @@ import com.example.meetingnotification.ui.home.HomeScreen
 fun MettingNavHost(                                           // Hauptfunktion für den Navigations-Host
     navController: NavHostController,                         // Controller zur Verwaltung des Navigationsverhaltens
     modifier: Modifier = Modifier,
-    viewModel: ContactsSearchScreenViewModel,                 // ViewModel
-    onSendMessage: () -> Unit                                 // Callback für das Senden von Nachrichten
+    viewModel: ContactsSearchScreenViewModel                 // ViewModel
 ) {
     NavHost(
         navController = navController,                        // Bindet den NavController an den Host
@@ -35,7 +34,7 @@ fun MettingNavHost(                                           // Hauptfunktion f
                 modifier = Modifier.background(Color.Green),      // Färbt den Hintergrund Magenta
                 navigateToSavedContacts = { navController.navigate(SavedContactsDestination.route) },   // Navigiert zu den gespeicherten Kontakten
                 navigateToTemplateScreen = { navController.navigate(BeforeTemplateDestination.route) }, // Navigiert zum Vorlagen-Screen
-                onSendMessagesClicked = onSendMessage                                                   // Ruft die Funktion für das Senden von Nachrichten auf
+                onSendMessagesClicked = { viewModel.sendCommandToSendAllMessages() }                                                  // Ruft die Funktion für das Senden von Nachrichten auf
             )
         }
         composable(route = BeforeTemplateDestination.route) {                         // Vorlagen-Screen für die Kontaktüberprüfung

@@ -10,12 +10,10 @@ import com.example.meetingnotification.ui.navigation.MettingNavHost
 @Composable
 fun NotificationApp(
     navController: NavHostController = rememberNavController(),
-    viewModel: ContactsSearchScreenViewModel,
-    sendMessage : () -> Unit
+    viewModel: ContactsSearchScreenViewModel
 ) {
     MettingNavHost(
         navController = navController,
-        viewModel = viewModel,
-        onSendMessage = sendMessage
+        viewModel = viewModel
     )
 }

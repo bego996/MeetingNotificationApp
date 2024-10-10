@@ -23,11 +23,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.meetingnotification.ui.AppViewModelProvider
+import com.example.meetingnotification.ui.R
 import com.example.meetingnotification.ui.navigation.NavigationDestination
 import kotlinx.coroutines.launch
 
@@ -119,6 +121,8 @@ fun FilledListscreen(                                         // Composable für
     savedContacts: ContactsScreenViewModel                    // ViewModel, das die Kontaktliste bereitstellt
 ) {
     val coroutineScope = rememberCoroutineScope()             // Coroutine-Umgebung für Nebenläufigkeit
+    val contactSex = stringResource(R.string.contactSex);
+
 
     Column(
         modifier = Modifier
@@ -130,21 +134,21 @@ fun FilledListscreen(                                         // Composable für
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.Start
         ) {
-            Text(text = "Sex | Title| Name| Surname| Number| Edit| Delete|")    // Überschriften für die Kontaktliste
+            Text(text = "${stringResource(R.string.contactSex)} | ${stringResource(R.string.contactTitle)} | ${stringResource(R.string.contactFirstname)} | ${stringResource(R.string.contactSurname)} | ${stringResource(R.string.contactPhonenumber)} |")    // Überschriften für die Kontaktliste
         }
         Spacer(modifier = Modifier.height(16.dp))             // Fügt eine vertikale Lücke von 16 dp hinzu
         LazyColumn(                                           // LazyColumn um einträge nach unten scrollen zu können.
-            modifier = Modifier
-                .weight(1f),
+            modifier = Modifier.weight(1f),
+            horizontalAlignment = Alignment.Start,
             content = {
                 items(savedContacts.contactsUiState.value.contactUiState) { contact ->      // Durchläuft die gespeicherten Kontakte
                     Row(
                         modifier = Modifier
                             .fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center,
+                        horizontalArrangement = Arrangement.Start,
                     ) {
-                        Text(text = "${contact.sex} | ${contact.title} | ${contact.firstName} | ${contact.lastName} | ${contact.phone}")    // Zeigt den Kontakt an
+                        Text(text = "${contact.sex}${" ".repeat(3)} | ${contact.title} | ${contact.firstName} | ${contact.lastName} | ${contact.phone}")    // Zeigt den Kontakt an
                         IconButton(
                             onClick = {
                                 coroutineScope.launch {                 // Startet eine Coroutine zum Löschen des Kontakts

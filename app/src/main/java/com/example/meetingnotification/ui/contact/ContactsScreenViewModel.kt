@@ -27,6 +27,10 @@ class ContactsScreenViewModel(                             // ViewModel zur Verw
             contactRepository.deleteItem(contact)          // Löscht den angegebenen Kontakt aus dem Repository
         }
     }
+
+    fun calcuateSpaceBetweenContactCredentials(credentialsFixed : List<String>){
+        val notFixedCredentials = contactRepository.getAllContactsStream()
+    }
 }
 
 data class ContactUiState(val contactUiState: List<Contact> = listOf()) // Datenklasse zur Darstellung des UI-Zustands mit einer leeren Liste als Standard
