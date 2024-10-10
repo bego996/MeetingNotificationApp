@@ -39,7 +39,7 @@ fun HomeScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(18.dp),
         verticalArrangement = Arrangement.SpaceBetween
     ) {
         // Top Column

@@ -7,9 +7,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.meetingnotification.ui.contact.ContactsSearchScreenViewModel
 import com.example.meetingnotification.ui.contact.BeforeTemplateDestination
 import com.example.meetingnotification.ui.contact.ContactCheckScreen
+import com.example.meetingnotification.ui.contact.ContactsSearchScreenViewModel
 import com.example.meetingnotification.ui.contact.SavedContacts
 import com.example.meetingnotification.ui.contact.SavedContactsDestination
 import com.example.meetingnotification.ui.contact.SearchContactDestination
@@ -32,7 +32,7 @@ fun MettingNavHost(                                           // Hauptfunktion f
     ) {
         composable(route = HomeDestination.route) {                 // Home-Screen als Start-Route
             HomeScreen(
-                modifier = Modifier.background(Color.Magenta),      // Färbt den Hintergrund Magenta
+                modifier = Modifier.background(Color.Green),      // Färbt den Hintergrund Magenta
                 navigateToSavedContacts = { navController.navigate(SavedContactsDestination.route) },   // Navigiert zu den gespeicherten Kontakten
                 navigateToTemplateScreen = { navController.navigate(BeforeTemplateDestination.route) }, // Navigiert zum Vorlagen-Screen
                 onSendMessagesClicked = onSendMessage                                                   // Ruft die Funktion für das Senden von Nachrichten auf

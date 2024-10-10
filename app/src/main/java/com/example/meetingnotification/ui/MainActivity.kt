@@ -95,12 +95,14 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {     // H
                 allContacts.add(contact)
             }
             smsService.addMessageToQueue(allContacts)                  // Fügt die Kontakte zur Warteschlange des Dienstes hinzu
+        }else if (isSmsServiceBound && action == ServiceAction.SendMessage){
+            //smsService.
         }
     }
 
     override fun onResume() {                                          // Wird beim Fortsetzen der Aktivität aufgerufen
         super.onResume()
-        checkAndRequestPermissions()
+        //checkAndRequestPermissions() Check why this causes stackoverflow exception !
         println("onResume() - MainActivity")                           // Debug-Nachricht
     }
 
@@ -135,7 +137,7 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {     // H
             ActivityCompat.requestPermissions(
                 this,
                 arrayOf(Manifest.permission.READ_CALENDAR),
-                REQUEST_CODE_CONTACTS_READ
+                REQUEST_CODE_KALENDER_READ
             )
         } else if (!isPermissionGranted(Manifest.permission.SEND_SMS)) {
             ActivityCompat.requestPermissions(

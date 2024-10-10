@@ -42,6 +42,7 @@ class SmsSendingService : Service() {                         // Dienst(Service)
     override fun onDestroy() {                                // Wird beim Zerstören des Dienstes aufgerufen
         unregisterReceiver(receiver)                          // Hebt die Registrierung des Empfängers auf
         super.onDestroy()
+        println("Receiver is unregistere an SmS service Destroyed")
     }
 
 

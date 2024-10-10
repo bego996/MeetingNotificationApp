@@ -22,6 +22,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.meetingnotification.ui.AppViewModelProvider
@@ -139,7 +142,7 @@ fun FilledListscreen(                                         // Composable für
                         modifier = Modifier
                             .fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Start,
+                        horizontalArrangement = Arrangement.Center,
                     ) {
                         Text(text = "${contact.sex} | ${contact.title} | ${contact.firstName} | ${contact.lastName} | ${contact.phone}")    // Zeigt den Kontakt an
                         IconButton(
@@ -170,7 +173,10 @@ fun FilledListscreen(                                         // Composable für
                     modifier = Modifier.weight(1f),
                     onClick = onCancelClicked,                // Ruft den "Cancel"-Callback auf
                 ) {
-                    Text(text = "Cancel")
+                    Text(
+                        text = "Cancel",
+                        style = TextStyle(fontWeight = FontWeight.Bold, color = Color.Blue)
+                    )
                 }
                 Spacer(modifier = Modifier.weight(1f))
                 IconButton(

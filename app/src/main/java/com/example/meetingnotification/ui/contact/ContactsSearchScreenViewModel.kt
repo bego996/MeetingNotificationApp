@@ -43,8 +43,7 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
 
     private var calenderEvents = listOf<EventDateTitle>()    // Liste der Kalenderereignisse
 
-    var smsServiceInteractor: SmsSendingServiceInteractor? =
-        null // Interaktor für den SMS-Versanddienst
+    var smsServiceInteractor: SmsSendingServiceInteractor? = null // Interaktor für den SMS-Versanddienst
 
 
     fun insertContactsToSmsQueue(contacts: List<ContactReadyForSms>) { // Fügt Kontakte zur SMS-Warteschlange hinzu
@@ -70,8 +69,7 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
     @SuppressLint("Range", "CheckResult")
     fun loadContacts(context: Context) {                     // Lädt die Kontakte aus dem System-Kontaktbuch
         val contactList = mutableListOf<Contact>()           // Liste für die geladenen Kontakte
-        val contentResolver =
-            context.contentResolver        // Holt den Content Resolver für Datenbank-Abfragen
+        val contentResolver = context.contentResolver        // Holt den Content Resolver für Datenbank-Abfragen
 
         val cursor = contentResolver.query(
             ContactsContract.Contacts.CONTENT_URI,
