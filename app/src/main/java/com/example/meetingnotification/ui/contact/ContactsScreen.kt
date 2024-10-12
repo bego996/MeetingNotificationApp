@@ -121,7 +121,6 @@ fun FilledListscreen(                                         // Composable für
     savedContacts: ContactsScreenViewModel                    // ViewModel, das die Kontaktliste bereitstellt
 ) {
     val coroutineScope = rememberCoroutineScope()             // Coroutine-Umgebung für Nebenläufigkeit
-    val contactSex = stringResource(R.string.contactSex);
 
 
     Column(
@@ -134,7 +133,11 @@ fun FilledListscreen(                                         // Composable für
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.Start
         ) {
-            Text(text = "${stringResource(R.string.contactSex)} | ${stringResource(R.string.contactTitle)} | ${stringResource(R.string.contactFirstname)} | ${stringResource(R.string.contactSurname)} | ${stringResource(R.string.contactPhonenumber)} |")    // Überschriften für die Kontaktliste
+            Text(text = "${stringResource(R.string.contactSex)} | ")    // Überschriften für die Kontaktliste
+            Text(text = "${stringResource(R.string.contactTitle)} | ")
+            Text(text = "${stringResource(R.string.contactFirstname)} | ")
+            Text(text = "${stringResource(R.string.contactSurname)} | ")
+            Text(text = "${stringResource(R.string.contactPhonenumber)} |")
         }
         Spacer(modifier = Modifier.height(16.dp))             // Fügt eine vertikale Lücke von 16 dp hinzu
         LazyColumn(                                           // LazyColumn um einträge nach unten scrollen zu können.
@@ -148,7 +151,11 @@ fun FilledListscreen(                                         // Composable für
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Start,
                     ) {
-                        Text(text = "${contact.sex}${" ".repeat(3)} | ${contact.title} | ${contact.firstName} | ${contact.lastName} | ${contact.phone}")    // Zeigt den Kontakt an
+                        Text(text = "${contact.sex} | ")    // Zeigt den Kontakt an
+                        Text(text = "${contact.title} | ")
+                        Text(text = "${contact.firstName} | ")
+                        Text(text = "${contact.lastName} | ")
+                        Text(text = "${contact.phone} |")
                         IconButton(
                             onClick = {
                                 coroutineScope.launch {                 // Startet eine Coroutine zum Löschen des Kontakts

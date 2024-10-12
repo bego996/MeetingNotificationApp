@@ -84,8 +84,7 @@ class ContactCheckBeforeSubmitViewModel(
         for (contact in contacts) {
             dates.firstOrNull {
                 it.eventName.split(" ")[0] == contact.firstName.split(" ")[0] && it.eventName.split(
-                    " "
-                )[1] == contact.lastName                       // Prüft, ob ein Kalenderereignis zum Kontakt passt
+                    " ")[1] == contact.lastName                       // Prüft, ob ein Kalenderereignis zum Kontakt passt
             }?.let { date ->                                   // Wenn ein passendes Ereignis gefunden wird
                     listZipped.add(
                         ContactZippedWithDate(
@@ -135,13 +134,21 @@ class ContactCheckBeforeSubmitViewModel(
 }
 
 
-private fun updateMessageWithCorrectDateTime(
-    originMessage: String,
-    dateReplacement: String,
-    timeReplacement: String
-): String {                                         // Ersetzt das Datum und die Uhrzeit in der ursprünglichen Nachricht
-    return originMessage.replace("dd.MM.yyyy", dateReplacement)
-        .replace("HH:mm", timeReplacement) // Ersetzt Platzhalter im ursprünglichen Text
+private fun updateMessageWithCorrectDateTime(originMessage: String, dateReplacement: String, timeReplacement: String): String { // Ersetzt das Datum und die Uhrzeit in der ursprünglichen Nachricht
+    val regexForAllPossibleDates = """(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])\.(\d{4})""".toRegex()
+    val regexForAllPossibleTimes = """(0[0-9]|1[0-9]|2[0-3]):(0[0-9]|[1-5][0-9])""".toRegex()
+    var messageReplacement = originMessage
+
+    if (regexForAllPossibleDates.containsMatchIn(originMessage).and(regexForAllPossibleTimes.containsMatchIn(originMessage))){
+        messageReplacement = originMessage
+            .replace(regexForAllPossibleDates, dateReplacement)
+            .replace(regexForAllPossibleTimes, timeReplacement)
+    }else if (originMessage.contains("dd.MM.yyyy").and(originMessage.contains("HH:mm"))){
+        messageReplacement = originMessage
+            .replace("dd.MM.yyyy", dateReplacement)
+            .replace("HH:mm", timeReplacement)
+    }
+    return messageReplacement
 }
 
 

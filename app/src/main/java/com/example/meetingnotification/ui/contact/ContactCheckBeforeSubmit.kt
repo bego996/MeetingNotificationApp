@@ -52,10 +52,8 @@ fun ContactCheckScreen(
     viewModel: ContactCheckBeforeSubmitViewModel = viewModel(factory = AppViewModelProvider.Factory), // ViewModel, wird mit einem Factory-Objekt erstellt
     modifier: Modifier
 ) {
-    val coroutineScope =
-        rememberCoroutineScope()                  // Erstellt eine Coroutine-Umgebung für Nebenläufigkeit
-    val uiState =
-        viewModel.contactUiState.collectAsState()        // Sammelt den Zustand der Kontakte im UI-State
+    val coroutineScope = rememberCoroutineScope()                  // Erstellt eine Coroutine-Umgebung für Nebenläufigkeit
+    val uiState = viewModel.contactUiState.collectAsState()        // Sammelt den Zustand der Kontakte im UI-State
     val contactsZipedWithDate by viewModel.calenderStateConnectedToContacts // Bekommt Kontakte, die mit Kalenderereignissen verbunden sind
     var templateIdDepencysMailIcon by remember { mutableStateOf(listOf<MutablePairs2>()) } // Initialisiert die Liste der Template-Abhängigkeiten
     var templateIdDepencysRadioButton by remember { mutableStateOf(listOf<MutablePairs2>()) } // Initialisiert die Liste der Template-Abhängigkeiten
@@ -70,10 +68,12 @@ fun ContactCheckScreen(
     }
     LaunchedEffect(Unit) {
         viewModel.loadCalenderData(calenderEvents)                // Lädt Kalenderdaten in das ViewModel
+        println("LaunchedEffect with UNIT launched in ContactcheckBefore Composable()")
     }
     LaunchedEffect(uiState.value.contactUiState.size) {
         if (uiState.value.contactUiState.isNotEmpty()) {
             viewModel.zipDatesToContacts(uiState.value.contactUiState) // Verknüpft die geladenen Kontakte mit Kalenderdaten
+            println("DatesZipedToContacts in LaunchedEffect in ContactCheckBeforeSubmit Composable()")
         }
     }
 
@@ -108,11 +108,8 @@ fun ContactCheckScreen(
                         IconButton(
                             modifier = Modifier.weight(1f),                       // Nimmt 1 Teil des Platzes ein
                             onClick = {
-                                val updatedList =
-                                    templateIdDepencysMailIcon.toMutableList()    // Erstellt eine mutable Liste
-                                val index =
-                                    updatedList.indexOf(updatedList.firstOrNull { it.first == contact.id }
-                                        ?: -1)  // Sucht den Index des aktuellen Kontakts
+                                val updatedList = templateIdDepencysMailIcon.toMutableList()    // Erstellt eine mutable Liste
+                                val index = updatedList.indexOf(updatedList.firstOrNull { it.first == contact.id } ?: -1)  // Sucht den Index des aktuellen Kontakts
                                 if (index != -1) {
                                     updatedList[index] = MutablePairs2(
                                         contact.id,

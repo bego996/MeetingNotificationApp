@@ -1,8 +1,7 @@
 package com.example.meetingnotification.ui.contact
 
 
-
-
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -35,13 +34,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.meetingnotification.ui.R
 import com.example.meetingnotification.ui.navigation.NavigationDestination
 import kotlinx.coroutines.launch
 
 
 object SearchContactDestination : NavigationDestination {        // Objekt für die Such-Route
-    override val route = "searchScreen"                          // Legt die Route auf "searchScreen" fest
+    override val route =
+        "searchScreen"                          // Legt die Route auf "searchScreen" fest
 }
 
 
@@ -52,15 +54,19 @@ fun SearchListScreen(                                            // Haupt-Compos
     onCancelCLicked: () -> Unit,                                 // Callback für den "Cancel" Button.
     navigateToSavedContacts: () -> Unit                          // Callback für das Navigieren zu gespeicherten Kontakten
 ) {
-    val coroutineScope = rememberCoroutineScope()                // Coroutine-Bereich für Nebenläufigkeit
-    val uiState = viewModel.contactsUiState.collectAsState()     // Überwacht den aktuellen Zustand der Kontakte
-    val contactBuffer = viewModel.getContacts().observeAsState(listOf()) // Beobachtet die Kontakte aus dem LiveData
+    val coroutineScope =
+        rememberCoroutineScope()                // Coroutine-Bereich für Nebenläufigkeit
+    val uiState =
+        viewModel.contactsUiState.collectAsState()     // Überwacht den aktuellen Zustand der Kontakte
+    val contactBuffer =
+        viewModel.getContacts().observeAsState(listOf()) // Beobachtet die Kontakte aus dem LiveData
     var text by remember { mutableStateOf("") }            // Suchtext-Status
     var contactBufferSorted by remember { mutableStateOf(contactBuffer.value) }         // Gefilterte Kontaktliste
     var contactIdsRadioDepency by remember { mutableStateOf(listOf<MutablePairs>()) }   // Liste für die Abhängigkeiten von Radio-Buttons
 
     LaunchedEffect(contactBuffer.value) {                        // Aktualisiert die Radio-Button-Abhängigkeiten, wenn sich die Kontaktliste ändert
-        contactIdsRadioDepency = contactBuffer.value.map { contact -> MutablePairs(contact.id, false) }
+        contactIdsRadioDepency =
+            contactBuffer.value.map { contact -> MutablePairs(contact.id, false) }
     }
 
     LaunchedEffect(text) {                                        // Filtert die Kontakte basierend auf dem Suchtext
@@ -68,7 +74,12 @@ fun SearchListScreen(                                            // Haupt-Compos
             contactBuffer.value                                   // Gibt alle Kontakte zurück, wenn kein Suchtext vorhanden ist
         } else {
             contactBuffer.value
-                .filter { it.firstName.contains(text, ignoreCase = true) }      // Filtert nach Vornamen
+                .filter {
+                    it.firstName.contains(
+                        text,
+                        ignoreCase = true
+                    )
+                }      // Filtert nach Vornamen
         }
     }
 
@@ -98,8 +109,17 @@ fun SearchListScreen(                                            // Haupt-Compos
             )
         }
         Spacer(modifier = Modifier.height(16.dp))
-        Text(text = "Name | Surname | Sex | Number | Title", modifier = Modifier.fillMaxWidth())    // Überschriften für die Liste
-        Spacer(modifier = Modifier.height(16.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Start
+        ) {
+            Text(text = "${stringResource(R.string.contactFirstname)} | ")    // Überschriften für die Liste
+            Text(text = "${stringResource(R.string.contactSurname)} | ")
+            Text(text = "${stringResource(R.string.contactSex)} | ")
+            Text(text = "${stringResource(R.string.contactPhonenumber)} | ")
+            Text(text = "${stringResource(R.string.contactTitle)} |")
+        }
+        Spacer(modifier = Modifier.height(20.dp))
         LazyColumn(
             modifier = Modifier.weight(1f)
         ) {
@@ -108,30 +128,46 @@ fun SearchListScreen(                                            // Haupt-Compos
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(8.dp)
+
                 ) {
-                    Text(                                                   // Textanzeige für die Kontaktdaten
-                        text = "${contact.firstName} | ${contact.lastName} | ${contact.sex} | ${contact.phone} | ${contact.title} |",
-                        modifier = Modifier.weight(1f)
-                    )
-                    if (!uiState.value.contactList.contains(contact)) {     // Zeigt einen RadioButton an, wenn der Kontakt nicht bereits hinzugefügt wurde
-                        RadioButton(
-                            selected = contactIdsRadioDepency.firstOrNull { pair -> pair.first == contact.id }?.second ?: false,    // Prüft den aktuellen Status des Radio-Buttons
-                            onClick = {
-                                val updateList = contactIdsRadioDepency.toMutableList()         // Erstellt eine veränderbare Liste der Abhängigkeiten
-                                val index = updateList.indexOfFirst { it.first == contact.id }  // Sucht den Index des aktuellen Kontakts
-                                if (index != -1) {
-                                    updateList[index] = MutablePairs(contact.id, !updateList[index].second)     // Aktualisiert den Status
-                                }
-                                contactIdsRadioDepency = updateList
-                            }
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Filled.Check,      // Zeigt ein Check-Icon, wenn der Kontakt bereits hinzugefügt wurde
-                            contentDescription = "Häkchen",
-                            tint = Color.Black                     // Setzt die Farbe auf Schwarz
-                        )
+                    Text(text = "${contact.firstName}  ")
+                    Text(text = "${contact.lastName}  ")
+                    Text(text = "${contact.sex}  ")
+                    Text(text = "${contact.phone}  ")
+                    Text(text = "${contact.title} ")
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        if (!uiState.value.contactList.contains(contact)) {     // Zeigt einen RadioButton an, wenn der Kontakt nicht bereits hinzugefügt wurde
+                            RadioButton(
+                                selected = contactIdsRadioDepency.firstOrNull { pair -> pair.first == contact.id }?.second
+                                    ?: false,    // Prüft den aktuellen Status des Radio-Buttons
+                                onClick = {
+                                    val updateList =
+                                        contactIdsRadioDepency.toMutableList()         // Erstellt eine veränderbare Liste der Abhängigkeiten
+                                    val index = updateList.indexOfFirst { it.first == contact.id }  // Sucht den Index des aktuellen Kontakts
+                                    if (index != -1) {
+                                        updateList[index] = MutablePairs(
+                                            contact.id,
+                                            !updateList[index].second
+                                        )  // Aktualisiert den Status
+                                    }
+                                    contactIdsRadioDepency = updateList
+                                }, modifier = Modifier
+                                    .height(60.dp)
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Filled.Check,      // Zeigt ein Check-Icon, wenn der Kontakt bereits hinzugefügt wurde
+                                contentDescription = "Häkchen",
+                                tint = Color.Black,                     // Setzt die Farbe auf Schwarz
+                                modifier = Modifier
+                                    .padding(end = 11.dp)
+                                    .height(60.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -154,13 +190,19 @@ fun SearchListScreen(                                            // Haupt-Compos
                 IconButton(
                     modifier = Modifier.weight(1f),
                     onClick = {
-                        contactBufferSorted.isNotEmpty().and(contactIdsRadioDepency.any { it.second }).let {    // Überprüft, ob Kontakte vorhanden und ausgewählt sind
-                            val idToMap = contactIdsRadioDepency.filter { it.second }.map { it.first }          // Holt die IDs der ausgewählten Kontakte
-                            coroutineScope.launch {
-                                viewModel.addContactsToDatabase(contactBufferSorted, idToMap)   // Fügt die ausgewählten Kontakte zur Datenbank hinzu
-                                navigateToSavedContacts()                                       // Navigiert zu gespeicherten Kontakten(composable).
+                        contactBufferSorted.isNotEmpty()
+                            .and(contactIdsRadioDepency.any { it.second })
+                            .let {    // Überprüft, ob Kontakte vorhanden und ausgewählt sind
+                                val idToMap = contactIdsRadioDepency.filter { it.second }
+                                    .map { it.first }          // Holt die IDs der ausgewählten Kontakte
+                                coroutineScope.launch {
+                                    viewModel.addContactsToDatabase(
+                                        contactBufferSorted,
+                                        idToMap
+                                    )   // Fügt die ausgewählten Kontakte zur Datenbank hinzu
+                                    navigateToSavedContacts()                                       // Navigiert zu gespeicherten Kontakten(composable).
+                                }
                             }
-                        }
                     }
                 ) {
                     Icon(

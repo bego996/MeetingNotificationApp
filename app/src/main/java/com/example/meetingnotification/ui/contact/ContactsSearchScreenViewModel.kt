@@ -37,8 +37,7 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
                 initialValue = ContactsUiState2()             // Anfangszustand der Kontakte ist eine leere Liste
             )
 
-    private val contactsWriteOnly =
-        MutableLiveData<List<Contact>>() // MutableLiveData zum Schreiben von Kontakten
+    private val contactsWriteOnly = MutableLiveData<List<Contact>>() // MutableLiveData zum Schreiben von Kontakten
     private val contactsReadOnly: LiveData<List<Contact>> get() = contactsWriteOnly // Nur lesbarer Zugriff auf Kontakte von zeile 38.
 
     private var calenderEvents = listOf<EventDateTitle>()    // Liste der Kalenderereignisse
@@ -55,10 +54,8 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
     }
 
 
-    suspend fun addContactsToDatabase(
-        contactList: List<Contact>,
-        compareIds: List<Int>
-    ) { // Fügt ausgewählte Kontakte zur Datenbank hinzu
+    suspend fun addContactsToDatabase(contactList: List<Contact>, compareIds: List<Int>)
+    { // Fügt ausgewählte Kontakte zur Datenbank hinzu
         for (id in compareIds) {
             contactList.firstOrNull { contact -> contact.id == id }?.let { matchingContact ->
                 contactRepository.insertItem(matchingContact) // Speichert den passenden Kontakt im Repository pfalls richtiger contact mit passender id gefunden wird.
@@ -129,8 +126,7 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
                         )
                         val isMale =
                             sex.lowercase() == "m"               // Prüft, ob das Geschlecht männlich ist
-                        val defaultMessage =
-                            context.resources.getString( // Standardnachricht für jeden Kontakt mit Platzhaltern
+                        val defaultMessage = context.resources.getString( // Standardnachricht für jeden Kontakt mit Platzhaltern
                                 R.string.defaultMessage,
                                 if (isMale) "r" else "",
                                 if (isMale) "Herr" else "Frau",
@@ -139,8 +135,8 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
                                 "dd.MM.yyyy",
                                 "HH:mm"
                             )
-                        contactList.add(
-                            Contact(                                      // Fügt den Kontakt zur Liste hinzu
+                        contactList.add(Contact
+                            (                                      // Fügt den Kontakt zur Liste hinzu
                                 id.toInt(),
                                 title,
                                 firstname,
@@ -168,8 +164,7 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
     @SuppressLint("Range")
     fun loadCalender(context: Context) { // Lädt Kalenderereignisse aus der Systemdatenbank
         val eventList = mutableListOf<EventDateTitle>()       // Liste der geladenen Ereignisse
-        val contentResolver =
-            context.contentResolver // Holt den Content Resolver für Datenbank-Abfragen
+        val contentResolver = context.contentResolver // Holt den Content Resolver für Datenbank-Abfragen
 
         val todayMillis = System.currentTimeMillis()
 
@@ -183,19 +178,19 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
         )                                                             //Die ganze abfrage oben ist äquvivalent zu dieser SQL abfrage : SELECT * FROM events WHERE DTSTART >= 1704115200000 ORDER BY DTSTART ASC;
 
         if (cursor != null && cursor.count > 0) {             // Wenn Ereignisse gefunden werden
-            while (cursor.moveToNext()) {                     // Durchläuft die Ereignisse im Cursor
-                val title =
-                    cursor.getString(cursor.getColumnIndex(CalendarContract.Events.TITLE)) // Titel des Ereignisses
-                val startTimeMilis =
-                    cursor.getLong(cursor.getColumnIndex(CalendarContract.Events.DTSTART))         // Startzeit in Millisekunden
+            while (cursor.moveToNext()) { // Durchläuft die Ereignisse im Cursor
+
+                val title = cursor.getString(cursor.getColumnIndex(CalendarContract.Events.TITLE)) // Titel des Ereignisses
+
+                val startTimeMilis = cursor.getLong(cursor.getColumnIndex(CalendarContract.Events.DTSTART))         // Startzeit in Millisekunden
 
                 val startEvent =
                     Instant.ofEpochMilli(startTimeMilis)                              // Konvertiert in ein LocalDateTime-Objekt
                         .atZone(ZoneId.systemDefault())
                         .toLocalDateTime()
 
-                eventList.add(
-                    EventDateTitle(
+                eventList.add(EventDateTitle
+                    (
                         startEvent,                            // Startzeit als LocalDateTime
                         title                                  // Titel des Ereignisses
                     )

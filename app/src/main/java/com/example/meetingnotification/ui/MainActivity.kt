@@ -26,19 +26,15 @@ class MainActivity : AppCompatActivity(),
     SmsSendingServiceInteractor {     // Hauptaktivität der App, die den SMS-Sending-Service Interactor implementiert
 
     companion object {                                                      // Begleitendes statisches Objekt für Konfigurationskonstanten
-        private const val REQUEST_CODE_CONTACTS_READ =
-            1                    // Anfragecode für Lesezugriff auf Kontakte
-        private const val REQUEST_CODE_KALENDER_READ =
-            2                    // Anfragecode für Lesezugriff auf Kalender
-        private const val REQUEST_CODE_SEND_SMS =
-            3                         // Anfragecode für Senden von SMS
+        private const val REQUEST_CODE_CONTACTS_READ = 1                    // Anfragecode für Lesezugriff auf Kontakte
+        private const val REQUEST_CODE_KALENDER_READ = 2                    // Anfragecode für Lesezugriff auf Kalender
+        private const val REQUEST_CODE_SEND_SMS = 3                         // Anfragecode für Senden von SMS
     }
 
     private val contactBuffer by viewModels<ContactsSearchScreenViewModel> { AppViewModelProvider.Factory }     // ViewModel für die Kontaktsuche
 
     private lateinit var smsService: SmsSendingService                 // Später zu initialisierender SMS-Dienst
-    private var isSmsServiceBound =
-        false                              // Status, ob der SMS-Dienst gebunden ist
+    private var isSmsServiceBound = false                              // Status, ob der SMS-Dienst gebunden ist
 
     private val smsServiceConnection =
         object : ServiceConnection {    // Objekt für die Verbindung zum SMS-Dienst
@@ -46,17 +42,14 @@ class MainActivity : AppCompatActivity(),
                 className: ComponentName,
                 service: IBinder
             ) { // Wird aufgerufen, wenn die Verbindung hergestellt ist
-                val binder =
-                    service as SmsSendingService.LocalBinder      // Holt den Binder vom SMS-Dienst
+                val binder = service as SmsSendingService.LocalBinder      // Holt den Binder vom SMS-Dienst
                 smsService = binder.getService()                           // Holt die Dienstinstanz
-                isSmsServiceBound =
-                    true                                   // Setzt den Verbindungsstatus auf "gebunden"
+                isSmsServiceBound = true                                   // Setzt den Verbindungsstatus auf "gebunden"
                 println("serviceConnected()")                              // Debug-Nachricht zur Bestätigung
             }
 
             override fun onServiceDisconnected(arg0: ComponentName) {      // Wird aufgerufen, wenn die Verbindung getrennt wird
-                isSmsServiceBound =
-                    false                                  // Setzt den Verbindungsstatus auf "nicht gebunden"
+                isSmsServiceBound = false                                  // Setzt den Verbindungsstatus auf "nicht gebunden"
                 println("serviceDisconected()")
             }
         }
@@ -66,8 +59,7 @@ class MainActivity : AppCompatActivity(),
         println("onCreate() - MainActivity")
 
         //checkAndRequestPermissions()                                   // Überprüft und fordert erforderliche Berechtigungen an
-        contactBuffer.smsServiceInteractor =
-            this                      // Verknüpft das ViewModel mit dem Dienst-Interface. Wichtige schnittstelle , weil im viewmodel kein service erstellt werden darf.
+        contactBuffer.smsServiceInteractor = this                      // Verknüpft das ViewModel mit dem Dienst-Interface. Wichtige schnittstelle , weil im viewmodel kein service erstellt werden darf.
 
         setContent {
             Surface(
@@ -86,26 +78,18 @@ class MainActivity : AppCompatActivity(),
         println("onStart() - MainActivity")                            // Debug-Nachricht
         checkAndRequestPermissions()
 
-        Intent(
-            this,
-            SmsSendingService::class.java
-        ).also { intent ->   // Erstellt einen Intent für den SMS-Dienst
-            bindService(
-                intent,
-                smsServiceConnection,
-                BIND_AUTO_CREATE
-            )             // Bindet die Aktivität an den Dienst
+        Intent(this, SmsSendingService::class.java)
+            .also { intent ->   // Erstellt einen Intent für den SMS-Dienst
+            bindService(intent, smsServiceConnection, BIND_AUTO_CREATE)             // Bindet die Aktivität an den Dienst
         }
-
     }
 
     override fun performServiceAction(
         action: ServiceAction,
         contacts: List<ContactReadyForSms>
-    ) { // Action to push contacts in servive or to send message to all contacts.
+    ) { //Action to push contacts in servive or to send message to all contacts.
         if (isSmsServiceBound && action == ServiceAction.PushContact && contacts.isNotEmpty()) { // Prüft, ob der Dienst gebunden und die Aktion gültig ist. Action to insert Contact to Queue.
-            val allContacts =
-                mutableListOf<ContactReadyForSms>()                                // Liste für alle Kontakte
+            val allContacts = mutableListOf<ContactReadyForSms>()                                // Liste für alle Kontakte
             contacts.forEach { contact ->                                                        // Fügt die Kontakte zur Liste hinzu
                 allContacts.add(contact)
             }
@@ -136,16 +120,14 @@ class MainActivity : AppCompatActivity(),
         super.onStop()
         if (isSmsServiceBound) {                                       // Prüft, ob der Dienst gebunden ist
             unbindService(smsServiceConnection)                        // Hebt die Dienstverbindung auf
-            isSmsServiceBound =
-                false                                  // Setzt den Verbindungsstatus auf "nicht gebunden"
+            isSmsServiceBound = false                                  // Setzt den Verbindungsstatus auf "nicht gebunden"
         }
         println("onStop() - MainActivity")                             // Debug-Nachricht
     }
 
     override fun onDestroy() {                                         // Wird beim Zerstören der Aktivität aufgerufen
         super.onDestroy()
-        contactBuffer.smsServiceInteractor =
-            null                      // Entfernt die Verbindung zwischen Dienst und ViewModel
+        contactBuffer.smsServiceInteractor = null                      // Entfernt die Verbindung zwischen Dienst und ViewModel
         println("onDestroy() - MainActivity")                          // Debug-Nachricht
     }
 
@@ -169,9 +151,10 @@ class MainActivity : AppCompatActivity(),
                 REQUEST_CODE_SEND_SMS
             )
         } else {
+            contactBuffer.loadContacts(this) //Lädt Kontakte ins ViewModel
             println("loadcontacts() called")
-            contactBuffer.loadContacts(this)                           //Lädt Kontakte ins ViewModel
             contactBuffer.loadCalender(this)                           //Lädt Kalenderdaten ins ViewModel
+            println("loadCalender() called")
         }
     }
 
