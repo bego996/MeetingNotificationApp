@@ -1,5 +1,6 @@
 package com.example.meetingnotification.ui.home
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,7 +22,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.example.meetingnotification.ui.R
 import com.example.meetingnotification.ui.navigation.NavigationDestination
 
 object HomeDestination : NavigationDestination {
@@ -36,70 +40,78 @@ fun HomeScreen(
     navigateToTemplateScreen: () -> Unit,
     onSendMessagesClicked: () -> Unit
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(18.dp),
-        verticalArrangement = Arrangement.SpaceBetween
-    ) {
-        // Top Column
+    Box(modifier = Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(R.drawable.background_picture1),
+            contentDescription = "Hintergrundbild",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop // Skaliert das Bild, um den verfügbaren Raum zu füllen
+        )
         Column(
-            modifier = Modifier
-                .fillMaxWidth(),
-            horizontalAlignment = Alignment.End
+            modifier = modifier
+                .fillMaxSize()
+                .padding(18.dp),
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Row {
-                Box(
-                    modifier = Modifier
-
-                ) {
-                    IconButton(
-                        onClick = { /*TODO*/ },
+            // Top Column
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.End
+            ) {
+                Row {
+                    Box(
                         modifier = Modifier
-                            .background(Color.Transparent)
+
                     ) {
-                        Icon(imageVector = Icons.Default.MoreVert, contentDescription = null)
+                        IconButton(
+                            onClick = { /*TODO*/ },
+                            modifier = Modifier
+                                .background(Color.Transparent)
+                        ) {
+                            Icon(imageVector = Icons.Default.MoreVert, contentDescription = null)
+                        }
                     }
+                    // Add other components as needed
                 }
-                // Add other components as needed
             }
-        }
-        Column(
-            modifier = Modifier
-                .fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Button(
-                onClick = navigateToTemplateScreen
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("Check Template before Send")
+                Button(
+                    onClick = navigateToTemplateScreen
+                ) {
+                    Text("Check Template before Send")
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = onSendMessagesClicked,
+                    colors = ButtonDefaults.buttonColors(
+                        contentColor = Color.White,
+                        containerColor = Color.Red
+                    )
+                ) {
+                    Text(text = "Send")
+                }
+                Text(text = "<blank>", color = Color.Yellow)
             }
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(
-                onClick = onSendMessagesClicked,
-                colors = ButtonDefaults.buttonColors(
-                    contentColor = Color.White,
-                    containerColor = Color.Red
-                )
+            // Bottom Column
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Bottom
             ) {
-                Text(text = "Send")
-            }
-            Text(text = "<blank>")
-        }
-        // Bottom Column
-        Column(
-            modifier = Modifier
-                .fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Bottom
-        ) {
-            Button(
-                onClick = navigateToSavedContacts,
-                colors = ButtonDefaults.buttonColors(
-                    contentColor = Color.White
-                )
-            ) {
-                Text(text = "Saved Contacts")
+                Button(
+                    onClick = navigateToSavedContacts,
+                    colors = ButtonDefaults.buttonColors(
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text(text = "Saved Contacts")
+                }
             }
         }
     }

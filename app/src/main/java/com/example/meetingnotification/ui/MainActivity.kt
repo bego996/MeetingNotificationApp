@@ -13,7 +13,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.meetingnotification.ui.contact.ContactReadyForSms
@@ -63,8 +62,7 @@ class MainActivity : AppCompatActivity(),
 
         setContent {
             Surface(
-                modifier = Modifier.fillMaxSize(),
-                color = Color.Green
+                modifier = Modifier.fillMaxSize()
             ) {
                 NotificationApp(
                     viewModel = contactBuffer

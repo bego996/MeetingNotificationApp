@@ -31,7 +31,7 @@ fun MettingNavHost(                                           // Hauptfunktion f
     ) {
         composable(route = HomeDestination.route) {                 // Home-Screen als Start-Route
             HomeScreen(
-                modifier = Modifier.background(Color.Green),      // Färbt den Hintergrund Magenta
+                modifier = Modifier,
                 navigateToSavedContacts = { navController.navigate(SavedContactsDestination.route) },   // Navigiert zu den gespeicherten Kontakten
                 navigateToTemplateScreen = { navController.navigate(BeforeTemplateDestination.route) }, // Navigiert zum Vorlagen-Screen
                 onSendMessagesClicked = { viewModel.sendCommandToSendAllMessages() }                                                  // Ruft die Funktion für das Senden von Nachrichten auf

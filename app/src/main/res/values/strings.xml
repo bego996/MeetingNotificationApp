@@ -1,9 +1,10 @@
 <resources>
     <string name="app_name">MeetingNotification</string>
-    <string name="defaultMessage">Sehr geehrte%1$s %2$s %3$s%4$s, ihr Termin findet am %5$s um %6$s Uhr statt. Mit freundlichen Grüßen</string>
-    <string name="contactSex">Sex</string>
-    <string name="contactTitle">Title</string>
-    <string name="contactFirstname">Firstname</string>
-    <string name="contactSurname">Surname</string>
-    <string name="contactPhonenumber">Phonenumber</string>
+    <string name="deufault_message_status">Undefined</string>
+    <string name="default_message">Sehr geehrte%1$s %2$s %3$s%4$s, ihr Termin findet am %5$s um %6$s Uhr statt. Mit freundlichen Grüßen</string>
+    <string name="contact_sex">Sex</string>
+    <string name="contact_title">Title</string>
+    <string name="contact_firstname">Firstname</string>
+    <string name="contact_surname">Surname</string>
+    <string name="contact_phonenumber">Phonenumber</string>
 </resources>

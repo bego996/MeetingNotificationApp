@@ -124,10 +124,9 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
                                 ContactsContract.CommonDataKinds.Phone.NUMBER
                             )
                         )
-                        val isMale =
-                            sex.lowercase() == "m"               // Prüft, ob das Geschlecht männlich ist
+                        val isMale = sex.lowercase() == "m"               // Prüft, ob das Geschlecht männlich ist
                         val defaultMessage = context.resources.getString( // Standardnachricht für jeden Kontakt mit Platzhaltern
-                                R.string.defaultMessage,
+                                R.string.default_message,
                                 if (isMale) "r" else "",
                                 if (isMale) "Herr" else "Frau",
                                 if (title != "none") "$title " else "",

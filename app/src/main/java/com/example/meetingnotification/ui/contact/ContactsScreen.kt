@@ -1,6 +1,8 @@
 package com.example.meetingnotification.ui.contact
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -23,6 +25,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -47,19 +51,27 @@ fun SavedContacts(                                            // Haupt-Composabl
 ) {
     val uiState = viewModel.contactsUiState.collectAsState()  // Holt den aktuellen Zustand der Kontakte aus der Datenbank Room.
 
-    if (uiState.value.contactUiState.isEmpty()) {             // Wenn keine Kontakte vorhanden sind
-        EmptyListScreen(                                      // Zeige die leere Liste an (composable).
-            modifier = modifier,
-            navigateToSearchContactScreen = navigateToSearchContactScreen,
-            onCancelClicked = onCancelClicked
+    Box(modifier = Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(R.drawable.background_picture1),
+            contentDescription = "Hintergrundbild",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop // Skaliert das Bild, um den verfügbaren Raum zu füllen
         )
-    } else {
-        FilledListscreen(                                     // Zeige die Liste mit gespeicherten Kontakten an(composable).
-            modifier = modifier,
-            onCancelClicked = onCancelClicked,
-            navigateToSearchContactScreen = navigateToSearchContactScreen,
-            savedContacts = viewModel
-        )
+        if (uiState.value.contactUiState.isEmpty()) {             // Wenn keine Kontakte vorhanden sind
+            EmptyListScreen(                                      // Zeige die leere Liste an (composable).
+                modifier = modifier,
+                navigateToSearchContactScreen = navigateToSearchContactScreen,
+                onCancelClicked = onCancelClicked
+            )
+        } else {
+            FilledListscreen(                                     // Zeige die Liste mit gespeicherten Kontakten an(composable).
+                modifier = modifier,
+                onCancelClicked = onCancelClicked,
+                navigateToSearchContactScreen = navigateToSearchContactScreen,
+                savedContacts = viewModel
+            )
+        }
     }
 }
 
@@ -133,11 +145,11 @@ fun FilledListscreen(                                         // Composable für
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.Start
         ) {
-            Text(text = "${stringResource(R.string.contactSex)} | ")    // Überschriften für die Kontaktliste
-            Text(text = "${stringResource(R.string.contactTitle)} | ")
-            Text(text = "${stringResource(R.string.contactFirstname)} | ")
-            Text(text = "${stringResource(R.string.contactSurname)} | ")
-            Text(text = "${stringResource(R.string.contactPhonenumber)} |")
+            Text(text = "${stringResource(R.string.contact_sex)} | ",color = Color.White, fontWeight = FontWeight.Bold)    // Überschriften für die Kontaktliste
+            Text(text = "${stringResource(R.string.contact_title)} | ",color = Color.White, fontWeight = FontWeight.Bold)
+            Text(text = "${stringResource(R.string.contact_firstname)} | ",color = Color.White, fontWeight = FontWeight.Bold)
+            Text(text = "${stringResource(R.string.contact_surname)} | ",color = Color.White, fontWeight = FontWeight.Bold)
+            Text(text = "${stringResource(R.string.contact_phonenumber)} |",color = Color.White, fontWeight = FontWeight.Bold)
         }
         Spacer(modifier = Modifier.height(16.dp))             // Fügt eine vertikale Lücke von 16 dp hinzu
         LazyColumn(                                           // LazyColumn um einträge nach unten scrollen zu können.
@@ -151,11 +163,11 @@ fun FilledListscreen(                                         // Composable für
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Start,
                     ) {
-                        Text(text = "${contact.sex} | ")    // Zeigt den Kontakt an
-                        Text(text = "${contact.title} | ")
-                        Text(text = "${contact.firstName} | ")
-                        Text(text = "${contact.lastName} | ")
-                        Text(text = "${contact.phone} |")
+                        Text(text = "${contact.sex} | ", color = Color.Green)    // Zeigt den Kontakt an
+                        Text(text = "${contact.title} | ",color = Color.Green)
+                        Text(text = "${contact.firstName} | ",color = Color.Green)
+                        Text(text = "${contact.lastName} | ",color = Color.Green)
+                        Text(text = "${contact.phone} |",color = Color.Green)
                         IconButton(
                             onClick = {
                                 coroutineScope.launch {                 // Startet eine Coroutine zum Löschen des Kontakts
@@ -165,7 +177,8 @@ fun FilledListscreen(                                         // Composable für
                         {
                             Icon(
                                 imageVector = Icons.Default.Clear,      // Löschen-Icon
-                                contentDescription = "delete icon"      // Beschreibender Text für das Löschen-Icon
+                                contentDescription = "delete icon", // Beschreibender Text für das Löschen-Icon
+                                tint = Color.Red
                             )
                         }
                     }
@@ -186,7 +199,7 @@ fun FilledListscreen(                                         // Composable für
                 ) {
                     Text(
                         text = "Cancel",
-                        style = TextStyle(fontWeight = FontWeight.Bold, color = Color.Blue)
+                        style = TextStyle(fontWeight = FontWeight.Bold, color = Color.Black)
                     )
                 }
                 Spacer(modifier = Modifier.weight(1f))
@@ -197,7 +210,8 @@ fun FilledListscreen(                                         // Composable für
                     Icon(
                         imageVector = Icons.Default.AddCircle, // Plus-Icon zur Darstellung "Hinzufügen"
                         contentDescription = "Add Icon",
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
+                        tint = Color.Black
                     )
                 }
             }
