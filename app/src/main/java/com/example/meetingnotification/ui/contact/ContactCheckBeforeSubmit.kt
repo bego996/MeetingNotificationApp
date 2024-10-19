@@ -17,7 +17,6 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
@@ -54,11 +53,10 @@ object BeforeTemplateDestination : NavigationDestination {
 
 @Composable
 fun ContactCheckScreen(
-    onCancelClicked: () -> Unit,                                   // Callback für die "Cancel"-Aktion
+    navigateToHomeScreen: () -> Unit,                                   // Callback für die "Cancel"-Aktion
     calenderEvents: List<EventDateTitle>,                          // Liste von Kalenderereignissen
     sendContactsToSmsService: (List<ContactReadyForSms>) -> Unit,  // Callback zum Senden von Kontakten an den SMS-Dienst
     viewModel: ContactCheckBeforeSubmitViewModel = viewModel(factory = AppViewModelProvider.Factory), // ViewModel, wird mit einem Factory-Objekt erstellt
-    modifier: Modifier
 ) {
     val coroutineScope = rememberCoroutineScope()                  // Erstellt eine Coroutine-Umgebung für Nebenläufigkeit
     val uiState = viewModel.contactUiState.collectAsState()        // Sammelt den Zustand der Kontakte im UI-State
@@ -211,7 +209,7 @@ fun ContactCheckScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     OutlinedButton(
-                        onClick = onCancelClicked,                                     // Ruft den onCancelClicked-Callback auf
+                        onClick = navigateToHomeScreen,                                     // Ruft den onCancelClicked-Callback auf
                         modifier = Modifier.weight(1f),
                         colors = ButtonColors(Color.Black,Color.White,Color.White,Color.White)
                     ) {
@@ -245,6 +243,7 @@ fun ContactCheckScreen(
                             }
                             viewModel.updateListReadyForSms(selectedContactsReadyForSMS) // Aktualisiert die Liste der Kontakte für SMS
                             sendContactsToSmsService(viewModel.getContactsReadyForSms()) // Sendet die Kontakte an den SMS-Service
+                            navigateToHomeScreen()
                         },
                         modifier = Modifier.weight(1f),
                         colors = ButtonColors(Color.Black,Color.White,Color.White,Color.White)
@@ -258,7 +257,6 @@ fun ContactCheckScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TemplateOverwatch(
     receiveMessage: String,                                                        // Die ursprüngliche Nachricht

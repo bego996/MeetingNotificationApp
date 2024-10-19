@@ -39,8 +39,7 @@ fun MettingNavHost(                                           // Hauptfunktion f
         }
         composable(route = BeforeTemplateDestination.route) {                         // Vorlagen-Screen für die Kontaktüberprüfung
             ContactCheckScreen(
-                modifier = Modifier.background(Color.Cyan),
-                onCancelClicked = { navController.popBackStack() },                   // Navigiert zurück zur vorherigen Route
+                navigateToHomeScreen = { navController.popBackStack() },                   // Navigiert zurück zur vorherigen Route
                 calenderEvents = viewModel.getCalender(),                             // Ruft die Kalenderereignisse aus dem ViewModel ab
                 sendContactsToSmsService = { viewModel.insertContactsToSmsQueue(it) } // Fügt Kontakte zur SMS-Warteschlange hinzu
             )
