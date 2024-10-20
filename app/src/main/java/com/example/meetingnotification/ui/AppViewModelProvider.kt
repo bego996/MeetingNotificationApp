@@ -4,9 +4,9 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.example.meetingnotification.ui.contact.ContactsSearchScreenViewModel
 import com.example.meetingnotification.ui.contact.ContactCheckBeforeSubmitViewModel
 import com.example.meetingnotification.ui.contact.ContactsScreenViewModel
+import com.example.meetingnotification.ui.contact.ContactsSearchScreenViewModel
 import com.example.meetingnotification.ui.home.HomeScreenViewModel
 
 
@@ -15,23 +15,26 @@ object AppViewModelProvider {
     val Factory = viewModelFactory {
         initializer {
             HomeScreenViewModel(
-                inventoryApplication().container.contactRepository
+                inventoryApplication().container.contactRepository,
+                inventoryApplication().container.eventRepository
             )
         }
         initializer {
             ContactsSearchScreenViewModel(
-                inventoryApplication().container.contactRepository
-                //this.createSavedStateHandle()
+                inventoryApplication().container.contactRepository,
+                inventoryApplication().container.eventRepository
             )
         }
         initializer {
             ContactsScreenViewModel(
-                inventoryApplication().container.contactRepository
+                inventoryApplication().container.contactRepository,
+                inventoryApplication().container.eventRepository
             )
         }
         initializer {
             ContactCheckBeforeSubmitViewModel(
-                inventoryApplication().container.contactRepository
+                inventoryApplication().container.contactRepository,
+                inventoryApplication().container.eventRepository
             )
         }
     }

@@ -10,10 +10,11 @@ import androidx.room.RoomDatabase
 // entities = [Contact::class]: Enthält die Entität `Contact` (Tabelle in der Datenbank)
 // version = 2: Setzt die aktuelle Version der Datenbank auf 2
 // exportSchema = false: Verhindert, dass das Datenbankschema als JSON-Datei exportiert wird
-@Database(entities = [Contact::class], version = 2, exportSchema = false)
+@Database(entities = [Contact::class,Event::class], version = 5, exportSchema = false)
 abstract class ContactDatabase : RoomDatabase() {
 
     abstract fun contactDao() : ContactDao  // Deklariert eine abstrakte Methode, die eine Instanz des DAO (Data Access Object) für "Contact" zurückgibt.
+    abstract fun eventDAO() : EventDao
 
     companion object {
         @Volatile   // Ein Volatile-Attribut (flüchtig) stellt sicher, dass Änderungen an dieser Variablen sofort sichtbar sind, auch bei Zugriffen von mehreren Threads.

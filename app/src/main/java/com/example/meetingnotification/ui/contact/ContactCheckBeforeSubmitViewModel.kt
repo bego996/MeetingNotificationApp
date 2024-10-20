@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.meetingnotification.ui.data.Contact
 import com.example.meetingnotification.ui.data.ContactRepository
+import com.example.meetingnotification.ui.data.EventRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -19,12 +20,13 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 class ContactCheckBeforeSubmitViewModel(
-    private val repository: ContactRepository                // Repository, das zur Datenverwaltung verwendet wird
+    private val contactRepository: ContactRepository,                // Repository, das zur Datenverwaltung verwendet wird
+    private val eventRepository: EventRepository
 ) : ViewModel() {
 
     // Ein StateFlow-Objekt, das den aktuellen Zustand der Kontakte verwaltet
     val contactUiState: StateFlow<ContactsUiState3> =
-        repository.getAllContactsStream().map { ContactsUiState3(it) }
+        contactRepository.getAllContactsStream().map { ContactsUiState3(it) }
             .stateIn(
                 scope = viewModelScope,                       // Coroutine-Bereich für Nebenläufigkeit
                 started = SharingStarted.WhileSubscribed(5_000L), // Teile die Daten, solange abonniert, mit einer Verzögerung von 5000 ms
@@ -48,11 +50,11 @@ class ContactCheckBeforeSubmitViewModel(
 
 
     suspend fun updateContact(contact: Contact) {                      // Aktualisiert einen bestimmten Kontakt im Repository
-        repository.updateItem(contact)
+        contactRepository.updateItem(contact)
     }
 
     fun getContactByID(id : Int) : Flow<Contact?> {
-        return repository.getContactStream(id)
+        return contactRepository.getContactStream(id)
     }
 
     fun loadCalenderData(events: List<EventDateTitle>) {               // Lädt die Kalenderdaten in das MutableStateFlow
@@ -111,7 +113,7 @@ class ContactCheckBeforeSubmitViewModel(
                     for (zipValue in zippedDateToContacts) {      // Durchläuft die Liste der verknüpften Daten
                         contactList.firstOrNull { it.id == zipValue.contactId }
                             ?.let { contact ->                    // Sucht den passenden Kontakt
-                                repository.updateItem(            // Aktualisiert den Kontakt mit der neuen Nachricht
+                                contactRepository.updateItem(            // Aktualisiert den Kontakt mit der neuen Nachricht
                                     Contact(
                                         id = contact.id,
                                         title = contact.title,

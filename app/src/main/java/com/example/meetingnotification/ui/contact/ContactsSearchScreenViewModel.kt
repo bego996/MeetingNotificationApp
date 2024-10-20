@@ -11,6 +11,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.meetingnotification.ui.R
 import com.example.meetingnotification.ui.data.Contact
 import com.example.meetingnotification.ui.data.ContactRepository
+import com.example.meetingnotification.ui.data.EventRepository
 import com.example.meetingnotification.ui.services.ServiceAction
 import com.example.meetingnotification.ui.services.SmsSendingServiceInteractor
 import kotlinx.coroutines.flow.Flow
@@ -24,7 +25,8 @@ import java.time.ZoneId
 
 
 class ContactsSearchScreenViewModel(                          // ViewModel zur Verwaltung von Kontakten im Suchbildschirm
-    private val contactRepository: ContactRepository         // Repository für den Zugriff auf die Kontakt-Datenbank
+    private val contactRepository: ContactRepository,         // Repository für den Zugriff auf die Kontakt-Datenbank
+    private val eventRepository: EventRepository
 ) : ViewModel() {
 
     val contactsUiState: StateFlow<ContactsUiState2> =
