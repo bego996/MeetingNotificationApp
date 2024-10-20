@@ -1,14 +1,12 @@
-package com.example.meetingnotification.ui.data
+package com.example.meetingnotification.ui.data.repositories
 
+import com.example.meetingnotification.ui.data.entities.Event
+import com.example.meetingnotification.ui.data.relations.EventWithContact
 import kotlinx.coroutines.flow.Flow
 
 interface EventRepository {
 
-    fun getEventsForContactStream(contactId: Int): Flow<List<Event>>
-
-    /**
-     * Retrieve an item from the given data source that matches with the [id].
-     */
+    fun getEventWithContact(eventId: Int): Flow<EventWithContact>
 
     /**
      * Insert item in the data source

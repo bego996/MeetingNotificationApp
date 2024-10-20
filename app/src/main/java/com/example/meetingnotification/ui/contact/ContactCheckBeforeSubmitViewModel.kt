@@ -6,9 +6,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.meetingnotification.ui.data.Contact
-import com.example.meetingnotification.ui.data.ContactRepository
-import com.example.meetingnotification.ui.data.EventRepository
+import com.example.meetingnotification.ui.data.entities.Contact
+import com.example.meetingnotification.ui.data.repositories.ContactRepository
+import com.example.meetingnotification.ui.data.repositories.EventRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -33,6 +33,8 @@ class ContactCheckBeforeSubmitViewModel(
                 initialValue = ContactsUiState3()             // Anfangswert des StateFlow
             )
 
+
+
     private val _calenderState = MutableStateFlow<List<EventDateTitle>>(emptyList())    // MutableStateFlow zur Verwaltung der Kalenderdaten
     private val calenderState: StateFlow<List<EventDateTitle>> = _calenderState         // Unveränderlicher StateFlow zur Abfrage der Kalenderdaten
 
@@ -49,8 +51,10 @@ class ContactCheckBeforeSubmitViewModel(
     }
 
 
-    suspend fun updateContact(contact: Contact) {                      // Aktualisiert einen bestimmten Kontakt im Repository
-        contactRepository.updateItem(contact)
+    fun updateContact(contact: Contact) { // Aktualisiert einen bestimmten Kontakt im Repository. kein supend nötig weil courtinescope unten ausgeführt wird.
+        viewModelScope.launch {
+            contactRepository.updateItem(contact)
+        }
     }
 
     fun getContactByID(id : Int) : Flow<Contact?> {
@@ -165,7 +169,9 @@ data class MutablePairs2(
     var second: Boolean
 ) // Datenklasse für Paare von Kontakt-ID und Status
 
-data class ContactsUiState3(val contactUiState: List<Contact> = listOf()) // Datenklasse zur Verwaltung des UI-Zustands der Kontakte
+data class ContactsUiState3(
+    val contactUiState: List<Contact> = listOf()
+) // Datenklasse zur Verwaltung des UI-Zustands der Kontakte
 
 data class ContactReadyForSms(
     val phoneNumber: String,

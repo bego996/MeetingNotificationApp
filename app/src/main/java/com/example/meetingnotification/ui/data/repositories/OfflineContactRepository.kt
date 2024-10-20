@@ -14,13 +14,20 @@
  * limitations under the License.
  */
 
-package com.example.meetingnotification.ui.data
+package com.example.meetingnotification.ui.data.repositories
 
+import com.example.meetingnotification.ui.data.dao.ContactDao
+import com.example.meetingnotification.ui.data.entities.Contact
+import com.example.meetingnotification.ui.data.relations.ContactWithEvents
 import kotlinx.coroutines.flow.Flow
 
 class OfflineContactRepository(private val contactDao: ContactDao) : ContactRepository {
 
     override fun getAllContactsStream(): Flow<List<Contact>> = contactDao.getAllContacts()
+
+    override fun getContactWithEvents(contactId: Int): Flow<ContactWithEvents> {
+        return contactDao.getContactWithEvents(contactId)
+    }
 
     override fun getContactStream(id: Int): Flow<Contact?> = contactDao.getContact(id)
 

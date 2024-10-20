@@ -1,4 +1,4 @@
-package com.example.meetingnotification.ui.data
+package com.example.meetingnotification.ui.data.entities
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
@@ -20,5 +20,5 @@ data class Event (
     val eventId: Int = 0,
     val eventDate: String,
     val contactOwnerId: Int,
-    var isNotified: Boolean = false
+    val isNotified: Boolean = false
 )

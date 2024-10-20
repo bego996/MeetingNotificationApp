@@ -1,4 +1,4 @@
-package com.example.meetingnotification.ui.data
+package com.example.meetingnotification.ui.data.entities
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

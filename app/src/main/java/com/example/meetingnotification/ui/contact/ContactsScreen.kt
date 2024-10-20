@@ -21,7 +21,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,7 +34,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.meetingnotification.ui.AppViewModelProvider
 import com.example.meetingnotification.ui.R
 import com.example.meetingnotification.ui.navigation.NavigationDestination
-import kotlinx.coroutines.launch
 
 
 object SavedContactsDestination : NavigationDestination {     // Definiert eine statische Route für "SavedContacts"
@@ -132,7 +130,6 @@ fun FilledListscreen(                                         // Composable für
     navigateToSearchContactScreen: () -> Unit,                // Callback zum Navigieren zum Suchfenster Composable per Navhostcontroller.
     savedContacts: ContactsScreenViewModel                    // ViewModel, das die Kontaktliste bereitstellt
 ) {
-    val coroutineScope = rememberCoroutineScope()             // Coroutine-Umgebung für Nebenläufigkeit
 
 
     Column(
@@ -169,11 +166,7 @@ fun FilledListscreen(                                         // Composable für
                         Text(text = "${contact.lastName} | ",color = Color.Green)
                         Text(text = "${contact.phone} |",color = Color.Green)
                         IconButton(
-                            onClick = {
-                                coroutineScope.launch {                 // Startet eine Coroutine zum Löschen des Kontakts
-                                    savedContacts.deleteContact(contact)
-                                }
-                            })
+                            onClick = { savedContacts.deleteContact(contact) }) //löschen von kontakt mit viewmodel coroutine scope im viewmodel.
                         {
                             Icon(
                                 imageVector = Icons.Default.Clear,      // Löschen-Icon

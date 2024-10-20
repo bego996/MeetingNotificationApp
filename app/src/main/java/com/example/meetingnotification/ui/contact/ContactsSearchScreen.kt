@@ -32,7 +32,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,7 +43,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.meetingnotification.ui.R
 import com.example.meetingnotification.ui.navigation.NavigationDestination
-import kotlinx.coroutines.launch
 
 
 object SearchContactDestination : NavigationDestination {        // Objekt für die Such-Route
@@ -60,12 +58,8 @@ fun SearchListScreen(                                            // Haupt-Compos
     onCancelCLicked: () -> Unit,                                 // Callback für den "Cancel" Button.
     navigateToSavedContacts: () -> Unit                          // Callback für das Navigieren zu gespeicherten Kontakten
 ) {
-    val coroutineScope =
-        rememberCoroutineScope()                // Coroutine-Bereich für Nebenläufigkeit
-    val uiState =
-        viewModel.contactsUiState.collectAsState()     // Überwacht den aktuellen Zustand der Kontakte
-    val contactBuffer =
-        viewModel.getContacts().observeAsState(listOf()) // Beobachtet die Kontakte aus dem LiveData
+    val uiState = viewModel.contactsUiState.collectAsState()     // Überwacht den aktuellen Zustand der Kontakte
+    val contactBuffer = viewModel.getContacts().observeAsState(listOf()) // Beobachtet die Kontakte aus dem LiveData
     var text by remember { mutableStateOf("") }            // Suchtext-Status
     var contactBufferSorted by remember { mutableStateOf(contactBuffer.value) }         // Gefilterte Kontaktliste
     var contactIdsRadioDepency by remember { mutableStateOf(listOf<MutablePairs>()) }   // Liste für die Abhängigkeiten von Radio-Buttons
@@ -81,10 +75,7 @@ fun SearchListScreen(                                            // Haupt-Compos
         } else {
             contactBuffer.value
                 .filter {
-                    it.firstName.contains(
-                        text,
-                        ignoreCase = true
-                    )
+                    it.firstName.contains(text, ignoreCase = true)
                 }      // Filtert nach Vornamen
         }
     }
@@ -128,11 +119,31 @@ fun SearchListScreen(                                            // Haupt-Compos
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Start
             ) {
-                Text(text = "${stringResource(R.string.contact_firstname)} | ",color = Color.White, fontWeight = FontWeight.Bold)    // Überschriften für die Liste
-                Text(text = "${stringResource(R.string.contact_surname)} | ",color = Color.White, fontWeight = FontWeight.Bold)
-                Text(text = "${stringResource(R.string.contact_sex)} | ",color = Color.White, fontWeight = FontWeight.Bold)
-                Text(text = "${stringResource(R.string.contact_phonenumber)} | ",color = Color.White, fontWeight = FontWeight.Bold)
-                Text(text = "${stringResource(R.string.contact_title)} |",color = Color.White, fontWeight = FontWeight.Bold)
+                Text(
+                    text = "${stringResource(R.string.contact_firstname)} | ",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )    // Überschriften für die Liste
+                Text(
+                    text = "${stringResource(R.string.contact_surname)} | ",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "${stringResource(R.string.contact_sex)} | ",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "${stringResource(R.string.contact_phonenumber)} | ",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "${stringResource(R.string.contact_title)} |",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
             }
             Spacer(modifier = Modifier.height(20.dp))
             LazyColumn(
@@ -172,7 +183,12 @@ fun SearchListScreen(                                            // Haupt-Compos
                                         }
                                         contactIdsRadioDepency = updateList
                                     }, modifier = Modifier.height(60.dp),
-                                    colors = RadioButtonColors(selectedColor = Color.White, unselectedColor = Color.White, disabledSelectedColor = Color.White, disabledUnselectedColor = Color.Black)
+                                    colors = RadioButtonColors(
+                                        selectedColor = Color.White,
+                                        unselectedColor = Color.White,
+                                        disabledSelectedColor = Color.White,
+                                        disabledUnselectedColor = Color.Black
+                                    )
                                 )
                             } else {
                                 Icon(
@@ -200,24 +216,25 @@ fun SearchListScreen(                                            // Haupt-Compos
                         modifier = Modifier.weight(2f),
                         onClick = onCancelCLicked // Ruft den "Cancel"-Callback auf
                     ) {
-                        Text(text = "Cancel", color = Color.Black)                          // Button Beschriftung "Cancel"
+                        Text(
+                            text = "Cancel",
+                            color = Color.Black
+                        )                          // Button Beschriftung "Cancel"
                     }
                     Spacer(modifier = Modifier.weight(1f))
                     Button(
                         modifier = Modifier.weight(2f),
                         onClick = {
                             contactBufferSorted.isNotEmpty()
-                                .and(contactIdsRadioDepency.any { it.second })
-                                .let {    // Überprüft, ob Kontakte vorhanden und ausgewählt sind
-                                    val idToMap = contactIdsRadioDepency.filter { it.second }
-                                        .map { it.first }          // Holt die IDs der ausgewählten Kontakte
-                                    coroutineScope.launch {
-                                        viewModel.addContactsToDatabase(
-                                            contactBufferSorted,
-                                            idToMap
-                                        )   // Fügt die ausgewählten Kontakte zur Datenbank hinzu
-                                        navigateToSavedContacts()                                       // Navigiert zu gespeicherten Kontakten(composable).
-                                    }
+                                .and(contactIdsRadioDepency.any { it.second })      // Überprüft, ob Kontakte vorhanden und ausgewählt sind
+                                .let {
+                                    val idToMap = contactIdsRadioDepency.filter { it.second }       // Holt die IDs der ausgewählten Kontakte
+                                        .map { it.first }
+                                    viewModel.addContactsToDatabase(            // Fügt die ausgewählten Kontakte zur Datenbank hinzu
+                                        contactBufferSorted,
+                                        idToMap
+                                    )
+                                    navigateToSavedContacts()                                       // Navigiert zu gespeicherten Kontakten(composable).
                                 }
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Black)

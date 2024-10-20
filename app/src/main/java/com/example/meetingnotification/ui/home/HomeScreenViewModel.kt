@@ -2,8 +2,8 @@ package com.example.meetingnotification.ui.home
 
 
 import androidx.lifecycle.ViewModel
-import com.example.meetingnotification.ui.data.ContactRepository
-import com.example.meetingnotification.ui.data.EventRepository
+import com.example.meetingnotification.ui.data.repositories.ContactRepository
+import com.example.meetingnotification.ui.data.repositories.EventRepository
 
 
 class HomeScreenViewModel(

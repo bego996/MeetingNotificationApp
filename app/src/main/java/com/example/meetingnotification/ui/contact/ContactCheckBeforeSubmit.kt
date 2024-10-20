@@ -30,7 +30,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,9 +41,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.meetingnotification.ui.AppViewModelProvider
 import com.example.meetingnotification.ui.R
-import com.example.meetingnotification.ui.data.Contact
+import com.example.meetingnotification.ui.data.entities.Contact
 import com.example.meetingnotification.ui.navigation.NavigationDestination
-import kotlinx.coroutines.launch
 
 object BeforeTemplateDestination : NavigationDestination {
     override val route =
@@ -58,8 +56,9 @@ fun ContactCheckScreen(
     sendContactsToSmsService: (List<ContactReadyForSms>) -> Unit,  // Callback zum Senden von Kontakten an den SMS-Dienst
     viewModel: ContactCheckBeforeSubmitViewModel = viewModel(factory = AppViewModelProvider.Factory), // ViewModel, wird mit einem Factory-Objekt erstellt
 ) {
-    val coroutineScope = rememberCoroutineScope()                  // Erstellt eine Coroutine-Umgebung für Nebenläufigkeit
-    val uiState = viewModel.contactUiState.collectAsState()        // Sammelt den Zustand der Kontakte im UI-State
+
+    val uiState =
+        viewModel.contactUiState.collectAsState()        // Sammelt den Zustand der Kontakte im UI-State
     val contactsZipedWithDate by viewModel.calenderStateConnectedToContacts // Bekommt Kontakte, die mit Kalenderereignissen verbunden sind
     var templateIdDepencysMailIcon by remember { mutableStateOf(listOf<MutablePairs2>()) } // Initialisiert die Liste der Template-Abhängigkeiten
     var templateIdDepencysRadioButton by remember { mutableStateOf(listOf<MutablePairs2>()) } // Initialisiert die Liste der Template-Abhängigkeiten
@@ -151,7 +150,12 @@ fun ContactCheckScreen(
                                 selected = templateIdDepencysRadioButton.firstOrNull { it.first == contact.id }?.second
                                     ?: false,                                      // Ausgewählt oder nicht.
                                 modifier = Modifier,
-                                colors = RadioButtonColors(selectedColor = Color.White, unselectedColor = Color.White, disabledSelectedColor = Color.White, disabledUnselectedColor = Color.Black),
+                                colors = RadioButtonColors(
+                                    selectedColor = Color.White,
+                                    unselectedColor = Color.White,
+                                    disabledSelectedColor = Color.White,
+                                    disabledUnselectedColor = Color.Black
+                                ),
                                 enabled = isContactInCalender,
                                 onClick = {
                                     val updatedList = templateIdDepencysRadioButton.toMutableList()
@@ -183,8 +187,8 @@ fun ContactCheckScreen(
                             TemplateOverwatch(
                                 contact.message,                                       // Übergibt die Nachricht des Kontakts
                                 sendMessageToUpdateContact = { newMessage ->                    // Funktion zum Aktualisieren der Nachricht
-                                    coroutineScope.launch {
-                                        val updatedContact = Contact(
+                                    val updatedContact =
+                                        Contact(
                                             contact.id,                                // ID des Kontakts
                                             contact.title,                             // Titel des Kontakts
                                             contact.firstName,                         // Vorname des Kontakts
@@ -193,8 +197,7 @@ fun ContactCheckScreen(
                                             contact.phone,                             // Telefonnummer des Kontakts
                                             newMessage                                          // Neue Nachricht
                                         )
-                                        viewModel.updateContact(updatedContact)        // Aktualisiert den Kontakt im ViewModel
-                                    }
+                                    viewModel.updateContact(updatedContact)        // Aktualisiert den Kontakt im ViewModel
                                 }
                             )
                         }
@@ -211,7 +214,7 @@ fun ContactCheckScreen(
                     OutlinedButton(
                         onClick = navigateToHomeScreen,                                     // Ruft den onCancelClicked-Callback auf
                         modifier = Modifier.weight(1f),
-                        colors = ButtonColors(Color.Black,Color.White,Color.White,Color.White)
+                        colors = ButtonColors(Color.Black, Color.White, Color.White, Color.White)
                     ) {
                         Text(text = "Cancel")                                          // Beschriftung "Cancel"
                     }
@@ -246,7 +249,7 @@ fun ContactCheckScreen(
                             navigateToHomeScreen()
                         },
                         modifier = Modifier.weight(1f),
-                        colors = ButtonColors(Color.Black,Color.White,Color.White,Color.White)
+                        colors = ButtonColors(Color.Black, Color.White, Color.White, Color.White)
                     ) {
                         Text(text = "Add All Selected")
                     }

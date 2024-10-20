@@ -9,9 +9,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.meetingnotification.ui.R
-import com.example.meetingnotification.ui.data.Contact
-import com.example.meetingnotification.ui.data.ContactRepository
-import com.example.meetingnotification.ui.data.EventRepository
+import com.example.meetingnotification.ui.data.entities.Contact
+import com.example.meetingnotification.ui.data.entities.Event
+import com.example.meetingnotification.ui.data.repositories.ContactRepository
+import com.example.meetingnotification.ui.data.repositories.EventRepository
 import com.example.meetingnotification.ui.services.ServiceAction
 import com.example.meetingnotification.ui.services.SmsSendingServiceInteractor
 import kotlinx.coroutines.flow.Flow
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -26,11 +28,11 @@ import java.time.ZoneId
 
 class ContactsSearchScreenViewModel(                          // ViewModel zur Verwaltung von Kontakten im Suchbildschirm
     private val contactRepository: ContactRepository,         // Repository für den Zugriff auf die Kontakt-Datenbank
-    private val eventRepository: EventRepository
+    private val eventRepository: EventRepository              // Repo für Zugriff auf die Event-Datenbank, kein stateflow nötig, weil kein nutzen vorhanden (weil über contact alle events geholt werden), bei contact jedoch doch.
 ) : ViewModel() {
 
     val contactsUiState: StateFlow<ContactsUiState2> =
-        // StateFlow zur Überwachung des UI-Zustands der Kontakte
+        // StateFlow zur Überwachung des UI-Zustands der Kontakte. Für events ist kein zur Überwachung nötig. Ich kann auch so insert,delete und updaten von events.
         contactRepository.getAllContactsStream()
             .map { ContactsUiState2(it) } // Wandelt die Daten in das UI-Format um
             .stateIn(
@@ -38,6 +40,8 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
                 started = SharingStarted.WhileSubscribed(5_000L), // Teilt die Daten weiter, solange abonniert
                 initialValue = ContactsUiState2()             // Anfangszustand der Kontakte ist eine leere Liste
             )
+
+
 
     private val contactsWriteOnly = MutableLiveData<List<Contact>>() // MutableLiveData zum Schreiben von Kontakten
     private val contactsReadOnly: LiveData<List<Contact>> get() = contactsWriteOnly // Nur lesbarer Zugriff auf Kontakte von zeile 38.
@@ -56,11 +60,13 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
     }
 
 
-    suspend fun addContactsToDatabase(contactList: List<Contact>, compareIds: List<Int>)
-    { // Fügt ausgewählte Kontakte zur Datenbank hinzu
-        for (id in compareIds) {
-            contactList.firstOrNull { contact -> contact.id == id }?.let { matchingContact ->
-                contactRepository.insertItem(matchingContact) // Speichert den passenden Kontakt im Repository pfalls richtiger contact mit passender id gefunden wird.
+    fun addContactsToDatabase(contactList: List<Contact>, compareIds: List<Int>) // Fügt ausgewählte Kontakte zur Datenbank hinzu. Keine suspend dunction nötig, weil viewmodel scope unten ansynchron ausführt.
+    {
+        viewModelScope.launch {
+            for (id in compareIds) {
+                contactList.firstOrNull { contact -> contact.id == id }?.let { matchingContact ->
+                    contactRepository.insertItem(matchingContact) // Speichert den passenden Kontakt im Repository pfalls richtiger contact mit passender id gefunden wird.
+                }
             }
         }
     }
@@ -85,16 +91,15 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
         if (cursor != null && cursor.count > 0) {            // Wenn es Ergebnisse gibt
             while (cursor.moveToNext()) { // Durchläuft jeden Kontakt im Cursor
 
-                val id =
-                    cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID)) // Kontakt-ID
-                val fullname =
-                    cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME))
-                        .split(" ")                             // Aufteilen des vollen Namens in Vor- und Nachname
+                val id = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID)) // Kontakt-ID
+
+                val fullname = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME)).split(" ")           // Aufteilen des vollen Namens in Vor- und Nachname
+
                 val firstname = fullname[0]                               // Vorname
-                val surname =
-                    fullname[if (fullname.size > 2) 2 else 1]   // Nachname, abhängig von der Namensstruktur
-                val sex =
-                    if (fullname.size > 2) fullname[1] else "X"     // Geschlecht (männlich/weiblich/unspezifisch)
+
+                val surname = fullname[if (fullname.size > 2) 2 else 1]   // Nachname, abhängig von der Namensstruktur
+
+                val sex = if (fullname.size > 2) fullname[1] else "X"     // Geschlecht (männlich/weiblich/unspezifisch)
 
                 val orgCursor = contentResolver.query(
                     ContactsContract.Data.CONTENT_URI,
@@ -106,8 +111,7 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
 
                 var title = "none"                            // Standardwert für den Titel
                 if (orgCursor != null && orgCursor.moveToFirst()) {
-                    title =
-                        orgCursor.getString(orgCursor.getColumnIndex(ContactsContract.CommonDataKinds.Organization.TITLE)) // Titel der Organisation
+                    title = orgCursor.getString(orgCursor.getColumnIndex(ContactsContract.CommonDataKinds.Organization.TITLE)) // Titel der Organisation
                 }
                 orgCursor?.close()
 
@@ -208,8 +212,9 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
 }
 
 data class MutablePairs(var first: Int, var second: Boolean)  // Datenklasse für Paare (ID, Status)
+
 data class ContactsUiState2(val contactList: List<Contact> = listOf()) // Datenklasse für den Kontaktzustand der UI
-data class EventDateTitle(
-    val eventDate: LocalDateTime,
-    val eventName: String
-) // Datenklasse für Ereignisse (Datum, Name)
+
+data class EventDateTitle(val eventDate: LocalDateTime, val eventName: String) // Datenklasse für Ereignisse (Datum, Name)
+
+data class EventsUiState(val eventList: List<Event> = listOf())

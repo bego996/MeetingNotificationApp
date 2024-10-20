@@ -2,9 +2,9 @@ package com.example.meetingnotification.ui.contact
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.meetingnotification.ui.data.Contact
-import com.example.meetingnotification.ui.data.ContactRepository
-import com.example.meetingnotification.ui.data.EventRepository
+import com.example.meetingnotification.ui.data.entities.Contact
+import com.example.meetingnotification.ui.data.repositories.ContactRepository
+import com.example.meetingnotification.ui.data.repositories.EventRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -24,15 +24,12 @@ class ContactsScreenViewModel(                             // ViewModel zur Verw
                 initialValue = ContactUiState()             // Initialwert des StateFlow ist ein leerer Zustand
             )
 
-    suspend fun deleteContact(contact: Contact) {          // Suspendierende Methode zum Löschen eines Kontakts
+    fun deleteContact(contact: Contact) {          // Kein supsend nötig weil courtinescope innerhalb ausgeführt wird die sowieso asynchron ist.
         viewModelScope.launch {                            // Startet eine neue Coroutine im Bereich des ViewModels
             contactRepository.deleteItem(contact)          // Löscht den angegebenen Kontakt aus dem Repository
         }
     }
 
-    fun calcuateSpaceBetweenContactCredentials(credentialsFixed : List<String>){
-        val notFixedCredentials = contactRepository.getAllContactsStream()
-    }
 }
 
 data class ContactUiState(val contactUiState: List<Contact> = listOf()) // Datenklasse zur Darstellung des UI-Zustands mit einer leeren Liste als Standard
