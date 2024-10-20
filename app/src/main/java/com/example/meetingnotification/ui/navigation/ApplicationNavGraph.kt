@@ -50,10 +50,10 @@ fun MettingNavHost(                                           // Hauptfunktion f
                 navigateToSearchContactScreen = { navController.navigate(SearchContactDestination.route) }, // Navigiert zum Suchbildschirm
                 onCancelClicked = {
                     navController.navigate(HomeDestination.route) { // Navigiert zurück zur Startseite
-                        popUpTo(navController.graph.startDestinationId) { // Leert den Navigationsstapel bis zur Startdestination
-                            inclusive = true
+                        popUpTo(navController.graph.startDestinationId) { // Leert den Navigationsstapel bis zur Startdestination was eingestelt als HOmeScreen ist.
+//                          inclusive = true                                Selbe logik wie composable zeile 61. Nur als demonstarion hier wenn es true währe, dann würde die instanz gelöscht werden und eine neue erstellt werden. Nützlich um z.b alte werte nicht zu behalten.
                         }
-                        launchSingleTop = true // Verhindert das Duplizieren der Home-Destination im Backstack
+                        launchSingleTop = true // Verhindert das Duplizieren der Home-Destination im Backstack genau wie unten.
                     }
                 }
             )
@@ -65,9 +65,9 @@ fun MettingNavHost(                                           // Hauptfunktion f
                 onCancelCLicked = {
                     navController.navigate(HomeDestination.route) {             // Navigiert zurück zur Startseite
                         popUpTo(navController.graph.startDestinationId) {       // Leert den Navigationsstapel bis zur Startdestination
-                            inclusive = false
+//                          inclusive = false                                   auskomentiert weil sowieso default wert false. Bedeuted das die home instanz nicht entfernt wird aus dem Stack.
                         }
-                        launchSingleTop = true // Verhindert das Duplizieren der Home-Destination im Backstack
+                        launchSingleTop = true // Verhindert das Duplizieren der Home-Destination im Backstack. In kombi mit deufault inclusive Wert, wird immer auf die bestehende instanz von home zugegrifen hier. Keine dupikation möglich.
                     }
                 },
                 navigateToSavedContacts = { navController.popBackStack() }      // Geht zum vorherigen Bildschirm zurück

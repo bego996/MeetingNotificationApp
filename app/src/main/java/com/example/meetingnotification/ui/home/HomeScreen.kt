@@ -38,7 +38,8 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     navigateToSavedContacts: () -> Unit,
     navigateToTemplateScreen: () -> Unit,
-    onSendMessagesClicked: () -> Unit
+    onSendMessagesClicked: () -> Unit,
+
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
