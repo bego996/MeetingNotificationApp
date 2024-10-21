@@ -7,9 +7,9 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.meetingnotification.ui.data.entities.Contact
+import com.example.meetingnotification.ui.data.entities.Event
 import com.example.meetingnotification.ui.data.repositories.ContactRepository
 import com.example.meetingnotification.ui.data.repositories.EventRepository
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -57,17 +57,19 @@ class ContactCheckBeforeSubmitViewModel(
         }
     }
 
-    fun getContactByID(id : Int) : Flow<Contact?> {
-        return contactRepository.getContactStream(id)
+    private fun insertEventForContact(contactZippedWithDate: List<ContactZippedWithDate>){
+        viewModelScope.launch {
+            contactZippedWithDate.forEach{
+                eventRepository.insertItem(Event(eventDate = it.date, eventTime = it.time, contactOwnerId = it.contactId))
+            }
+        }
     }
 
     fun loadCalenderData(events: List<EventDateTitle>) {               // Lädt die Kalenderdaten in das MutableStateFlow
         _calenderState.value = events
     }
 
-
     private fun getCalenderState(): List<EventDateTitle> = calenderState.value      // Gibt die aktuelle Liste der Kalenderereignisse zurück
-
 
     fun getDayDuration(meetingDate: String): String {        // Berechnet die Anzahl der Tage bis zum angegebenen Datum
         val meetingDateFormat = DateTimeFormatter.ofPattern("dd.MM.yyyy") // Datumsformat für die Berechnung
@@ -80,7 +82,6 @@ class ContactCheckBeforeSubmitViewModel(
             ).days // Tage bis zum Datum berechnen
         return "$daysBeetweenNowAndMeetingDate Days Left"    // Gibt die verbleibenden Tage als Zeichenkette zurück
     }
-
 
     fun zipDatesToContacts(contacts: List<Contact>) {                              // Verknüpft Kontakte mit Kalenderdaten
         val dates = getCalenderState()                                             // Holt die aktuelle Liste der Kalenderereignisse
@@ -103,6 +104,7 @@ class ContactCheckBeforeSubmitViewModel(
                 }
         }
         _calenderStateConnectedToContacts.value = listZipped           // Aktualisiert die MutableState-Liste mit den verknüpften Daten
+        insertEventForContact(listZipped)
         updateContactsMessageAfterZippingItWithDates(
             listZipped,
             contacts

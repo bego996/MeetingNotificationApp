@@ -57,8 +57,7 @@ fun ContactCheckScreen(
     viewModel: ContactCheckBeforeSubmitViewModel = viewModel(factory = AppViewModelProvider.Factory), // ViewModel, wird mit einem Factory-Objekt erstellt
 ) {
 
-    val uiState =
-        viewModel.contactUiState.collectAsState()        // Sammelt den Zustand der Kontakte im UI-State
+    val uiState = viewModel.contactUiState.collectAsState()        // Sammelt den Zustand der Kontakte im UI-State
     val contactsZipedWithDate by viewModel.calenderStateConnectedToContacts // Bekommt Kontakte, die mit Kalenderereignissen verbunden sind
     var templateIdDepencysMailIcon by remember { mutableStateOf(listOf<MutablePairs2>()) } // Initialisiert die Liste der Template-Abhängigkeiten
     var templateIdDepencysRadioButton by remember { mutableStateOf(listOf<MutablePairs2>()) } // Initialisiert die Liste der Template-Abhängigkeiten

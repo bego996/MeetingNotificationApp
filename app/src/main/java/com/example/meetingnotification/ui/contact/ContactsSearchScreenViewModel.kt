@@ -10,7 +10,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.meetingnotification.ui.R
 import com.example.meetingnotification.ui.data.entities.Contact
-import com.example.meetingnotification.ui.data.entities.Event
 import com.example.meetingnotification.ui.data.repositories.ContactRepository
 import com.example.meetingnotification.ui.data.repositories.EventRepository
 import com.example.meetingnotification.ui.services.ServiceAction
@@ -64,8 +63,14 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
     {
         viewModelScope.launch {
             for (id in compareIds) {
-                contactList.firstOrNull { contact -> contact.id == id }?.let { matchingContact ->
-                    contactRepository.insertItem(matchingContact) // Speichert den passenden Kontakt im Repository pfalls richtiger contact mit passender id gefunden wird.
+                contactList.firstOrNull { contact -> contact.id == id }?.let { matchingContact ->   // Speichert den passenden Kontakt im Repository pfalls richtiger contact mit passender id gefunden wird.
+                    contactRepository.insertItem(Contact(
+                        title = matchingContact.title,
+                        firstName = matchingContact.firstName,
+                        lastName = matchingContact.lastName,
+                        sex = matchingContact.sex,
+                        phone = matchingContact.phone,
+                        message = matchingContact.message))
                 }
             }
         }
@@ -166,6 +171,7 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
         return contactsReadOnly
     }
 
+
     @SuppressLint("Range")
     fun loadCalender(context: Context) { // Lädt Kalenderereignisse aus der Systemdatenbank
         val eventList = mutableListOf<EventDateTitle>()       // Liste der geladenen Ereignisse
@@ -189,8 +195,7 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
 
                 val startTimeMilis = cursor.getLong(cursor.getColumnIndex(CalendarContract.Events.DTSTART))         // Startzeit in Millisekunden
 
-                val startEvent =
-                    Instant.ofEpochMilli(startTimeMilis)                              // Konvertiert in ein LocalDateTime-Objekt
+                val startEvent = Instant.ofEpochMilli(startTimeMilis)                              // Konvertiert in ein LocalDateTime-Objekt
                         .atZone(ZoneId.systemDefault())
                         .toLocalDateTime()
 
@@ -216,5 +221,3 @@ data class MutablePairs(var first: Int, var second: Boolean)  // Datenklasse fü
 data class ContactsUiState2(val contactList: List<Contact> = listOf()) // Datenklasse für den Kontaktzustand der UI
 
 data class EventDateTitle(val eventDate: LocalDateTime, val eventName: String) // Datenklasse für Ereignisse (Datum, Name)
-
-data class EventsUiState(val eventList: List<Event> = listOf())
