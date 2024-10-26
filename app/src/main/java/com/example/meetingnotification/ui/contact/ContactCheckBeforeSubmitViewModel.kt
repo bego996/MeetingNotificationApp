@@ -113,12 +113,10 @@ class ContactCheckBeforeSubmitViewModel(
 
 
     private fun updateContactsMessageAfterZippingItWithDates(zippedDateToContacts: MutableList<ContactZippedWithDate>, contactList: List<Contact>) {                             // Aktualisiert die Nachrichten der Kontakte
-        zippedDateToContacts.isNotEmpty()
-            .let {                  // Nur wenn verknüpfte Daten vorhanden sind
+        zippedDateToContacts.isNotEmpty().let {                  // Nur wenn verknüpfte Daten vorhanden sind
                 viewModelScope.launch {                           // Startet eine neue Coroutine
                     for (zipValue in zippedDateToContacts) {      // Durchläuft die Liste der verknüpften Daten
-                        contactList.firstOrNull { it.id == zipValue.contactId }
-                            ?.let { contact ->                    // Sucht den passenden Kontakt
+                        contactList.firstOrNull { it.id == zipValue.contactId }?.let { contact ->                    // Sucht den passenden Kontakt
                                 contactRepository.updateItem(            // Aktualisiert den Kontakt mit der neuen Nachricht
                                     Contact(
                                         id = contact.id,

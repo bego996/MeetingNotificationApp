@@ -1,5 +1,6 @@
 package com.example.meetingnotification.ui.contact
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -49,6 +50,8 @@ object BeforeTemplateDestination : NavigationDestination {
         "beforeTemplate"                         // Definiert die Route als "beforeTemplate"
 }
 
+private const val TAG = "ContactCheckBeforeSubmitScreen"
+
 @Composable
 fun ContactCheckScreen(
     navigateToHomeScreen: () -> Unit,                                   // Callback für die "Cancel"-Aktion
@@ -69,15 +72,17 @@ fun ContactCheckScreen(
                 false
             )
         } // Aktualisiert die Abhängigkeiten mit den IDs der Kontakte
+        Log.d(TAG,"Depencys for ContactIdToMailIcon established in Launched Effect()")
     }
     LaunchedEffect(Unit) {
         viewModel.loadCalenderData(calenderEvents)                // Lädt Kalenderdaten in das ViewModel
-        println("LaunchedEffect with UNIT launched in ContactcheckBefore Composable()")
+        Log.d(TAG,"Calender loaded in launchedEffect()")
     }
-    LaunchedEffect(uiState.value.contactUiState.size) {
+
+    LaunchedEffect(uiState.value.contactUiState.size) {                //Wir müssen hier die size als key nutzen weil dieser launcheffect vom launcheffect oben abhängig ist. Die richtige größe der kontakliste würde hier sonst zu spät angezeigt werden.
         if (uiState.value.contactUiState.isNotEmpty()) {
             viewModel.zipDatesToContacts(uiState.value.contactUiState) // Verknüpft die geladenen Kontakte mit Kalenderdaten
-            println("DatesZipedToContacts in LaunchedEffect in ContactCheckBeforeSubmit Composable()")
+            Log.d(TAG,"Dates to Contacts Zipped in LaunchedEffect()")
         }
     }
 
