@@ -61,6 +61,7 @@ fun ContactCheckScreen(
 ) {
 
     val uiState = viewModel.contactUiState.collectAsState()        // Sammelt den Zustand der Kontakte im UI-State
+    val uiStateWithEvents = viewModel.contactWithEvents.collectAsState()    // Sammelt den Zustand der Kontakte und deren Events im Ui-State.
     val contactsZipedWithDate by viewModel.calenderStateConnectedToContacts // Bekommt Kontakte, die mit Kalenderereignissen verbunden sind
     var templateIdDepencysMailIcon by remember { mutableStateOf(listOf<MutablePairs2>()) } // Initialisiert die Liste der Template-Abhängigkeiten
     var templateIdDepencysRadioButton by remember { mutableStateOf(listOf<MutablePairs2>()) } // Initialisiert die Liste der Template-Abhängigkeiten
@@ -75,7 +76,7 @@ fun ContactCheckScreen(
         Log.d(TAG,"Depencys for ContactIdToMailIcon established in Launched Effect()")
     }
     LaunchedEffect(Unit) {
-        viewModel.loadCalenderData(calenderEvents)                // Lädt Kalenderdaten in das ViewModel
+        viewModel.loadCalenderData(calenderEvents)                // Lädt Kalenderdaten in das ViewModel wird nur beim ersten rendern aufgerufen.
         Log.d(TAG,"Calender loaded in launchedEffect()")
     }
 
@@ -83,6 +84,20 @@ fun ContactCheckScreen(
         if (uiState.value.contactUiState.isNotEmpty()) {
             viewModel.zipDatesToContacts(uiState.value.contactUiState) // Verknüpft die geladenen Kontakte mit Kalenderdaten
             Log.d(TAG,"Dates to Contacts Zipped in LaunchedEffect()")
+            viewModel.loadContactsWithEvents()
+            Log.d(TAG,"Contacts load with event called in LaunchedEffect()")
+        }
+    }
+
+    LaunchedEffect(uiStateWithEvents.value.size) {                //Wartet bis die größe der contacte mit event liste sich ändert (nicht null ist). Vom Launched effect oben abhängig.
+        if (uiStateWithEvents.value.isNotEmpty()) {
+            uiStateWithEvents.value.forEach {contactAndDate ->
+                println(contactAndDate.contact)
+                contactAndDate.events.forEach { event ->
+                    println(event)
+                }
+            }
+            Log.d(TAG,"Event printout with contact finished in LaunchedEffect()")
         }
     }
 
@@ -164,11 +179,9 @@ fun ContactCheckScreen(
                                 onClick = {
                                     val updatedList = templateIdDepencysRadioButton.toMutableList()
                                     val index =
-                                        updatedList.indexOf(updatedList.firstOrNull { it.first == contact.id }
-                                            ?: -1)
+                                        updatedList.indexOf(updatedList.firstOrNull { it.first == contact.id } ?: -1)
                                     if (index != -1) {
-                                        updatedList[index] =
-                                            MutablePairs2(contact.id, !updatedList[index].second)
+                                        updatedList[index] = MutablePairs2(contact.id, !updatedList[index].second)
                                     } else {
                                         updatedList.add(MutablePairs2(contact.id, true))
                                     }

@@ -8,16 +8,20 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.meetingnotification.ui.data.entities.Contact
 import com.example.meetingnotification.ui.data.entities.Event
+import com.example.meetingnotification.ui.data.relations.ContactWithEvents
 import com.example.meetingnotification.ui.data.repositories.ContactRepository
 import com.example.meetingnotification.ui.data.repositories.EventRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+
+private val TAG = ContactCheckBeforeSubmitViewModel::class.simpleName
 
 class ContactCheckBeforeSubmitViewModel(
     private val contactRepository: ContactRepository,                // Repository, das zur Datenverwaltung verwendet wird
@@ -33,7 +37,8 @@ class ContactCheckBeforeSubmitViewModel(
                 initialValue = ContactsUiState3()             // Anfangswert des StateFlow
             )
 
-
+    private var _contactWithEvents = MutableStateFlow<List<ContactWithEvents>>(emptyList())
+    val contactWithEvents: StateFlow<List<ContactWithEvents>> = _contactWithEvents
 
     private val _calenderState = MutableStateFlow<List<EventDateTitle>>(emptyList())    // MutableStateFlow zur Verwaltung der Kalenderdaten
     private val calenderState: StateFlow<List<EventDateTitle>> = _calenderState         // Unveränderlicher StateFlow zur Abfrage der Kalenderdaten
@@ -42,6 +47,21 @@ class ContactCheckBeforeSubmitViewModel(
     val calenderStateConnectedToContacts: State<List<ContactZippedWithDate>> = _calenderStateConnectedToContacts        // Öffentlicher Zugriff auf die verknüpften Kalenderdaten
 
     private var contactListReadyForSms by mutableStateOf(listOf<ContactReadyForSms>())      // Kontakte, die bereit für den SMS-Versand sind
+
+    fun loadContactsWithEvents(){
+        viewModelScope.launch {
+            val mutableListContactsWithEvents = mutableListOf<ContactWithEvents>()
+
+            calenderStateConnectedToContacts.value.forEach { contactWithDate ->
+
+                val contactAndEvents =
+                    contactRepository.getContactWithEvents(contactWithDate.contactId).first()
+
+                mutableListContactsWithEvents.add(contactAndEvents)
+            }
+            _contactWithEvents.value = mutableListContactsWithEvents
+        }
+    }
 
     fun getContactsReadyForSms(): List<ContactReadyForSms> = contactListReadyForSms         // Gibt die Liste der Kontakte für den SMS-Versand zurück
 
@@ -82,6 +102,11 @@ class ContactCheckBeforeSubmitViewModel(
             ).days // Tage bis zum Datum berechnen
         return "$daysBeetweenNowAndMeetingDate Days Left"    // Gibt die verbleibenden Tage als Zeichenkette zurück
     }
+
+//    fun isContactForNextEventAlreadyNotified(contactId: Int) : Boolean{
+//        val eventListForContact = contactRepository.getContactWithEvents(contactId).map{it.events}
+//
+//    }
 
     fun zipDatesToContacts(contacts: List<Contact>) {                              // Verknüpft Kontakte mit Kalenderdaten
         val dates = getCalenderState()                                             // Holt die aktuelle Liste der Kalenderereignisse
@@ -139,8 +164,7 @@ class ContactCheckBeforeSubmitViewModel(
     }
 }
 
-
-private fun updateMessageWithCorrectDateTime(originMessage: String, dateReplacement: String, timeReplacement: String): String { // Ersetzt das Datum und die Uhrzeit in der ursprünglichen Nachricht
+    private fun updateMessageWithCorrectDateTime(originMessage: String, dateReplacement: String, timeReplacement: String): String { // Ersetzt das Datum und die Uhrzeit in der ursprünglichen Nachricht
     val regexForAllPossibleDates = """(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])\.(\d{4})""".toRegex()
     val regexForAllPossibleTimes = """(0[0-9]|1[0-9]|2[0-3]):(0[0-9]|[1-5][0-9])""".toRegex()
     var messageReplacement = originMessage
@@ -157,6 +181,11 @@ private fun updateMessageWithCorrectDateTime(originMessage: String, dateReplacem
     return messageReplacement
 }
 
+
+
+data class ContactsWithEvent(
+    val contactWithEvents: List<ContactWithEvents> = listOf()
+)
 
 data class ContactZippedWithDate(
     val contactId: Int,
