@@ -166,7 +166,7 @@ fun SearchListScreen(                                            // Haupt-Compos
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.End
                         ) {
-                            if (!uiState.value.contactList.contains(contact)) {     // Zeigt einen RadioButton an, wenn der Kontakt nicht bereits hinzugefügt wurde
+                            if (uiState.value.contactList.firstOrNull { contacts -> contacts.firstName == contact.firstName && contacts.lastName == contact.lastName}?.let { false } != false) {     // Zeigt einen RadioButton an, wenn der Kontakt nicht bereits hinzugefügt wurde
                                 RadioButton(
                                     selected = contactIdsRadioDepency.firstOrNull { pair -> pair.first == contact.id }?.second
                                         ?: false,    // Prüft den aktuellen Status des Radio-Buttons
