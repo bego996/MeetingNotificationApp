@@ -29,6 +29,7 @@ class SmsSendingService : Service() {                         // Dienst(Service)
 
 
 
+
     override fun onCreate() {                                 // Wird beim Erstellen des Dienstes aufgerufen
         super.onCreate()
         println("ServiceOnCreate()")

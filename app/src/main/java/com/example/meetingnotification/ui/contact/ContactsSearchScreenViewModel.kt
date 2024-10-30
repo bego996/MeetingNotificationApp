@@ -64,13 +64,7 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
         viewModelScope.launch {
             for (id in compareIds) {
                 contactList.firstOrNull { contact -> contact.id == id }?.let { matchingContact ->   // Speichert den passenden Kontakt im Repository pfalls richtiger contact mit passender id gefunden wird.
-                    contactRepository.insertItem(Contact(
-                        title = matchingContact.title,
-                        firstName = matchingContact.firstName,
-                        lastName = matchingContact.lastName,
-                        sex = matchingContact.sex,
-                        phone = matchingContact.phone,
-                        message = matchingContact.message))
+                    contactRepository.insertItem(matchingContact)
                 }
             }
         }
