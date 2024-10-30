@@ -165,17 +165,18 @@ fun ContactCheckScreen(
                                 )
                             }
                             var isContactInCalender by remember { mutableStateOf(false) }
+                            val isContactsNextEventNotified = viewModel.isContactNotifiedForUpcomingEvent(contact.id)
+                            val isContactSelectedInRadioButton = templateIdDepencysRadioButton.firstOrNull { it.first == contact.id }?.second ?: false
                             RadioButton(
-                                selected = templateIdDepencysRadioButton.firstOrNull { it.first == contact.id }?.second
-                                    ?: false,                                      // Ausgewählt oder nicht.
+                                selected =  (isContactsNextEventNotified || isContactSelectedInRadioButton),             // Ausgewählt oder nicht.
                                 modifier = Modifier,
                                 colors = RadioButtonColors(
                                     selectedColor = Color.White,
                                     unselectedColor = Color.White,
-                                    disabledSelectedColor = Color.White,
+                                    disabledSelectedColor = Color.Black,
                                     disabledUnselectedColor = Color.Black
                                 ),
-                                enabled = isContactInCalender,
+                                enabled = (!isContactsNextEventNotified && isContactInCalender),
                                 onClick = {
                                     val updatedList = templateIdDepencysRadioButton.toMutableList()
                                     val index =

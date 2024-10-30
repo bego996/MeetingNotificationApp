@@ -54,8 +54,7 @@ class ContactCheckBeforeSubmitViewModel(
 
             calenderStateConnectedToContacts.value.forEach { contactWithDate ->
 
-                val contactAndEvents =
-                    contactRepository.getContactWithEvents(contactWithDate.contactId).first()
+                val contactAndEvents = contactRepository.getContactWithEvents(contactWithDate.contactId).first()
 
                 mutableListContactsWithEvents.add(contactAndEvents)
             }
@@ -75,6 +74,14 @@ class ContactCheckBeforeSubmitViewModel(
         viewModelScope.launch {
             contactRepository.updateItem(contact)
         }
+    }
+
+    fun isContactNotifiedForUpcomingEvent(contactId: Int) : Boolean{
+        val allEventsForChoosenContact = contactWithEvents.value.firstOrNull { contactWithEvents -> contactWithEvents.contact.id == contactId }?.events ?: emptyList()   //gibt event zurück oder false, falls es keine events hatt.
+        if (allEventsForChoosenContact.isEmpty()) return false
+        val upcomingEventSortedOut = allEventsForChoosenContact.sortedByDescending { event -> event.eventDate}[0]
+        val upcomingEventNotified = upcomingEventSortedOut.isNotified
+        return upcomingEventNotified
     }
 
     private fun insertEventForContact(contactZippedWithDate: List<ContactZippedWithDate>){
