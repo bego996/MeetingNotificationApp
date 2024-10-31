@@ -13,7 +13,10 @@ class SmsSentReceiver(private val service: SmsSendingService) : BroadcastReceive
 
     override fun onReceive(context: Context, intent: Intent) { // Überschreibt die `onReceive`-Methode, um auf Broadcasts zu reagieren
         Log.d(TAG, "smsReceiverCalled() with ResultCode: $resultCode")      // Loggt eine Debug-Nachricht, dass der Receiver aktiviert wurde
-        if (resultCode == Activity.RESULT_OK || resultCode == 4) {     // Überprüft, ob die SMS erfolgreich gesendet wurde, indem das `resultCode` mit `RESULT_OK` verglichen wird
+        if (resultCode == Activity.RESULT_OK || resultCode == 4) {     // Überprüft, ob die SMS erfolgreich gesendet wurde, indem das `resultCode` mit `RESULT_OK` verglichen wird. 4 war für ein anderes Device als OK.
+            val contactId = intent.getIntExtra("contactId",-1)  //Hier wird der Integer Extra entnommen der im intent übergeben wurde.
+            Log.d(TAG,"Message for contactId: $contactId is send.")
+            service.updateEventStatusFromContact(contactId)
             service.sendNextMessage(context)        // Wenn das Ergebnis erfolgreich ist, ruft die `sendNextMessage`-Methode auf dem `service`-Objekt auf
         }
     }

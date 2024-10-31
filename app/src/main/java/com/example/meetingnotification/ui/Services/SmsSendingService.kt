@@ -13,11 +13,20 @@ import android.telephony.SmsManager
 import android.widget.Toast
 import com.example.meetingnotification.ui.broadcastReceiver.SmsSentReceiver
 import com.example.meetingnotification.ui.contact.ContactReadyForSms
+import com.example.meetingnotification.ui.data.repositories.ContactRepository
+import com.example.meetingnotification.ui.data.repositories.EventRepository
 
 class SmsSendingService : Service() {                         // Dienst(Service), der SMS-Nachrichten versendet
     private lateinit var receiver: SmsSentReceiver            // Deklariert einen SMS-Empfänger(Broadcast)
+    private lateinit var contactRepository: ContactRepository
+    private lateinit var eventRepository: EventRepository
     private val binder = LocalBinder()                        // Binder für die Client-Anbindung an den Dienst
     var messageQueue = ArrayDeque<SmsMessage>()               // Warteschlange für SMS-Nachrichten
+
+    fun initialize(contactRepository: ContactRepository,eventRepository: EventRepository){
+        this.contactRepository = contactRepository
+        this.eventRepository = eventRepository
+    }
 
     inner class LocalBinder : Binder() {                                // Innere Klasse, die den Binder für den lokalen Dienst bereitstellt
         fun getService(): SmsSendingService = this@SmsSendingService    // Gibt die aktuelle Instanz des Dienstes zurück
@@ -26,8 +35,6 @@ class SmsSendingService : Service() {                         // Dienst(Service)
     override fun onBind(intent: Intent): IBinder {            // Methode zum Binden des Dienstes an einen Client
         return binder                                         // Gibt den Binder zurück
     }
-
-
 
 
     override fun onCreate() {                                 // Wird beim Erstellen des Dienstes aufgerufen
@@ -46,9 +53,12 @@ class SmsSendingService : Service() {                         // Dienst(Service)
         println("Receiver is unregistere an SmS service Destroyed")
     }
 
+    fun updateEventStatusFromContact(contactId: Int){
+
+    }
 
     fun addMessageToQueue(contactInformation: List<ContactReadyForSms>) {                                   // Fügt eine Liste von Kontakten zur SMS-Warteschlange hinzu
-        val contactMaper = contactInformation.map { SmsMessage(it.phoneNumber, it.message, it.fullName) }   // Wandelt die Kontakte in SMS-Nachrichten um
+        val contactMaper = contactInformation.map { SmsMessage(it.contactId,it.phoneNumber, it.message, it.fullName) }   // Wandelt die Kontakte in SMS-Nachrichten um
         contactMaper.forEach { contact ->
             if (!messageQueue.contains(contact)) {            // Vermeidet das Hinzufügen doppelter Nachrichten
                 messageQueue.add(contact)                     // Fügt die Nachricht zur Warteschlange hinzu
@@ -61,9 +71,12 @@ class SmsSendingService : Service() {                         // Dienst(Service)
         println("sendNextMessage is called()")
         if (messageQueue.isNotEmpty()) {                      // Prüft, ob die Warteschlange leer ist
             val nextMessage = messageQueue.removeFirst()      // Holt die erste Nachricht und entfernt sie aus der Warteschlange
+            val uniqueRequestCode = nextMessage.contactId       //diesen unique code brauce ich weil ab api 31 nicht mehr FlAG_IMUTABLE (mit dem konnte man vor api 31 die extras aktualisieren im gleichen intent) verwendet werden kann.
 
             val smsIntent = PendingIntent.getBroadcast(
-                context, 0, Intent("SMS_SENT"),     // Erzeugt ein PendingIntent für das "SMS_SENT"-Broadcast
+                context, uniqueRequestCode, Intent("SMS_SENT").apply {  //hier kommt der unique requestcode rein. In meinem fall die contact id sowie unten (aber mit echtem namen contactId).
+                    putExtra("contactId",nextMessage.contactId)     //Fügt die contactId zum Intent hinzu um den Receiver die id des erfolgreich gesendeten nachricht an contacts zu geben.
+                },     // Erzeugt ein PendingIntent für das "SMS_SENT"-Broadcast
                 PendingIntent.FLAG_IMMUTABLE
             )
 
@@ -106,7 +119,7 @@ class SmsSendingService : Service() {                         // Dienst(Service)
         builder.create().show()                                                      // Erstellt und zeigt den Dialog an
     }
 
-    data class SmsMessage(val phoneNumber: String, val message: String, val fullName: String)   // Datenklasse für eine SMS-Nachricht
+    data class SmsMessage(val contactId: Int,val phoneNumber: String, val message: String, val fullName: String)   // Datenklasse für eine SMS-Nachricht
 }
 
 

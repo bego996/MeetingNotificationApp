@@ -189,11 +189,6 @@ class ContactCheckBeforeSubmitViewModel(
 }
 
 
-
-data class ContactsWithEvent(
-    val contactWithEvents: List<ContactWithEvents> = listOf()
-)
-
 data class ContactZippedWithDate(
     val contactId: Int,
     val date: String,
@@ -210,6 +205,7 @@ data class ContactsUiState3(
 ) // Datenklasse zur Verwaltung des UI-Zustands der Kontakte
 
 data class ContactReadyForSms(
+    val contactId: Int,
     val phoneNumber: String,
     val message: String,
     val fullName: String

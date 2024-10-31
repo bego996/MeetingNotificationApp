@@ -247,16 +247,15 @@ fun ContactCheckScreen(
                             val selectedContactsReadyForSMS = mutableListOf<ContactReadyForSms>()
                             templateIdDepencysRadioButton.isNotEmpty().let {
                                 templateIdDepencysRadioButton.forEach { contactSelected ->
-                                    val contactsReadyForSms =
-                                        uiState.value.contactUiState.firstOrNull { it.id == contactSelected.first }
+                                    val contactsReadyForSms = uiState.value.contactUiState.firstOrNull { it.id == contactSelected.first }
                                             ?.let {
                                                 ContactReadyForSms(
+                                                    it.id,
                                                     it.phone,
                                                     it.message,
                                                     it.firstName
                                                 )
                                             }
-
                                     contactsReadyForSms?.let {
                                         selectedContactsReadyForSMS.add(contactsReadyForSms)
                                     }

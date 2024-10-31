@@ -7,6 +7,7 @@ import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.IBinder
+import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -20,6 +21,8 @@ import com.example.meetingnotification.ui.contact.ContactsSearchScreenViewModel
 import com.example.meetingnotification.ui.services.ServiceAction
 import com.example.meetingnotification.ui.services.SmsSendingService
 import com.example.meetingnotification.ui.services.SmsSendingServiceInteractor
+
+private val TAG = MainActivity::class.simpleName
 
 class MainActivity : AppCompatActivity(),
     SmsSendingServiceInteractor {     // Hauptaktivität der App, die den SMS-Sending-Service Interactor implementiert
@@ -44,18 +47,24 @@ class MainActivity : AppCompatActivity(),
                 val binder = service as SmsSendingService.LocalBinder      // Holt den Binder vom SMS-Dienst
                 smsService = binder.getService()                           // Holt die Dienstinstanz
                 isSmsServiceBound = true                                   // Setzt den Verbindungsstatus auf "gebunden"
-                println("serviceConnected()")                              // Debug-Nachricht zur Bestätigung
+
+                val application = applicationContext as MeetingNotificationApplication
+                smsService.initialize(
+                    application.container.contactRepository,
+                    application.container.eventRepository
+                )
+                Log.d(TAG,"serviceConnected() and Repositories initialized.")                              // Debug-Nachricht zur Bestätigung
             }
 
             override fun onServiceDisconnected(arg0: ComponentName) {      // Wird aufgerufen, wenn die Verbindung getrennt wird
                 isSmsServiceBound = false                                  // Setzt den Verbindungsstatus auf "nicht gebunden"
-                println("serviceDisconected()")
+                Log.d(TAG,"serviceDisconected()")
             }
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {               // Wird beim Erstellen der Aktivität aufgerufen
         super.onCreate(savedInstanceState)
-        println("onCreate() - MainActivity")
+        Log.d(TAG,"onCreate() - MainActivity")
 
         //checkAndRequestPermissions()                                   // Überprüft und fordert erforderliche Berechtigungen an
         contactBuffer.smsServiceInteractor = this                      // Verknüpft das ViewModel mit dem Dienst-Interface. Wichtige schnittstelle , weil im viewmodel kein service erstellt werden darf.
@@ -73,7 +82,7 @@ class MainActivity : AppCompatActivity(),
 
     override fun onStart() {                                           // Wird beim Start der Aktivität aufgerufen
         super.onStart()
-        println("onStart() - MainActivity")                            // Debug-Nachricht
+        Log.d(TAG,"onStart() - MainActivity")                            // Debug-Nachricht
         checkAndRequestPermissions()
 
         Intent(this, SmsSendingService::class.java)
@@ -106,12 +115,12 @@ class MainActivity : AppCompatActivity(),
 
     override fun onResume() {                                          // Wird beim Fortsetzen der Aktivität aufgerufen
         super.onResume()
-        println("onResume() - MainActivity")                           // Debug-Nachricht
+        Log.d(TAG,"onResume() - MainActivity")                           // Debug-Nachricht
     }
 
     override fun onPause() {                                           // Wird beim Pausieren der Aktivität aufgerufen
         super.onPause()
-        println("onPause() - MainActivity")                            // Debug-Nachricht
+        Log.d(TAG,"onPause() - MainActivity")                           // Debug-Nachricht
     }
 
     override fun onStop() {                                            // Wird beim Stoppen der Aktivität aufgerufen
@@ -120,13 +129,13 @@ class MainActivity : AppCompatActivity(),
             unbindService(smsServiceConnection)                        // Hebt die Dienstverbindung auf
             isSmsServiceBound = false                                  // Setzt den Verbindungsstatus auf "nicht gebunden"
         }
-        println("onStop() - MainActivity")                             // Debug-Nachricht
+        Log.d(TAG,"onStop() - MainActivity")                             // Debug-Nachricht
     }
 
     override fun onDestroy() {                                         // Wird beim Zerstören der Aktivität aufgerufen
         super.onDestroy()
         contactBuffer.smsServiceInteractor = null                      // Entfernt die Verbindung zwischen Dienst und ViewModel
-        println("onDestroy() - MainActivity")                          // Debug-Nachricht
+        Log.d(TAG,"onDestroy() - MainActivity")                         // Debug-Nachricht
     }
 
     private fun checkAndRequestPermissions() {                         // Überprüft und fordert erforderliche Berechtigungen an, bei start der Acticity.
@@ -150,9 +159,9 @@ class MainActivity : AppCompatActivity(),
             )
         } else {
             contactBuffer.loadContacts(this) //Lädt Kontakte ins ViewModel
-            println("loadcontacts() called")
+            Log.d(TAG,"loadcontacts() called")
             contactBuffer.loadCalender(this)                           //Lädt Kalenderdaten ins ViewModel
-            println("loadCalender() called")
+            Log.d(TAG,"loadCalender() called")
         }
     }
 
