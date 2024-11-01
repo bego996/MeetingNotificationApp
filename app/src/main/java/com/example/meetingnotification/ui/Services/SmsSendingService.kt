@@ -13,13 +13,20 @@ import android.telephony.SmsManager
 import android.widget.Toast
 import com.example.meetingnotification.ui.broadcastReceiver.SmsSentReceiver
 import com.example.meetingnotification.ui.contact.ContactReadyForSms
+import com.example.meetingnotification.ui.data.entities.Event
 import com.example.meetingnotification.ui.data.repositories.ContactRepository
 import com.example.meetingnotification.ui.data.repositories.EventRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 class SmsSendingService : Service() {                         // Dienst(Service), der SMS-Nachrichten versendet
     private lateinit var receiver: SmsSentReceiver            // Deklariert einen SMS-Empfänger(Broadcast)
     private lateinit var contactRepository: ContactRepository
     private lateinit var eventRepository: EventRepository
+
+    private val serviceScope = CoroutineScope(Dispatchers.IO)
     private val binder = LocalBinder()                        // Binder für die Client-Anbindung an den Dienst
     var messageQueue = ArrayDeque<SmsMessage>()               // Warteschlange für SMS-Nachrichten
 
@@ -53,8 +60,17 @@ class SmsSendingService : Service() {                         // Dienst(Service)
         println("Receiver is unregistere an SmS service Destroyed")
     }
 
-    fun updateEventStatusFromContact(contactId: Int){
-
+    //Callback function.
+    fun getUpcomingEventForContact(contactId: Int,callback: (Event) -> Unit){
+        serviceScope.launch {
+            try {
+                val allEventsForChoosenContact = contactRepository.getContactWithEvents(contactId).first().events
+                val upcomingEventSortedOut = allEventsForChoosenContact.sortedByDescending { event -> event.eventDate}[0]
+                callback(upcomingEventSortedOut)
+            }catch (e: NoSuchElementException){
+                throw NoSuchElementException("No events found for contactId: $contactId")
+            }
+        }
     }
 
     fun addMessageToQueue(contactInformation: List<ContactReadyForSms>) {                                   // Fügt eine Liste von Kontakten zur SMS-Warteschlange hinzu

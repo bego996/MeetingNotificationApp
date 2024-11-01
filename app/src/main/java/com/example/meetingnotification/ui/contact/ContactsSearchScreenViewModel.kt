@@ -14,7 +14,6 @@ import com.example.meetingnotification.ui.data.repositories.ContactRepository
 import com.example.meetingnotification.ui.data.repositories.EventRepository
 import com.example.meetingnotification.ui.services.ServiceAction
 import com.example.meetingnotification.ui.services.SmsSendingServiceInteractor
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -68,10 +67,6 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
                 }
             }
         }
-    }
-
-    fun getContactByID(id: Int): Flow<Contact?> {
-        return contactRepository.getContactStream(id)
     }
 
     @SuppressLint("Range", "CheckResult")
