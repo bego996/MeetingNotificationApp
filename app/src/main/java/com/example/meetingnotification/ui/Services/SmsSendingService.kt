@@ -60,7 +60,7 @@ class SmsSendingService : Service() {                         // Dienst(Service)
         println("Receiver is unregistere an SmS service Destroyed")
     }
 
-    //Callback function.
+    //Callback function. Function to get the upcoming event for specific contact from the database.
     fun getUpcomingEventForContact(contactId: Int,callback: (Event) -> Unit){
         serviceScope.launch {
             try {
@@ -70,6 +70,13 @@ class SmsSendingService : Service() {                         // Dienst(Service)
             }catch (e: NoSuchElementException){
                 throw NoSuchElementException("No events found for contactId: $contactId")
             }
+        }
+    }
+
+    //will be called when a event for a contact is already notified. It updates the Event in the database.
+    fun updateEventInDatabase(event: Event){
+        serviceScope.launch {
+            eventRepository.updateItem(event)
         }
     }
 
