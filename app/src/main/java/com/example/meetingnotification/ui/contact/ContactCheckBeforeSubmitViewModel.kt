@@ -37,26 +37,51 @@ class ContactCheckBeforeSubmitViewModel(
                 initialValue = ContactsUiState3()             // Anfangswert des StateFlow
             )
 
+    //alle kalenderereignisse die in der datenbank gespeichert sind, auch abgelaufene oder neue.
     private var _contactWithEvents = MutableStateFlow<List<ContactWithEvents>>(emptyList())
     val contactWithEvents: StateFlow<List<ContactWithEvents>> = _contactWithEvents
 
+    //alle kalendreignisse die wirkich eingetragen sind im kalender aber nicht unbedingt in der db sein müssen.
     private val _calenderState = MutableStateFlow<List<EventDateTitle>>(emptyList())    // MutableStateFlow zur Verwaltung der Kalenderdaten
     private val calenderState: StateFlow<List<EventDateTitle>> = _calenderState         // Unveränderlicher StateFlow zur Abfrage der Kalenderdaten
 
+    //nur die nächsten anstehenden kalenereignisse, pro contact nur ein event möglich.
     private val _calenderStateConnectedToContacts = mutableStateOf<List<ContactZippedWithDate>>(emptyList())            // MutableState zur Verknüpfung von Kontakten mit Kalenderdaten
     val calenderStateConnectedToContacts: State<List<ContactZippedWithDate>> = _calenderStateConnectedToContacts        // Öffentlicher Zugriff auf die verknüpften Kalenderdaten
 
     private var contactListReadyForSms by mutableStateOf(listOf<ContactReadyForSms>())      // Kontakte, die bereit für den SMS-Versand sind
 
+
     fun loadContactsWithEvents(){
         viewModelScope.launch {
             val mutableListContactsWithEvents = mutableListOf<ContactWithEvents>()
+            val actualEventsInCalender = calenderState
+            val dateFormatter = DateTimeFormatter.ofPattern("dd:MM:yyyy")
 
             calenderStateConnectedToContacts.value.forEach { contactWithDate ->
 
-                val contactAndEvents = contactRepository.getContactWithEvents(contactWithDate.contactId).first()
+                val justContact = contactRepository.getContactStream(contactWithDate.contactId).first()
+                val eventsFromContact = contactRepository.getContactWithEvents(contactWithDate.contactId).first().events.toMutableList()
 
-                mutableListContactsWithEvents.add(contactAndEvents)
+                if (eventsFromContact.isNotEmpty()){
+                    var eventsWhichExistInCalender = eventsFromContact.filter {event ->
+                        actualEventsInCalender.value.any { actualevent ->
+                            actualevent.eventDate.toLocalTime().toString() == event.eventTime &&
+                            actualevent.eventDate.toLocalDate().format(dateFormatter) == event.eventDate
+                        }
+                    }
+                    var eventsWhichDontExistInCalender =  eventsFromContact.subtract(eventsWhichExistInCalender.toSet()).toList()
+
+                    if (eventsWhichDontExistInCalender.isNotEmpty()){
+                        eventsWhichDontExistInCalender.forEach {notExistingEvent ->
+                            eventRepository.deleteItem(notExistingEvent)
+                            eventsFromContact.remove(notExistingEvent)
+                        }
+                    }
+                    justContact?.let {
+                        ContactWithEvents(it,eventsFromContact) }?.let {
+                            mutableListContactsWithEvents.add(it)} ?: throw NullPointerException("contact or event not found")
+                }
             }
             _contactWithEvents.value = mutableListContactsWithEvents
         }
@@ -109,11 +134,6 @@ class ContactCheckBeforeSubmitViewModel(
             ).days // Tage bis zum Datum berechnen
         return "$daysBeetweenNowAndMeetingDate Days Left"    // Gibt die verbleibenden Tage als Zeichenkette zurück
     }
-
-//    fun isContactForNextEventAlreadyNotified(contactId: Int) : Boolean{
-//        val eventListForContact = contactRepository.getContactWithEvents(contactId).map{it.events}
-//
-//    }
 
     fun zipDatesToContacts(contacts: List<Contact>) {                              // Verknüpft Kontakte mit Kalenderdaten
         val dates = getCalenderState()                                             // Holt die aktuelle Liste der Kalenderereignisse
