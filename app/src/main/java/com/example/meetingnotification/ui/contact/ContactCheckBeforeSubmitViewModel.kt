@@ -150,35 +150,31 @@ class ContactCheckBeforeSubmitViewModel(
     private fun deleteEventsThatDontExistsInCalenderAnymoreFromDatabase(allEventsInCalender: List<EventDateTitle>,contactsInDatabase: List<Contact>){
         viewModelScope.launch {
             val outputFormatterDate = DateTimeFormatter.ofPattern("dd.MM.yyyy")
-            val nowDateTime = LocalDateTime.now() // Aktuelle Zeit als LocalDateTime
-            val validEventsInDatabase = mutableListOf<Event>()
-            val eventsToDelete = mutableListOf<Event>()
+            val now = LocalDateTime.now()
 
-            contactsInDatabase.forEach { contact ->
-                val eventFromContact = contactRepository.getContactWithEvents(contact.id).first().events
-                validEventsInDatabase.addAll(eventFromContact)
-            }
-
-            val futureEvents = validEventsInDatabase.filter { event ->
-                val eventDate = LocalDate.parse(event.eventDate, outputFormatterDate)
-                val eventTime = LocalTime.parse(event.eventTime)
-                val eventDateTime = LocalDateTime.of(eventDate, eventTime) // Kombination zu LocalDateTime
-                eventDateTime.isAfter(nowDateTime) // Prüfung, ob das Event in der Zukunft liegt
-            }
-            // Prüfen, welche Events gelöscht werden müssen
-            futureEvents.forEach { validEvent ->
+            // Direkt als MutableList initialisieren (keine spätere Umwandlung nötig)
+            val validEventsInDatabase = contactsInDatabase.flatMap { contact ->
+                contactRepository.getContactWithEvents(contact.id).first().events
+            }.filter { event ->
                 val eventDateTime = LocalDateTime.of(
-                    LocalDate.parse(validEvent.eventDate, outputFormatterDate),
-                    LocalTime.parse(validEvent.eventTime)
+                    LocalDate.parse(event.eventDate, outputFormatterDate),
+                    LocalTime.parse(event.eventTime)
                 )
-                val existsInCalendar = allEventsInCalender.any { calendarEvent ->
-                    calendarEvent.eventDate.isEqual(eventDateTime)
-                }
+                eventDateTime.isAfter(now)  // Event muss in der Zukunft liegen
+            }.toMutableList()
 
-                if (!existsInCalendar) {
-                    eventsToDelete.add(validEvent) // Falls das Event nicht im Kalender existiert, löschen
+            // Events finden, die in der DB sind, aber nicht im Kalender vorkommen
+            val eventsToDelete = validEventsInDatabase.filter { validEvent ->
+                allEventsInCalender.none { event ->
+                    val actualEventDateTime = event.eventDate
+                    val validEventDateTime = LocalDateTime.of(
+                        LocalDate.parse(validEvent.eventDate, outputFormatterDate),
+                        LocalTime.parse(validEvent.eventTime)
+                    )
+                    actualEventDateTime == validEventDateTime
                 }
             }
+
             Log.i(TAG,"Size of to be deleted Events: ${eventsToDelete.size}")
             //delete Events that are no more in calender but still in Database.
             eventsToDelete.forEach { eventToDelete -> eventRepository.deleteItem(eventToDelete) }
