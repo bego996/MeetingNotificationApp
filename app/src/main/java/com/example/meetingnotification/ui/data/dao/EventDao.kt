@@ -26,4 +26,7 @@ interface EventDao {
     @Transaction
     @Query("SELECT * FROM events WHERE eventId = :eventId")
     fun getEventWithContact(eventId: Int): Flow<EventWithContact>
+
+    @Query("SELECT * FROM events WHERE eventDate = :eventDate AND eventTime = :eventTime")
+    fun getEventFromDateAndTimeParam(eventDate: String,eventTime: String): Flow<List<Event>>
 }

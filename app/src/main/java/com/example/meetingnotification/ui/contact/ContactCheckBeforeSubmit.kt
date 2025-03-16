@@ -89,17 +89,17 @@ fun ContactCheckScreen(
         }
     }
 
-    LaunchedEffect(uiStateWithEvents.value.size) {                //Wartet bis die größe der contacte mit event liste sich ändert (nicht null ist). Vom Launched effect oben abhängig.
-        if (uiStateWithEvents.value.isNotEmpty()) {
-            uiStateWithEvents.value.forEach {contactAndDate ->
-                println(contactAndDate.contact)
-                contactAndDate.events.forEach { event ->
-                    println(event)
-                }
-            }
-            Log.d(TAG,"Event printout with contact finished in LaunchedEffect()")
-        }
-    }
+//    LaunchedEffect(uiStateWithEvents.value.size) {                //Wartet bis die größe der contacte mit event liste sich ändert (nicht null ist). Vom Launched effect oben abhängig.
+//        if (uiStateWithEvents.value.isNotEmpty()) {
+//            uiStateWithEvents.value.forEach {contactAndDate ->
+//                println(contactAndDate.contact)
+//                contactAndDate.events.forEach { event ->
+//                    println(event)
+//                }
+//            }
+//            Log.d(TAG,"Event printout with contact finished in LaunchedEffect()")
+//        }
+//    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(

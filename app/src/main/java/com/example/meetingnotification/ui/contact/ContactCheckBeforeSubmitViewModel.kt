@@ -1,5 +1,6 @@
 package com.example.meetingnotification.ui.contact
 
+import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -19,6 +20,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 private val TAG = ContactCheckBeforeSubmitViewModel::class.simpleName
@@ -55,37 +58,17 @@ class ContactCheckBeforeSubmitViewModel(
     fun loadContactsWithEvents(){
         viewModelScope.launch {
             val mutableListContactsWithEvents = mutableListOf<ContactWithEvents>()
-            val actualEventsInCalender = calenderState
-            val dateFormatter = DateTimeFormatter.ofPattern("dd:MM:yyyy")
 
             calenderStateConnectedToContacts.value.forEach { contactWithDate ->
 
-                val justContact = contactRepository.getContactStream(contactWithDate.contactId).first()
-                val eventsFromContact = contactRepository.getContactWithEvents(contactWithDate.contactId).first().events.toMutableList()
+                val contactAndEvents = contactRepository.getContactWithEvents(contactWithDate.contactId).first()
 
-                if (eventsFromContact.isNotEmpty()){
-                    var eventsWhichExistInCalender = eventsFromContact.filter {event ->
-                        actualEventsInCalender.value.any { actualevent ->
-                            actualevent.eventDate.toLocalTime().toString() == event.eventTime &&
-                            actualevent.eventDate.toLocalDate().format(dateFormatter) == event.eventDate
-                        }
-                    }
-                    var eventsWhichDontExistInCalender =  eventsFromContact.subtract(eventsWhichExistInCalender.toSet()).toList()
-
-                    if (eventsWhichDontExistInCalender.isNotEmpty()){
-                        eventsWhichDontExistInCalender.forEach {notExistingEvent ->
-                            eventRepository.deleteItem(notExistingEvent)
-                            eventsFromContact.remove(notExistingEvent)
-                        }
-                    }
-                    justContact?.let {
-                        ContactWithEvents(it,eventsFromContact) }?.let {
-                            mutableListContactsWithEvents.add(it)} ?: throw NullPointerException("contact or event not found")
-                }
+                mutableListContactsWithEvents.add(contactAndEvents)
             }
             _contactWithEvents.value = mutableListContactsWithEvents
         }
     }
+
 
     fun getContactsReadyForSms(): List<ContactReadyForSms> = contactListReadyForSms         // Gibt die Liste der Kontakte für den SMS-Versand zurück
 
@@ -148,19 +131,58 @@ class ContactCheckBeforeSubmitViewModel(
                     listZipped.add(
                         ContactZippedWithDate(
                             contact.id,
-                            date.eventDate.toLocalDate()
-                                .format(outputFormatterDate),          // Formatiertes Datum
+                            date.eventDate.toLocalDate().format(outputFormatterDate),          // Formatiertes Datum
                             date.eventDate.toLocalTime().toString()    // Uhrzeit als Zeichenkette
                         )
                     )
                 }
         }
+
         _calenderStateConnectedToContacts.value = listZipped           // Aktualisiert die MutableState-Liste mit den verknüpften Daten
+        deleteEventsThatDontExistsInCalenderAnymoreFromDatabase(dates,contacts)
         insertEventForContact(listZipped)
         updateContactsMessageAfterZippingItWithDates(
             listZipped,
             contacts
         )   // Aktualisiert die Nachrichten der Kontakte nach der Verknüpfung
+    }
+
+    private fun deleteEventsThatDontExistsInCalenderAnymoreFromDatabase(allEventsInCalender: List<EventDateTitle>,contactsInDatabase: List<Contact>){
+        viewModelScope.launch {
+            val outputFormatterDate = DateTimeFormatter.ofPattern("dd.MM.yyyy")
+            val nowDateTime = LocalDateTime.now() // Aktuelle Zeit als LocalDateTime
+            val validEventsInDatabase = mutableListOf<Event>()
+            val eventsToDelete = mutableListOf<Event>()
+
+            contactsInDatabase.forEach { contact ->
+                val eventFromContact = contactRepository.getContactWithEvents(contact.id).first().events
+                validEventsInDatabase.addAll(eventFromContact)
+            }
+
+            val futureEvents = validEventsInDatabase.filter { event ->
+                val eventDate = LocalDate.parse(event.eventDate, outputFormatterDate)
+                val eventTime = LocalTime.parse(event.eventTime)
+                val eventDateTime = LocalDateTime.of(eventDate, eventTime) // Kombination zu LocalDateTime
+                eventDateTime.isAfter(nowDateTime) // Prüfung, ob das Event in der Zukunft liegt
+            }
+            // Prüfen, welche Events gelöscht werden müssen
+            futureEvents.forEach { validEvent ->
+                val eventDateTime = LocalDateTime.of(
+                    LocalDate.parse(validEvent.eventDate, outputFormatterDate),
+                    LocalTime.parse(validEvent.eventTime)
+                )
+                val existsInCalendar = allEventsInCalender.any { calendarEvent ->
+                    calendarEvent.eventDate.isEqual(eventDateTime)
+                }
+
+                if (!existsInCalendar) {
+                    eventsToDelete.add(validEvent) // Falls das Event nicht im Kalender existiert, löschen
+                }
+            }
+            Log.i(TAG,"Size of to be deleted Events: ${eventsToDelete.size}")
+            //delete Events that are no more in calender but still in Database.
+            eventsToDelete.forEach { eventToDelete -> eventRepository.deleteItem(eventToDelete) }
+        }
     }
 
 

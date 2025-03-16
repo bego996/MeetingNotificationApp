@@ -8,6 +8,8 @@ interface EventRepository {
 
     fun getEventWithContact(eventId: Int): Flow<EventWithContact>
 
+    fun getEventFromDateAndTimeParam(eventDate: String,eventTime: String): Flow<List<Event>>
+
     /**
      * Insert item in the data source
      */
