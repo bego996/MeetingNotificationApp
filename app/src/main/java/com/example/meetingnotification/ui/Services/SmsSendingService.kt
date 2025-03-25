@@ -20,6 +20,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 class SmsSendingService : Service() {                         // Dienst(Service), der SMS-Nachrichten versendet
     private lateinit var receiver: SmsSentReceiver            // Deklariert einen SMS-Empfänger(Broadcast)
@@ -62,10 +66,16 @@ class SmsSendingService : Service() {                         // Dienst(Service)
 
     //Callback function. Function to get the upcoming event for specific contact from the database.
     fun getUpcomingEventForContact(contactId: Int,callback: (Event) -> Unit){
+        val dateTimeNow = LocalDateTime.now()
+        val dateFormated = DateTimeFormatter.ofPattern("dd.MM.yyyy")
+
         serviceScope.launch {
             try {
                 val allEventsForChoosenContact = contactRepository.getContactWithEvents(contactId).first().events
-                val upcomingEventSortedOut = allEventsForChoosenContact.sortedByDescending { event -> event.eventDate}[0]
+
+                val upcomingEventSortedOut = allEventsForChoosenContact.filter { event ->
+                    LocalDateTime.of(LocalDate.parse(event.eventDate,dateFormated), LocalTime.parse(event.eventTime)).isAfter(dateTimeNow) }.sortedBy { event -> event.eventDate }[0]
+
                 callback(upcomingEventSortedOut)
             }catch (e: NoSuchElementException){
                 throw NoSuchElementException("No events found for contactId: $contactId")

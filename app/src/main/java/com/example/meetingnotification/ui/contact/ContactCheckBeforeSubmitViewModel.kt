@@ -87,8 +87,16 @@ class ContactCheckBeforeSubmitViewModel(
     fun isContactNotifiedForUpcomingEvent(contactId: Int) : Boolean{
         val allEventsForChoosenContact = contactWithEvents.value.firstOrNull { contactWithEvents -> contactWithEvents.contact.id == contactId }?.events ?: emptyList()   //gibt event zurück oder false, falls es keine events hatt.
         if (allEventsForChoosenContact.isEmpty()) return false
-        val upcomingEventSortedOut = allEventsForChoosenContact.sortedByDescending { event -> event.eventDate}[0]
-        val upcomingEventNotified = upcomingEventSortedOut.isNotified
+
+        val dateTimeNow = LocalDateTime.now()
+        val dateFormated = DateTimeFormatter.ofPattern("dd.MM.yyyy")
+
+        val upcomingEventSortedOut = allEventsForChoosenContact.filter { event ->
+            LocalDateTime.of(LocalDate.parse(event.eventDate,dateFormated),LocalTime.parse(event.eventTime)).isAfter(dateTimeNow) }.sortedBy { event -> event.eventDate }
+
+
+        val upcomingEventNotified = upcomingEventSortedOut.firstOrNull()?.isNotified ?: return false
+
         return upcomingEventNotified
     }
 
@@ -110,10 +118,7 @@ class ContactCheckBeforeSubmitViewModel(
         val meetingDateFormat = DateTimeFormatter.ofPattern("dd.MM.yyyy") // Datumsformat für die Berechnung
         val daysBeetweenNowAndMeetingDate =
             LocalDate.now().until(
-                LocalDate.parse(
-                    meetingDate,
-                    meetingDateFormat
-                )
+                LocalDate.parse(meetingDate, meetingDateFormat)
             ).days // Tage bis zum Datum berechnen
         return "$daysBeetweenNowAndMeetingDate Days Left"    // Gibt die verbleibenden Tage als Zeichenkette zurück
     }
@@ -152,7 +157,7 @@ class ContactCheckBeforeSubmitViewModel(
             val outputFormatterDate = DateTimeFormatter.ofPattern("dd.MM.yyyy")
             val now = LocalDateTime.now()
 
-            // Direkt als MutableList initialisieren (keine spätere Umwandlung nötig)
+
             val validEventsInDatabase = contactsInDatabase.flatMap { contact ->
                 contactRepository.getContactWithEvents(contact.id).first().events
             }.filter { event ->
@@ -161,7 +166,7 @@ class ContactCheckBeforeSubmitViewModel(
                     LocalTime.parse(event.eventTime)
                 )
                 eventDateTime.isAfter(now)  // Event muss in der Zukunft liegen
-            }.toMutableList()
+            }
 
             // Events finden, die in der DB sind, aber nicht im Kalender vorkommen
             val eventsToDelete = validEventsInDatabase.filter { validEvent ->
@@ -174,7 +179,6 @@ class ContactCheckBeforeSubmitViewModel(
                     actualEventDateTime == validEventDateTime
                 }
             }
-
             Log.i(TAG,"Size of to be deleted Events: ${eventsToDelete.size}")
             //delete Events that are no more in calender but still in Database.
             eventsToDelete.forEach { eventToDelete -> eventRepository.deleteItem(eventToDelete) }
@@ -206,8 +210,7 @@ class ContactCheckBeforeSubmitViewModel(
                     }
                 }
             }
-    }
-}
+    } }
 
     private fun updateMessageWithCorrectDateTime(originMessage: String, dateReplacement: String, timeReplacement: String): String { // Ersetzt das Datum und die Uhrzeit in der ursprünglichen Nachricht
     val regexForAllPossibleDates = """(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])\.(\d{4})""".toRegex()
