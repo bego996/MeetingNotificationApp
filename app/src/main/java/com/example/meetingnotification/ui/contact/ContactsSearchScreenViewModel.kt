@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.provider.CalendarContract
 import android.provider.ContactsContract
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -23,6 +24,7 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 
+private val TAG = ContactsSearchScreenViewModel::class.simpleName
 
 class ContactsSearchScreenViewModel(                          // ViewModel zur Verwaltung von Kontakten im Suchbildschirm
     private val contactRepository: ContactRepository,         // Repository für den Zugriff auf die Kontakt-Datenbank
@@ -69,10 +71,17 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
         }
     }
 
+    fun updateContactInDatabase(contact: Contact){
+        viewModelScope.launch {
+            contactRepository.updateItem(contact)
+        }
+    }
+
     @SuppressLint("Range", "CheckResult")
     fun loadContacts(context: Context) {                     // Lädt die Kontakte aus dem System-Kontaktbuch
         val contactList = mutableListOf<Contact>()           // Liste für die geladenen Kontakte
         val contentResolver = context.contentResolver        // Holt den Content Resolver für Datenbank-Abfragen
+        var isContactJustToUpdate = false
 
         val cursor = contentResolver.query(
             ContactsContract.Contacts.CONTENT_URI,
@@ -134,6 +143,7 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
                                 "dd.MM.yyyy",
                                 "HH:mm"
                             )
+
                         contactList.add(Contact
                             (                                      // Fügt den Kontakt zur Liste hinzu
                                 id.toInt(),
@@ -145,12 +155,30 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
                                 defaultMessage
                             )
                         )
+
+                        val contactFromDatabaseIfExists = contactsUiState.value.contactList.firstOrNull { contact -> contact.id == id.toInt()}
+
+                        contactFromDatabaseIfExists?.let {
+                            if (contactFromDatabaseIfExists.lastName != surname ||
+                                contactFromDatabaseIfExists.firstName != firstname ||
+                                contactFromDatabaseIfExists.sex.toString() != sex ||
+                                contactFromDatabaseIfExists.title != title ||
+                                contactFromDatabaseIfExists.phone != phoneNumber){
+                                Log.d(TAG,"Contact is just to update in database()")
+                                isContactJustToUpdate = true
+                            }
+                            if (isContactJustToUpdate){
+                                updateContactInDatabase(contactFromDatabaseIfExists.copy(firstName = firstname, lastName = surname, title = title, phone = phoneNumber, sex = sex[0], message = defaultMessage))
+                            }
+                        }
+
                     }
                     phoneCursor?.close()
                 }
             }
             cursor.close()                                                //Schließt den cursor wenn fertig, wichtig!
         }
+
         // Aktualisiert die Kontakte in der Live-Datenstruktur. Wichtig : postValue() überschreibt immer alle alten Werte.
         //Wenn wir neue Werte anhängen wollen, bleibt keine andere Möglichkeit, als die alte liste irgendwo abzuspeichern und dann neue einfügen und am schluss wiieder mit postValue() updaten.
         contactsWriteOnly.postValue(contactList)
