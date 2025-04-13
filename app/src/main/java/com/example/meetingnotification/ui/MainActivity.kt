@@ -158,10 +158,10 @@ class MainActivity : AppCompatActivity(),
                 REQUEST_CODE_SEND_SMS
             )
         } else {
-            contactBuffer.loadContacts(this) //Lädt Kontakte ins ViewModel
             Log.d(TAG,"loadcontacts() called")
-            contactBuffer.loadCalender(this)                           //Lädt Kalenderdaten ins ViewModel
+            contactBuffer.loadContactsWrapper(this)
             Log.d(TAG,"loadCalender() called")
+            contactBuffer.loadCalender(this)                           //Lädt Kalenderdaten ins ViewModel
         }
     }
 

@@ -71,14 +71,34 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
         }
     }
 
-    fun updateContactInDatabase(contact: Contact){
+//    private fun updateEventsFromAContactInDatabase(contact: Contact){
+//        viewModelScope.launch {
+//            eventRepository.updateItem(contact)
+//        }
+//    }
+//
+//    //Nötig um loadCalender() asynchron laufen zu lassen und nach loadContacts() auszuführen.
+//    fun loadEventWrapper(context: Context){
+//        viewModelScope.launch {
+//            loadCalender(context)
+//        }
+//    }
+
+    private fun updateContactInDatabase(contact: Contact){
         viewModelScope.launch {
             contactRepository.updateItem(contact)
         }
     }
 
+    //Nötig um loadContacts asynchron laufen zu lassen, um darrin suspende funktionen auf die datenbank aufzurufen um einen contact zu erhalten.
+    fun loadContactsWrapper(context: Context){
+        viewModelScope.launch {
+            loadContacts(context)
+        }
+    }
+
     @SuppressLint("Range", "CheckResult")
-    fun loadContacts(context: Context) {                     // Lädt die Kontakte aus dem System-Kontaktbuch
+    suspend fun loadContacts(context: Context) {                     // Lädt die Kontakte aus dem System-Kontaktbuch
         val contactList = mutableListOf<Contact>()           // Liste für die geladenen Kontakte
         val contentResolver = context.contentResolver        // Holt den Content Resolver für Datenbank-Abfragen
         var isContactJustToUpdate = false
@@ -155,8 +175,8 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
                                 defaultMessage
                             )
                         )
-
-                        val contactFromDatabaseIfExists = contactsUiState.value.contactList.firstOrNull { contact -> contact.id == id.toInt()}
+                        //Hier wird geprüft ob contact schon in der datenbank eingetragen ist.
+                        val contactFromDatabaseIfExists = contactRepository.getContactStream(id.toInt())
 
                         contactFromDatabaseIfExists?.let {
                             if (contactFromDatabaseIfExists.lastName != surname ||
@@ -168,7 +188,8 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
                                 isContactJustToUpdate = true
                             }
                             if (isContactJustToUpdate){
-                                updateContactInDatabase(contactFromDatabaseIfExists.copy(firstName = firstname, lastName = surname, title = title, phone = phoneNumber, sex = sex[0], message = defaultMessage))
+                                updateContactInDatabase(Contact(id.toInt(),title,firstname,surname,sex[0],phoneNumber,defaultMessage))
+                                isContactJustToUpdate = false
                             }
                         }
 

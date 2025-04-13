@@ -24,7 +24,7 @@ interface ContactDao {
     suspend fun delete(contact: Contact)
 
     @Query("SELECT * from contacts WHERE id = :id ")
-    fun getContact(id: Int): Flow<Contact>
+    suspend fun getContact(id: Int): Contact?
 
     @Query("SELECT * from contacts ORDER BY firstName ASC")
     fun getAllContacts(): Flow<List<Contact>>

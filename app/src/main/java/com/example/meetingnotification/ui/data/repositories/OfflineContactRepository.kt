@@ -29,7 +29,7 @@ class OfflineContactRepository(private val contactDao: ContactDao) : ContactRepo
         return contactDao.getContactWithEvents(contactId)
     }
 
-    override fun getContactStream(id: Int): Flow<Contact?> = contactDao.getContact(id)
+    override suspend fun getContactStream(id: Int): Contact? = contactDao.getContact(id)
 
     override suspend fun insertItem(contact: Contact) = contactDao.insert(contact)
 

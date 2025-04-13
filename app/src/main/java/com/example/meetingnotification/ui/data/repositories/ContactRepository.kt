@@ -13,7 +13,7 @@ interface ContactRepository {
     /**
      * Retrieve an item from the given data source that matches with the [id].
      */
-    fun getContactStream(id: Int): Flow<Contact?>
+    suspend fun getContactStream(id: Int): Contact?
 
     /**
      * Insert item in the data source
