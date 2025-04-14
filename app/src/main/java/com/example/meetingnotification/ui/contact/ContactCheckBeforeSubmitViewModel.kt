@@ -42,7 +42,7 @@ class ContactCheckBeforeSubmitViewModel(
 
     //alle kalenderereignisse die in der datenbank gespeichert sind, auch abgelaufene oder neue.
     private var _contactWithEvents = MutableStateFlow<List<ContactWithEvents>>(emptyList())
-    val contactWithEvents: StateFlow<List<ContactWithEvents>> = _contactWithEvents
+    private val contactWithEvents: StateFlow<List<ContactWithEvents>> = _contactWithEvents
 
     //alle kalendreignisse die wirkich eingetragen sind im kalender aber nicht unbedingt in der db sein müssen.
     private val _calenderState = MutableStateFlow<List<EventDateTitle>>(emptyList())    // MutableStateFlow zur Verwaltung der Kalenderdaten
@@ -116,10 +116,7 @@ class ContactCheckBeforeSubmitViewModel(
 
     fun getDayDuration(meetingDate: String): String {        // Berechnet die Anzahl der Tage bis zum angegebenen Datum
         val meetingDateFormat = DateTimeFormatter.ofPattern("dd.MM.yyyy") // Datumsformat für die Berechnung
-        val daysBeetweenNowAndMeetingDate =
-            LocalDate.now().until(
-                LocalDate.parse(meetingDate, meetingDateFormat)
-            ).days // Tage bis zum Datum berechnen
+        val daysBeetweenNowAndMeetingDate = LocalDate.now().until(LocalDate.parse(meetingDate, meetingDateFormat)).days // Tage bis zum Datum berechnen
         return "$daysBeetweenNowAndMeetingDate Days Left"    // Gibt die verbleibenden Tage als Zeichenkette zurück
     }
 
