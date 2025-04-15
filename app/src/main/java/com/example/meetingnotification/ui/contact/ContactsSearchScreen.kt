@@ -2,6 +2,7 @@ package com.example.meetingnotification.ui.contact
 
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -19,15 +21,18 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.RadioButtonColors
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -38,10 +43,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.meetingnotification.ui.R
+import com.example.meetingnotification.ui.data.entities.Contact
 import com.example.meetingnotification.ui.navigation.NavigationDestination
 
 
@@ -52,197 +56,174 @@ object SearchContactDestination : NavigationDestination {        // Objekt für 
 
 
 @Composable
-fun SearchListScreen(                                            // Haupt-Composable für den Suchbildschirm
+fun SearchListScreen(
     modifier: Modifier = Modifier,
-    viewModel: ContactsSearchScreenViewModel,                    // ViewModel
-    onCancelCLicked: () -> Unit,                                 // Callback für den "Cancel" Button.
-    navigateToSavedContacts: () -> Unit                          // Callback für das Navigieren zu gespeicherten Kontakten
+    viewModel: ContactsSearchScreenViewModel,                 // ViewModel zur Bereitstellung von Daten
+    onCancelCLicked: () -> Unit,                              // Callback für "Cancel"-Button
+    navigateToSavedContacts: () -> Unit                       // Callback zum Navigieren zur gespeicherten Kontaktliste
 ) {
-    val uiState = viewModel.contactsUiState.collectAsState()     // Überwacht den aktuellen Zustand der Kontakte
-    val contactBuffer = viewModel.getContacts().observeAsState(listOf()) // Beobachtet die Kontakte aus dem LiveData
-    var text by remember { mutableStateOf("") }            // Suchtext-Status
-    var contactBufferSorted by remember { mutableStateOf(contactBuffer.value) }         // Gefilterte Kontaktliste
-    var contactIdsRadioDepency by remember { mutableStateOf(listOf<MutablePairs>()) }   // Liste für die Abhängigkeiten von Radio-Buttons
+    val uiState = viewModel.contactsUiState.collectAsState()  // Beobachtet den aktuellen Zustand der gespeicherten Kontakte
+    val contactBuffer = viewModel.getContacts().observeAsState(emptyList()) // Holt alle Kontakte aus dem LiveData
 
-    LaunchedEffect(contactBuffer.value) {                        // Aktualisiert die Radio-Button-Abhängigkeiten, wenn sich die Kontaktliste ändert
-        contactIdsRadioDepency =
-            contactBuffer.value.map { contact -> MutablePairs(contact.id, false) }
+    var text by remember { mutableStateOf("") }               // Suchtext-State für das Eingabefeld
+
+    val contactBufferSorted by remember(text, contactBuffer.value) {
+        derivedStateOf {
+            if (text.isBlank()) contactBuffer.value
+            else contactBuffer.value.filter {
+                it.firstName.contains(text, ignoreCase = true) // Filtert Kontakte nach Vornamen
+            }
+        }
     }
 
-    LaunchedEffect(text) {                                        // Filtert die Kontakte basierend auf dem Suchtext
-        contactBufferSorted = if (text == "") {
-            contactBuffer.value                                   // Gibt alle Kontakte zurück, wenn kein Suchtext vorhanden ist
-        } else {
-            contactBuffer.value
-                .filter {
-                    it.firstName.contains(text, ignoreCase = true)
-                }      // Filtert nach Vornamen
-        }
+    var contactIdsRadioDepency by remember(contactBufferSorted) {
+        mutableStateOf(
+            contactBufferSorted.map { contact -> MutablePairs(contact.id, false) } // Initialisiert die RadioButton-Abhängigkeiten
+        )
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
-            painter = painterResource(R.drawable.background_picture1),
+            painter = painterResource(R.drawable.background_light2),
             contentDescription = "Hintergrundbild",
             modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop // Skaliert das Bild, um den verfügbaren Raum zu füllen
+            contentScale = ContentScale.Crop // Skaliert das Bild, um es zu füllen
         )
+
+        // semi-transparent overlay for better readability
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.4f))
+        )
+
         Column(
             modifier = Modifier
-                .fillMaxSize()                                        // Füllt den gesamten verfügbaren Platz
-                .padding(10.dp)                                       // Fügt einen Innenabstand von 10 dp hinzu
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.4f))  // Halbtransparentes Overlay für bessere Lesbarkeit
+                .padding(16.dp)                              // Standard-Padding für Abstand
         ) {
-            Row(
+            // 🔍 Suchfeld mit Icon
+            TextField(
                 modifier = Modifier
-                    .fillMaxWidth(),                                  // Füllt die gesamte verfügbare Breite aus
-                verticalAlignment = Alignment.CenterVertically        // Zentriert die Elemente vertikal
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Search,               // Such-Icon zur Darstellung der Suche
-                    contentDescription = "Search Icon",
-                    modifier = Modifier.size(55.dp)                   // Setzt die Größe des Icons auf 55 dp
-                )
-                TextField(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .size(55.dp),                                 // Setzt die Höhe des Textfelds auf 55 dp
-                    value = text,                                     // Bindet den aktuellen Suchtext-Wert
-                    onValueChange = { newText ->
-                        text = newText
-                    },    // Aktualisiert den Suchtext-Wert
-                    placeholder = { Text("Enter Search Options") },   // Platzhaltertext, wenn das Feld leer ist
-                    maxLines = 1                                           // Beschränkt die Eingabe auf eine Zeile
-                )
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Start
-            ) {
-                Text(
-                    text = "${stringResource(R.string.contact_firstname)} | ",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )    // Überschriften für die Liste
-                Text(
-                    text = "${stringResource(R.string.contact_surname)} | ",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "${stringResource(R.string.contact_sex)} | ",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "${stringResource(R.string.contact_phonenumber)} | ",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "${stringResource(R.string.contact_title)} |",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            Spacer(modifier = Modifier.height(20.dp))
-            LazyColumn(
-                modifier = Modifier.weight(1f)
-            ) {
-                items(contactBufferSorted) { contact ->               // Iteriert durch die gefilterten Kontakte
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
+                    .fillMaxWidth()
+                    .size(55.dp),                                 // Setzt die Höhe des Textfelds auf 55 dp
+                value = text,                                     // Bindet den aktuellen Suchtext-Wert
+                onValueChange = { newText ->
+                    text = newText
+                },    // Aktualisiert den Suchtext-Wert
+                placeholder = { Text("Enter Search Options") },
+                maxLines = 1,
+                leadingIcon = { Icon(Icons.Default.Search,null) }
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))        // Abstand zum nächsten Element
+
+            // 📜 Kontaktliste mit Scrollmöglichkeit
+            LazyColumn(modifier = Modifier.weight(1f)) {
+                items(contactBufferSorted, key = { it.id }) { contact ->  // Iteriert durch gefilterte Kontakte, nutzt stabile Key-Zuweisung
+                    val isSelected = contactIdsRadioDepency.firstOrNull { it.first == contact.id }?.second ?: false
+                    Card(
                         modifier = Modifier
                             .fillMaxWidth()
-
+                            .padding(vertical = 6.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.8f))
                     ) {
-                        Text(text = "${contact.firstName} | ", color = Color.Green)
-                        Text(text = "${contact.lastName} | ", color = Color.Green)
-                        Text(text = "${contact.sex} | ", color = Color.Green)
-                        Text(text = "${contact.phone} | ", color = Color.Green)
-                        Text(text = "${contact.title} |", color = Color.Green)
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.End
-                        ) {
-                            if (uiState.value.contactList.firstOrNull { contacts -> contacts.firstName == contact.firstName && contacts.lastName == contact.lastName}?.let { false } != false) {     // Zeigt einen RadioButton an, wenn der Kontakt nicht bereits hinzugefügt wurde
-                                RadioButton(
-                                    selected = contactIdsRadioDepency.firstOrNull { pair -> pair.first == contact.id }?.second
-                                        ?: false,    // Prüft den aktuellen Status des Radio-Buttons
-                                    onClick = {
-                                        val updateList =
-                                            contactIdsRadioDepency.toMutableList()         // Erstellt eine veränderbare Liste der Abhängigkeiten
-                                        val index =
-                                            updateList.indexOfFirst { it.first == contact.id }  // Sucht den Index des aktuellen Kontakts
-                                        if (index != -1) {
-                                            updateList[index] = MutablePairs(
-                                                contact.id,
-                                                !updateList[index].second
-                                            )  // Aktualisiert den Status
-                                        }
-                                        contactIdsRadioDepency = updateList
-                                    }, modifier = Modifier.height(60.dp),
-                                    colors = RadioButtonColors(
-                                        selectedColor = Color.White,
-                                        unselectedColor = Color.White,
-                                        disabledSelectedColor = Color.White,
-                                        disabledUnselectedColor = Color.Black
-                                    )
-                                )
-                            } else {
-                                Icon(
-                                    imageVector = Icons.Filled.Check,      // Zeigt ein Check-Icon, wenn der Kontakt bereits hinzugefügt wurde
-                                    contentDescription = "Häkchen",
-                                    tint = Color.Black,                     // Setzt die Farbe auf Schwarz
-                                    modifier = Modifier
-                                        .padding(end = 11.dp)
-                                        .height(60.dp)
-                                )
+                        ContactRow(
+                            contact = contact,
+                            alreadySaved = uiState.value.contactList.any {
+                                it.firstName == contact.firstName && it.lastName == contact.lastName // Prüft, ob Kontakt bereits gespeichert ist
+                            },
+                            isSelected = isSelected,
+                            onToggle = {
+                                contactIdsRadioDepency = contactIdsRadioDepency.map {
+                                    if (it.first == contact.id) it.copy(second = !it.second) else it
+                                } // Schaltet RadioButton-Zustand um
                             }
-                        }
+                        )
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(16.dp))
-            Column(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth()
-                    //verticalAlignment = Alignment.CenterVertically
+
+            Spacer(modifier = Modifier.height(14.dp))        // Abstand zur Button-Zeile
+
+            // ⬅️➡️ Action Buttons
+            Row(modifier = Modifier.fillMaxWidth()) {
+                OutlinedButton(
+                    modifier = Modifier.weight(1f),
+                    onClick = onCancelCLicked                // Abbruch
                 ) {
-                    OutlinedButton(
-                        modifier = Modifier.weight(2f),
-                        onClick = onCancelCLicked // Ruft den "Cancel"-Callback auf
-                    ) {
-                        Text(
-                            text = "Cancel",
-                            color = Color.Black
-                        )                          // Button Beschriftung "Cancel"
-                    }
-                    Spacer(modifier = Modifier.weight(1f))
-                    Button(
-                        modifier = Modifier.weight(2f),
-                        onClick = {
-                            contactBufferSorted.isNotEmpty()
-                                .and(contactIdsRadioDepency.any { it.second })      // Überprüft, ob Kontakte vorhanden und ausgewählt sind
-                                .let {
-                                    val idToMap = contactIdsRadioDepency.filter { it.second }       // Holt die IDs der ausgewählten Kontakte
-                                        .map { it.first }
-                                    viewModel.addContactsToDatabase(            // Fügt die ausgewählten Kontakte zur Datenbank hinzu
-                                        contactBufferSorted,
-                                        idToMap
-                                    )
-                                    navigateToSavedContacts()                                       // Navigiert zu gespeicherten Kontakten(composable).
-                                }
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
-                    ) {
-                        Text(text = "Add All Selected")
-                    }
+                    Text("Cancel", color = Color.White)
+                }
+                Spacer(modifier = Modifier.width(16.dp))     // Abstand zwischen Buttons
+                Button(
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        val selectedIds = contactIdsRadioDepency.filter { it.second }.map { it.first } // Holt IDs der ausgewählten Kontakte
+                        if (selectedIds.isNotEmpty()) {
+                            viewModel.addContactsToDatabase(contactBufferSorted, selectedIds) // Übergibt Auswahl an ViewModel
+                            navigateToSavedContacts()                 // Navigiert zurück zur gespeicherten Liste
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.White)
+                ) {
+                    Text("Add All Selected", color = Color.Black)
                 }
             }
         }
     }
 }
+
+
+@Composable
+fun ContactRow(
+    contact: Contact,                   // Einzelkontakt
+    alreadySaved: Boolean,             // Gibt an, ob der Kontakt bereits gespeichert ist
+    isSelected: Boolean,               // Aktueller Radio-Button-Status
+    onToggle: () -> Unit               // Callback zum Umschalten des Auswahlstatus
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(6.dp),  // Vertikaler Abstand zwischen Listenelementen
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        // 👤 Kontaktinformationen
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "Geschlecht -> ${if (contact.sex == 'W') "Weiblich" else "Männlich" }"
+            )
+            Text(
+                text = "Titel -> ${contact.title}"
+            )
+            Text(text = "Name -> ${contact.firstName} ${contact.lastName}")
+            Text(
+                text = "📞 ${contact.phone}",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.DarkGray
+            )
+        }
+
+        // ✅ Auswahlstatus
+        if (alreadySaved) {
+            Icon(
+                imageVector = Icons.Filled.Check,
+                contentDescription = null,
+                tint = Color(0xFF116715),
+                modifier = Modifier.padding(12.dp)
+            )
+        } else {
+            RadioButton(
+                selected = isSelected,
+                onClick = onToggle,  // Setzt Auswahlstatus um
+                colors = RadioButtonDefaults.colors(
+                    selectedColor = Color(0xFF116715),
+                    unselectedColor = Color.Black
+                )
+            )
+        }
+    }
+}
+
+

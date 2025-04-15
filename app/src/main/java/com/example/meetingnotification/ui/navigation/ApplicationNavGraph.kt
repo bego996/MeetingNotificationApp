@@ -62,14 +62,7 @@ fun MettingNavHost(                                           // Hauptfunktion f
             SearchListScreen(
                 modifier = Modifier.background(Color.DarkGray),
                 viewModel = viewModel,
-                onCancelCLicked = {
-                    navController.navigate(HomeDestination.route) {             // Navigiert zurück zur Startseite
-                        popUpTo(navController.graph.startDestinationId) {       // Leert den Navigationsstapel bis zur Startdestination
-//                          inclusive = false                                   auskomentiert weil sowieso default wert false. Bedeuted das die home instanz nicht entfernt wird aus dem Stack.
-                        }
-                        launchSingleTop = true // Verhindert das Duplizieren der Home-Destination im Backstack. In kombi mit deufault inclusive Wert, wird immer auf die bestehende instanz von home zugegrifen hier. Keine dupikation möglich.
-                    }
-                },
+                onCancelCLicked = {navController.popBackStack()},
                 navigateToSavedContacts = { navController.popBackStack() }      // Geht zum vorherigen Bildschirm zurück
             )
         }

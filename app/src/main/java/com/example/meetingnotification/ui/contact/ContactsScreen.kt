@@ -1,5 +1,11 @@
 package com.example.meetingnotification.ui.contact
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -27,18 +33,25 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.meetingnotification.ui.AppViewModelProvider
 import com.example.meetingnotification.ui.R
 import com.example.meetingnotification.ui.navigation.NavigationDestination
+import kotlinx.coroutines.delay
 
 
 object SavedContactsDestination : NavigationDestination {     // Definiert eine statische Route für "SavedContacts"
@@ -162,48 +175,70 @@ fun FilledListscreen(
         Text(
             text = "Gespeicherte Kontakte",
             style = MaterialTheme.typography.headlineSmall,
-            color = Color.White,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
+            color = Color.Green,
+            modifier = Modifier.padding(bottom = 16.dp),
+            fontWeight = FontWeight.Bold)
 
         LazyColumn(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
         ) {
-            items(savedContacts.contactsUiState.value.contactUiState) { contact ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.7f))
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Geschlecht -> ${if (contact.sex == 'W') "Weiblich" else "Männlich" }"
-                            )
-                            Text(
-                                text = "Titel -> ${contact.title}"
-                            )
-                            Text(text = "Name -> ${contact.firstName} ${contact.lastName}")
-                            Text(
-                                text = "📞 ${contact.phone}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color.DarkGray
-                            )
-                        }
+            items(savedContacts.contactsUiState.value.contactUiState, key = {it.id}) { contact ->
+                var visible by remember { mutableStateOf(true) }
+                var pendingDelete by remember { mutableStateOf(false) }
 
-                        IconButton(onClick = { savedContacts.deleteContact(contact) }) {
-                            Icon(
-                                imageVector = Icons.Default.Clear,
-                                contentDescription = "Kontakt löschen",
-                                tint = Color.Red
-                            )
+                if (pendingDelete){
+                    LaunchedEffect(true) {
+                        delay(300)
+                        savedContacts.deleteContact(contact)
+                    }
+                }
+
+                AnimatedVisibility(
+                    visible = visible,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut(tween(durationMillis = 300)) + slideOutVertically()
+                ) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.9f))
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Geschlecht -> ${if (contact.sex == 'W') "Weiblich" else "Männlich" }"
+                                )
+                                Text(
+                                    text = "Titel -> ${contact.title}"
+                                )
+                                Text(text = "Name -> ${contact.firstName} ${contact.lastName}")
+                                Text(
+                                    text = "📞 ${contact.phone}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color.DarkGray
+                                )
+                            }
+
+                            IconButton(
+                                onClick = {
+                                    visible = false
+                                    // Warte kurz, bis die Animation durch ist, dann lösche
+                                    pendingDelete = true
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Clear,
+                                    contentDescription = "Kontakt löschen",
+                                    tint = Color.Red
+                                )
+                            }
                         }
                     }
                 }

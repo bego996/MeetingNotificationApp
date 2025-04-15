@@ -133,7 +133,7 @@ fun ContactCheckScreen(
             LazyColumn(
                 modifier = Modifier.weight(1f)
             ) {
-                items(uiState.value.contactUiState) { contact ->
+                items(uiState.value.contactUiState, key = {it.id}) { contact ->
                     var isContactInCalender by remember { mutableStateOf(false) }
                     val isContactsNextEventNotified = viewModel.isContactNotifiedForUpcomingEvent(contact.id)
                     val isContactSelectedInRadioButton = templateIdDepencysRadioButton.firstOrNull { it.first == contact.id }?.second ?: false
