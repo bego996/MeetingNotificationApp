@@ -46,7 +46,7 @@ fun MettingNavHost(                                           // Hauptfunktion f
         }
         composable(route = SavedContactsDestination.route) {            // Route für den Screen der gespeicherten Kontakte
             SavedContacts(
-                modifier = Modifier.background(Color.DarkGray),         // Färbt den Hintergrund dunkelgrau
+                modifier = Modifier,
                 navigateToSearchContactScreen = { navController.navigate(SearchContactDestination.route) }, // Navigiert zum Suchbildschirm
                 onCancelClicked = {
                     navController.navigate(HomeDestination.route) { // Navigiert zurück zur Startseite
