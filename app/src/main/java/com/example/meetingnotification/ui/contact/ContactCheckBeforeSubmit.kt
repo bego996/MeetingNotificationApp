@@ -27,7 +27,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.material3.RadioButtonColors
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -194,21 +194,24 @@ fun ContactCheckScreen(
 
                                 RadioButton(
                                     selected = (isContactsNextEventNotified || isContactSelectedInRadioButton),
+                                    colors = RadioButtonColors(
+                                        selectedColor = Color.Green,
+                                        unselectedColor = Color.White,
+                                        disabledSelectedColor = Color.Black,
+                                        disabledUnselectedColor = Color.Black
+                                    ),
+                                    enabled = (!isContactsNextEventNotified && isContactInCalender),
                                     onClick = {
                                         val updatedList = templateIdDepencysRadioButton.toMutableList()
-                                        val index = updatedList.indexOfFirst { it.first == contact.id }
+                                        val index =
+                                            updatedList.indexOf(updatedList.firstOrNull { it.first == contact.id } ?: -1)
                                         if (index != -1) {
                                             updatedList[index] = MutablePairs2(contact.id, !updatedList[index].second)
                                         } else {
                                             updatedList.add(MutablePairs2(contact.id, true))
                                         }
                                         templateIdDepencysRadioButton = updatedList
-                                    },
-                                    colors = RadioButtonDefaults.colors(
-                                        selectedColor = Color.Green,
-                                        unselectedColor = Color.White
-                                    )
-                                )
+                                    })
                             }
 
                             // Termininfo (originale Logik)
@@ -260,19 +263,25 @@ fun ContactCheckScreen(
 
                 Button(
                     onClick = {
-                        val selectedContacts = uiState.value.contactUiState
-                            .filter { contact ->
-                                templateIdDepencysRadioButton.any { it.first == contact.id && it.second }
+                        val selectedContactsReadyForSMS = mutableListOf<ContactReadyForSms>()
+                        templateIdDepencysRadioButton.isNotEmpty().let {
+                            templateIdDepencysRadioButton.forEach { contactSelected ->
+                                val contactsReadyForSms = uiState.value.contactUiState.firstOrNull { it.id == contactSelected.first }
+                                    ?.let {
+                                        ContactReadyForSms(
+                                            it.id,
+                                            it.phone,
+                                            it.message,
+                                            it.firstName
+                                        )
+                                    }
+                                contactsReadyForSms?.let {
+                                    selectedContactsReadyForSMS.add(contactsReadyForSms)
+                                }
                             }
-                            .map { contact ->
-                                ContactReadyForSms(
-                                    contact.id,
-                                    contact.phone,
-                                    contact.message,
-                                    contact.firstName
-                                )
-                            }
-                        sendContactsToSmsService(selectedContacts)
+                        }
+                        viewModel.updateListReadyForSms(selectedContactsReadyForSMS) // Aktualisiert die Liste der Kontakte für SMS
+                        sendContactsToSmsService(viewModel.getContactsReadyForSms()) // Sendet die Kontakte an den SMS-Service
                         navigateToHomeScreen()
                     },
                     modifier = Modifier.weight(1f),
