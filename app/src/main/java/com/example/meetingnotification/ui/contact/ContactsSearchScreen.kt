@@ -31,6 +31,7 @@ import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -47,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import com.example.meetingnotification.ui.R
 import com.example.meetingnotification.ui.data.entities.Contact
 import com.example.meetingnotification.ui.navigation.NavigationDestination
+import kotlinx.coroutines.delay
 
 
 object SearchContactDestination : NavigationDestination {        // Objekt für die Such-Route
@@ -64,14 +66,14 @@ fun SearchListScreen(
 ) {
     val uiState = viewModel.contactsUiState.collectAsState()  // Beobachtet den aktuellen Zustand der gespeicherten Kontakte
     val contactBuffer = viewModel.getContacts().observeAsState(emptyList()) // Holt alle Kontakte aus dem LiveData
-
     var text by remember { mutableStateOf("") }               // Suchtext-State für das Eingabefeld
+    val debouncedText = rememberDebounceText(text)
 
-    val contactBufferSorted by remember(text, contactBuffer.value) {
+    val contactBufferSorted by remember(debouncedText,contactBuffer.value) {
         derivedStateOf {
-            if (text.isBlank()) contactBuffer.value
+            if (debouncedText.isBlank()) contactBuffer.value
             else contactBuffer.value.filter {
-                it.firstName.contains(text, ignoreCase = true) // Filtert Kontakte nach Vornamen
+                it.firstName.contains(debouncedText, ignoreCase = true) // Filtert Kontakte nach Vornamen
             }
         }
     }
@@ -82,6 +84,7 @@ fun SearchListScreen(
         )
     }
 
+
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
             painter = painterResource(R.drawable.background_light2),
@@ -89,13 +92,7 @@ fun SearchListScreen(
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop // Skaliert das Bild, um es zu füllen
         )
-
-        // semi-transparent overlay for better readability
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.4f))
-        )
+        
 
         Column(
             modifier = Modifier
@@ -224,6 +221,18 @@ fun ContactRow(
             )
         }
     }
+}
+
+@Composable
+fun rememberDebounceText(input: String, delayMillis: Long = 500L): String {
+    var debouncedText by remember { mutableStateOf(input) }
+
+    LaunchedEffect(input) {
+        delay(delayMillis)
+        debouncedText = input
+    }
+
+    return debouncedText
 }
 
 
