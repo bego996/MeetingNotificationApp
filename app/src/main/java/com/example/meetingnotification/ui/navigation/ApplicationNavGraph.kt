@@ -41,7 +41,8 @@ fun MettingNavHost(                                           // Hauptfunktion f
             ContactCheckScreen(
                 navigateToHomeScreen = { navController.popBackStack() },                   // Navigiert zurück zur vorherigen Route
                 calenderEvents = viewModel.getCalender(),                             // Ruft die Kalenderereignisse aus dem ViewModel ab
-                sendContactsToSmsService = { viewModel.insertContactsToSmsQueue(it) } // Fügt Kontakte zur SMS-Warteschlange hinzu
+                sendContactsToSmsService = { viewModel.insertContactsToSmsQueue(it) }, // Fügt Kontakte zur SMS-Warteschlange hinzu
+                contactsInSmsQueueById = viewModel.getContactsFromSmsQueue() ?: emptyList()
             )
         }
         composable(route = SavedContactsDestination.route) {            // Route für den Screen der gespeicherten Kontakte

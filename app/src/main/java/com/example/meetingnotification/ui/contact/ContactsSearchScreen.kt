@@ -1,6 +1,7 @@
 package com.example.meetingnotification.ui.contact
 
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -118,7 +119,7 @@ fun SearchListScreen(
 
             // 📜 Kontaktliste mit Scrollmöglichkeit
             LazyColumn(modifier = Modifier.weight(1f)) {
-                items(contactBufferSorted, key = { it.id }) { contact ->  // Iteriert durch gefilterte Kontakte, nutzt stabile Key-Zuweisung
+                items(contactBufferSorted) { contact ->  // Iteriert durch gefilterte Kontakte, nutzt stabile Key-Zuweisung
                     val isSelected = contactIdsRadioDepency.firstOrNull { it.first == contact.id }?.second ?: false
                     Card(
                         modifier = Modifier
@@ -179,6 +180,7 @@ fun ContactRow(
     isSelected: Boolean,               // Aktueller Radio-Button-Status
     onToggle: () -> Unit               // Callback zum Umschalten des Auswahlstatus
 ) {
+    Log.d("RECOMPOSE","ContactRow for ${contact.firstName}")
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -222,6 +224,7 @@ fun ContactRow(
         }
     }
 }
+
 
 @Composable
 fun rememberDebounceText(input: String, delayMillis: Long = 500L): String {

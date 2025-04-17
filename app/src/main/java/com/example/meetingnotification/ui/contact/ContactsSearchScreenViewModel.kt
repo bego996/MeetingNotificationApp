@@ -52,11 +52,15 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
 
 
     fun insertContactsToSmsQueue(contacts: List<ContactReadyForSms>) { // Fügt Kontakte zur SMS-Warteschlange hinzu
-        smsServiceInteractor?.performServiceAction(ServiceAction.PushContact, contacts)
+        smsServiceInteractor?.performServiceActionToAddOrSend(ServiceAction.PushContact, contacts)
+    }
+
+    fun getContactsFromSmsQueue(): List<Int>? {
+        return smsServiceInteractor?.performServiceActionToGetContactFromQueue(ServiceAction.GetContactsFromQueue)
     }
 
     fun sendCommandToSendAllMessages(){
-        smsServiceInteractor?.performServiceAction(ServiceAction.SendMessage, listOf())
+        smsServiceInteractor?.performServiceActionToAddOrSend(ServiceAction.SendMessage, listOf())
     }
 
 

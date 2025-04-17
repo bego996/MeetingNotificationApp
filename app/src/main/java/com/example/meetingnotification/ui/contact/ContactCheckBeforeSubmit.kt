@@ -64,6 +64,7 @@ fun ContactCheckScreen(
     navigateToHomeScreen: () -> Unit,
     calenderEvents: List<EventDateTitle>,
     sendContactsToSmsService: (List<ContactReadyForSms>) -> Unit,
+    contactsInSmsQueueById: List<Int>,
     viewModel: ContactCheckBeforeSubmitViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
     val uiState = viewModel.contactUiState.collectAsState()
@@ -131,12 +132,15 @@ fun ContactCheckScreen(
 
             // Kontaktliste (LazyColumn mit originaler Logik)
             LazyColumn(
-                modifier = Modifier.weight(1f)
-            ) {
+                modifier = Modifier
+                    .weight(1f),
+                content = {
                 items(uiState.value.contactUiState, key = {it.id}) { contact ->
-                    var isContactInCalender by remember { mutableStateOf(false) }
+
+                    var isContactInCalender = contactsZipedWithDate.any{it.contactId == contact.id}
                     val isContactsNextEventNotified = viewModel.isContactNotifiedForUpcomingEvent(contact.id)
                     val isContactSelectedInRadioButton = templateIdDepencysRadioButton.firstOrNull { it.first == contact.id }?.second ?: false
+                    val isContactInMessageQueue = contactsInSmsQueueById.any { contactIdFromSmsQueue -> contactIdFromSmsQueue == contact.id }
 
                     Card(
                         modifier = Modifier
@@ -193,7 +197,7 @@ fun ContactCheckScreen(
                                 }
 
                                 RadioButton(
-                                    selected = (isContactsNextEventNotified || isContactSelectedInRadioButton),
+                                    selected = (isContactsNextEventNotified || isContactSelectedInRadioButton || isContactInMessageQueue ),
                                     colors = RadioButtonColors(
                                         selectedColor = Color.Green,
                                         unselectedColor = Color.White,
@@ -219,9 +223,11 @@ fun ContactCheckScreen(
                                 text = contactsZipedWithDate.firstOrNull { it.contactId == contact.id }
                                     ?.let {
                                         isContactInCalender = true
+                                        //Log.d("ContactInCalender"," set to true contact= ${contact.lastName} aktuall state isContactInCalender= $isContactInCalender")
                                         viewModel.getDayDuration(it.date)
                                     } ?: stringResource(R.string.deufault_message_status).also {
-                                    isContactInCalender = false
+                                        isContactInCalender = false
+                                    //Log.d("NoContactInCalender"," set to false contact= ${contact.lastName} aktuall state isContactInCalender= $isContactInCalender")
                                 },
                                 color = if (isContactInCalender) Color.Green else Color.White.copy(alpha = 0.6f),
                                 fontSize = 12.sp,
@@ -244,6 +250,7 @@ fun ContactCheckScreen(
                     }
                 }
             }
+        )
 
             // Footer-Buttons (originale Logik)
             Row(

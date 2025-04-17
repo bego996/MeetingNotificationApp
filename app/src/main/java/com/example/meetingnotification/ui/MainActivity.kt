@@ -62,6 +62,43 @@ class MainActivity : AppCompatActivity(),
             }
         }
 
+    //Action to push contacts in servive or to send message to all contacts or to get Contacts from ServiceQueue.
+    override fun performServiceActionToAddOrSend(action: ServiceAction, contacts: List<ContactReadyForSms>)
+    {
+        if (isSmsServiceBound && action == ServiceAction.PushContact && contacts.isNotEmpty()) { // Prüft, ob der Dienst gebunden und die Aktion gültig ist. Action to insert Contact to Queue.
+            val allContacts = mutableListOf<ContactReadyForSms>()                                // Liste für alle Kontakte
+            contacts.forEach { contact ->                                                        // Fügt die Kontakte zur Liste hinzu
+                allContacts.add(contact)
+            }
+            smsService.addMessageToQueue(allContacts)                  // Fügt die Kontakte zur Warteschlange des Dienstes hinzu
+        } else if (isSmsServiceBound && action == ServiceAction.SendMessage) { //Action to Send Messages
+            smsService.showMessageSendDialog(
+                this@MainActivity,
+                smsService.messageQueue.takeIf { it.isNotEmpty() }?.map { it.fullName }.toString()
+            ) { accepted ->
+                if (accepted) {
+                    smsService.sendNextMessage(this@MainActivity)
+                }
+            }
+        }
+    }
+
+    override fun performServiceActionToGetContactFromQueue(action: ServiceAction): List<Int> {
+        return if (isSmsServiceBound && action == ServiceAction.GetContactsFromQueue)
+            smsService.getContactsInSmsQueueWithId()
+        else
+            emptyList()
+    }
+
+    override fun performServiceActionToRemoveFromQueue(
+        action: ServiceAction,
+        contactIds: List<Int>
+    ) {
+        TODO("Not yet implemented")
+    }
+
+    fun getContactsFromSmsServiceQueue() = smsService.getContactsInSmsQueueWithId()          // A local funktion to give back the contactIds from Service Sms Queue.
+
     override fun onCreate(savedInstanceState: Bundle?) {               // Wird beim Erstellen der Aktivität aufgerufen
         super.onCreate(savedInstanceState)
         Log.d(TAG,"onCreate() - MainActivity")
@@ -88,28 +125,6 @@ class MainActivity : AppCompatActivity(),
         Intent(this, SmsSendingService::class.java)
             .also { intent ->   // Erstellt einen Intent für den SMS-Dienst
             bindService(intent, smsServiceConnection, BIND_AUTO_CREATE)             // Bindet die Aktivität an den Dienst
-        }
-    }
-
-    override fun performServiceAction(
-        action: ServiceAction,
-        contacts: List<ContactReadyForSms>
-    ) { //Action to push contacts in servive or to send message to all contacts.
-        if (isSmsServiceBound && action == ServiceAction.PushContact && contacts.isNotEmpty()) { // Prüft, ob der Dienst gebunden und die Aktion gültig ist. Action to insert Contact to Queue.
-            val allContacts = mutableListOf<ContactReadyForSms>()                                // Liste für alle Kontakte
-            contacts.forEach { contact ->                                                        // Fügt die Kontakte zur Liste hinzu
-                allContacts.add(contact)
-            }
-            smsService.addMessageToQueue(allContacts)                  // Fügt die Kontakte zur Warteschlange des Dienstes hinzu
-        } else if (isSmsServiceBound && action == ServiceAction.SendMessage) { //Action to Send Messages
-            smsService.showMessageSendDialog(
-                this@MainActivity,
-                smsService.messageQueue.takeIf { it.isNotEmpty() }?.map { it.fullName }.toString()
-            ) { accepted ->
-                if (accepted) {
-                    smsService.sendNextMessage(this@MainActivity)
-                }
-            }
         }
     }
 
@@ -158,10 +173,11 @@ class MainActivity : AppCompatActivity(),
                 REQUEST_CODE_SEND_SMS
             )
         } else {
-            Log.d(TAG,"loadcontacts() called")
             contactBuffer.loadContactsWrapper(this)
-            Log.d(TAG,"loadCalender() called")
+            //contactBuffer.loadContacts(this)
+            Log.d(TAG,"loadcontacts() called")
             contactBuffer.loadCalender(this)                           //Lädt Kalenderdaten ins ViewModel
+            Log.d(TAG,"loadCalender() called")
         }
     }
 

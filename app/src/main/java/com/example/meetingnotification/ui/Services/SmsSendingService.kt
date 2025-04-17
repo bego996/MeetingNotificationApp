@@ -99,6 +99,8 @@ class SmsSendingService : Service() {                         // Dienst(Service)
         }
     }
 
+    fun getContactsInSmsQueueWithId() : List<Int> = messageQueue.toList().map { contact -> contact.contactId}
+
 
     fun sendNextMessage(context: Context) {                   // Sendet die nächste Nachricht aus der Warteschlange
         println("sendNextMessage is called()")
