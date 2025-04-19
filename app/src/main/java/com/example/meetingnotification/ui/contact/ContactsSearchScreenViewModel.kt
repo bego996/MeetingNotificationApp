@@ -63,6 +63,10 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
         smsServiceInteractor?.performServiceActionToAddOrSend(ServiceAction.SendMessage, listOf())
     }
 
+    fun removeContactIfInSmsQueue(contactId : Int){
+        smsServiceInteractor?.performServiceActionToRemoveFromQueue(ServiceAction.DeleteContactFromQueue,contactId)
+    }
+
 
     fun addContactsToDatabase(contactList: List<Contact>, compareIds: List<Int>) // Fügt ausgewählte Kontakte zur Datenbank hinzu. Keine suspend dunction nötig, weil viewmodel scope unten ansynchron ausführt.
     {
@@ -74,19 +78,6 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
             }
         }
     }
-
-//    private fun updateEventsFromAContactInDatabase(contact: Contact){
-//        viewModelScope.launch {
-//            eventRepository.updateItem(contact)
-//        }
-//    }
-//
-//    //Nötig um loadCalender() asynchron laufen zu lassen und nach loadContacts() auszuführen.
-//    fun loadEventWrapper(context: Context){
-//        viewModelScope.launch {
-//            loadCalender(context)
-//        }
-//    }
 
     private fun updateContactInDatabase(contact: Contact){
         viewModelScope.launch {

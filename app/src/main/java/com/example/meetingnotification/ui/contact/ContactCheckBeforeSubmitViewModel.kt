@@ -42,7 +42,7 @@ class ContactCheckBeforeSubmitViewModel(
 
     //alle kalenderereignisse die in der datenbank gespeichert sind, auch abgelaufene oder neue.
     private var _contactWithEvents = MutableStateFlow<List<ContactWithEvents>>(emptyList())
-    private val contactWithEvents: StateFlow<List<ContactWithEvents>> = _contactWithEvents
+    val contactWithEvents: StateFlow<List<ContactWithEvents>> = _contactWithEvents
 
     //alle kalendreignisse die wirkich eingetragen sind im kalender aber nicht unbedingt in der db sein müssen.
     private val _calenderState = MutableStateFlow<List<EventDateTitle>>(emptyList())    // MutableStateFlow zur Verwaltung der Kalenderdaten
@@ -52,6 +52,7 @@ class ContactCheckBeforeSubmitViewModel(
     private val _calenderStateConnectedToContacts = mutableStateOf<List<ContactZippedWithDate>>(emptyList())            // MutableState zur Verknüpfung von Kontakten mit Kalenderdaten
     val calenderStateConnectedToContacts: State<List<ContactZippedWithDate>> = _calenderStateConnectedToContacts        // Öffentlicher Zugriff auf die verknüpften Kalenderdaten
 
+    // Mit by wird der .value wert versteckt aber es ist equivalent zu einem State wie oben, nur das der State mit .value herausgeholt werden muss.
     private var contactListReadyForSms by mutableStateOf(listOf<ContactReadyForSms>())      // Kontakte, die bereit für den SMS-Versand sind
 
 

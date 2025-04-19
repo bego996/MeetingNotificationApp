@@ -101,6 +101,13 @@ class SmsSendingService : Service() {                         // Dienst(Service)
 
     fun getContactsInSmsQueueWithId() : List<Int> = messageQueue.toList().map { contact -> contact.contactId}
 
+    fun removeContactFromQueue(contactId: Int){
+        if (messageQueue.any { contactInQueue -> contactInQueue.contactId == contactId }){
+            val indexOfToBeRemovedContactInQueue = messageQueue.indexOf(messageQueue.first { contact -> contact.contactId == contactId })
+            messageQueue.removeAt(indexOfToBeRemovedContactInQueue)
+        }
+    }
+
 
     fun sendNextMessage(context: Context) {                   // Sendet die nächste Nachricht aus der Warteschlange
         println("sendNextMessage is called()")

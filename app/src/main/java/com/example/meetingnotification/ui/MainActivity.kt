@@ -90,14 +90,12 @@ class MainActivity : AppCompatActivity(),
             emptyList()
     }
 
-    override fun performServiceActionToRemoveFromQueue(
-        action: ServiceAction,
-        contactIds: List<Int>
-    ) {
-        TODO("Not yet implemented")
+    override fun performServiceActionToRemoveFromQueue(action: ServiceAction, contactId: Int) {
+        if (action == ServiceAction.DeleteContactFromQueue){
+            smsService.removeContactFromQueue(contactId)
+        }
     }
 
-    fun getContactsFromSmsServiceQueue() = smsService.getContactsInSmsQueueWithId()          // A local funktion to give back the contactIds from Service Sms Queue.
 
     override fun onCreate(savedInstanceState: Bundle?) {               // Wird beim Erstellen der Aktivität aufgerufen
         super.onCreate(savedInstanceState)
@@ -174,7 +172,6 @@ class MainActivity : AppCompatActivity(),
             )
         } else {
             contactBuffer.loadContactsWrapper(this)
-            //contactBuffer.loadContacts(this)
             Log.d(TAG,"loadcontacts() called")
             contactBuffer.loadCalender(this)                           //Lädt Kalenderdaten ins ViewModel
             Log.d(TAG,"loadCalender() called")

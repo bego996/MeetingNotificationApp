@@ -65,12 +65,15 @@ fun ContactCheckScreen(
     calenderEvents: List<EventDateTitle>,
     sendContactsToSmsService: (List<ContactReadyForSms>) -> Unit,
     contactsInSmsQueueById: List<Int>,
+    removeContactFromSmsQueue: (Int) -> Unit,
     viewModel: ContactCheckBeforeSubmitViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
     val uiState = viewModel.contactUiState.collectAsState()
     val contactsZipedWithDate by viewModel.calenderStateConnectedToContacts
     var templateIdDepencysMailIcon by remember { mutableStateOf(listOf<MutablePairs2>()) }
     var templateIdDepencysRadioButton by remember { mutableStateOf(listOf<MutablePairs2>()) }
+    var contactsFromSmsServiceQueueByIds by remember { mutableStateOf(contactsInSmsQueueById) }
+    val contactsWithEvents = viewModel.contactWithEvents.collectAsState()       //Nur nötig um beim ersten rendern die lazycolumn unten zu aktualisieren.
 
     // Deine originalen LaunchedEffects
     LaunchedEffect(uiState.value) {
@@ -84,6 +87,7 @@ fun ContactCheckScreen(
     }
 
 
+    //Weil hier async funktion vorhanden muss ich warten auf contactsWithEvents oben um die lazyColumn unten neu zu rendern.
     LaunchedEffect(uiState.value.contactUiState.size) {
         if (uiState.value.contactUiState.isNotEmpty()) {
             viewModel.zipDatesToContacts(uiState.value.contactUiState)
@@ -104,7 +108,9 @@ fun ContactCheckScreen(
         )
 
         // Overlay für Lesbarkeit
-        Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f)))
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.3f)))
 
         Column(
             modifier = Modifier
@@ -138,9 +144,10 @@ fun ContactCheckScreen(
                 items(uiState.value.contactUiState, key = {it.id}) { contact ->
 
                     var isContactInCalender = contactsZipedWithDate.any{it.contactId == contact.id}
-                    val isContactsNextEventNotified = viewModel.isContactNotifiedForUpcomingEvent(contact.id)
+                    //Wird mit if geprüft um beim ersten rendern zu warten bis launchefekt oben mit async funktion fertig ist, dann wird lazy column neu gerendert.
+                    val isContactsNextEventNotified = if(contactsWithEvents.value.isNotEmpty()) viewModel.isContactNotifiedForUpcomingEvent(contact.id) else false
                     val isContactSelectedInRadioButton = templateIdDepencysRadioButton.firstOrNull { it.first == contact.id }?.second ?: false
-                    val isContactInMessageQueue = contactsInSmsQueueById.any { contactIdFromSmsQueue -> contactIdFromSmsQueue == contact.id }
+                    val isContactInMessageQueue = contactsFromSmsServiceQueueByIds.any { contactIdFromSmsQueue -> contactIdFromSmsQueue == contact.id }
 
                     Card(
                         modifier = Modifier
@@ -207,12 +214,20 @@ fun ContactCheckScreen(
                                     enabled = (!isContactsNextEventNotified && isContactInCalender),
                                     onClick = {
                                         val updatedList = templateIdDepencysRadioButton.toMutableList()
-                                        val index =
-                                            updatedList.indexOf(updatedList.firstOrNull { it.first == contact.id } ?: -1)
-                                        if (index != -1) {
-                                            updatedList[index] = MutablePairs2(contact.id, !updatedList[index].second)
-                                        } else {
-                                            updatedList.add(MutablePairs2(contact.id, true))
+                                        val index = updatedList.indexOf(updatedList.firstOrNull { it.first == contact.id } ?: -1)
+
+                                        if (isContactInMessageQueue){
+                                            val smsQueueToEdit = contactsFromSmsServiceQueueByIds.toMutableList()
+                                            smsQueueToEdit.remove(contact.id)
+                                            contactsFromSmsServiceQueueByIds = smsQueueToEdit
+                                            removeContactFromSmsQueue(contact.id)
+                                            updatedList.add(MutablePairs2(contact.id, false))
+                                        }else{
+                                            if (index != -1) {
+                                                updatedList[index] = MutablePairs2(contact.id, !updatedList[index].second)
+                                            } else {
+                                                updatedList.add(MutablePairs2(contact.id, true))
+                                            }
                                         }
                                         templateIdDepencysRadioButton = updatedList
                                     })
@@ -296,9 +311,9 @@ fun ContactCheckScreen(
                         containerColor = Color(0xFF4CAF50), // Grün
                         contentColor = Color.White
                     ),
-                    enabled = templateIdDepencysRadioButton.any { it.second }
+                    enabled =  templateIdDepencysRadioButton.any { it.second } || contactsFromSmsServiceQueueByIds.isNotEmpty()
                 ) {
-                    Text("Senden (${templateIdDepencysRadioButton.count { it.second }})")
+                    Text("Senden (${templateIdDepencysRadioButton.count { it.second } + contactsFromSmsServiceQueueByIds.size})")
                 }
             }
         }
