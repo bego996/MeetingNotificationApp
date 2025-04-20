@@ -50,6 +50,7 @@ fun MettingNavHost(                                           // Hauptfunktion f
             SavedContacts(
                 modifier = Modifier,
                 navigateToSearchContactScreen = { navController.navigate(SearchContactDestination.route) }, // Navigiert zum Suchbildschirm
+                deleteContactFromSmsQueueIfExisting = {viewModel.removeContactIfInSmsQueue(it)},
                 onCancelClicked = {
                     navController.navigate(HomeDestination.route) { // Navigiert zurück zur Startseite
                         popUpTo(navController.graph.startDestinationId) { // Leert den Navigationsstapel bis zur Startdestination was eingestelt als HOmeScreen ist.

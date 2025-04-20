@@ -26,7 +26,7 @@ class ContactsScreenViewModel(                             // ViewModel zur Verw
 
     fun deleteContact(contact: Contact) {          // Kein supsend nötig weil courtinescope innerhalb ausgeführt wird die sowieso asynchron ist.
         viewModelScope.launch {                            // Startet eine neue Coroutine im Bereich des ViewModels
-            contactRepository.deleteItem(contact)          // Löscht den angegebenen Kontakt aus dem Repository
+            contactRepository.deleteItem(contact)          // Löscht den angegebenen Kontakt aus dem Repository (Database)
         }
     }
 

@@ -63,7 +63,8 @@ fun SavedContacts(
     navigateToSearchContactScreen: () -> Unit,
     onCancelClicked: () -> Unit,
     modifier: Modifier,
-    viewModel: ContactsScreenViewModel = viewModel(factory = AppViewModelProvider.Factory)
+    viewModel: ContactsScreenViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    deleteContactFromSmsQueueIfExisting: (contactId: Int) -> Unit
 ) {
     val uiState = viewModel.contactsUiState.collectAsState()
 
@@ -93,7 +94,8 @@ fun SavedContacts(
                 modifier = modifier,
                 onCancelClicked = onCancelClicked,
                 navigateToSearchContactScreen = navigateToSearchContactScreen,
-                savedContacts = viewModel
+                savedContacts = viewModel,
+                deleteContactFromSmsQueueIfExists = { deleteContactFromSmsQueueIfExisting(it) }
             )
         }
     }
@@ -165,7 +167,8 @@ fun FilledListscreen(
     modifier: Modifier = Modifier,
     onCancelClicked: () -> Unit,
     navigateToSearchContactScreen: () -> Unit,
-    savedContacts: ContactsScreenViewModel
+    savedContacts: ContactsScreenViewModel,
+    deleteContactFromSmsQueueIfExists: (contactId: Int) -> Unit
 ) {
     Column(
         modifier = modifier
@@ -192,6 +195,7 @@ fun FilledListscreen(
                     LaunchedEffect(true) {
                         delay(300)
                         savedContacts.deleteContact(contact)
+                        deleteContactFromSmsQueueIfExists(contact.id)
                     }
                 }
 

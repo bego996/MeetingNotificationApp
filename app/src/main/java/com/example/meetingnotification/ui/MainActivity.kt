@@ -62,6 +62,7 @@ class MainActivity : AppCompatActivity(),
             }
         }
 
+
     //Action to push contacts in servive or to send message to all contacts or to get Contacts from ServiceQueue.
     override fun performServiceActionToAddOrSend(action: ServiceAction, contacts: List<ContactReadyForSms>)
     {
