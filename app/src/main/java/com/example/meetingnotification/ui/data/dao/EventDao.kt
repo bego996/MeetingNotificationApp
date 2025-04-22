@@ -27,6 +27,10 @@ interface EventDao {
     @Query("SELECT * FROM events WHERE eventId = :eventId")
     fun getEventWithContact(eventId: Int): Flow<EventWithContact>
 
+    @Query("SELECT COUNT(*) FROM events WHERE eventDate BETWEEN :dateNow and :dateTo AND isNotified == 0")
+    fun getNotNotifiedEventsAndFromActualDateTime(dateNow: String,dateTo: String): Int
+
+
     @Query("SELECT * FROM events WHERE eventDate = :eventDate AND eventTime = :eventTime")
     fun getEventFromDateAndTimeParam(eventDate: String,eventTime: String): Flow<List<Event>>
 }

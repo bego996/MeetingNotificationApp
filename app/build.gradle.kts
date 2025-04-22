@@ -75,6 +75,7 @@ dependencies {
     implementation("junit:junit:4.13.2")
     implementation("androidx.test.ext:junit-ktx:1.2.1")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.6")
+    implementation("androidx.work:work-runtime-ktx:2.9.1")
     ksp("androidx.room:room-compiler:${rootProject.extra["room_version"]}")
     implementation("androidx.room:room-ktx:${rootProject.extra["room_version"]}")
 

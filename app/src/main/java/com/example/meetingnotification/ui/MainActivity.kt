@@ -5,6 +5,7 @@ import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
@@ -31,6 +32,7 @@ class MainActivity : AppCompatActivity(),
         private const val REQUEST_CODE_CONTACTS_READ = 1                    // Anfragecode für Lesezugriff auf Kontakte
         private const val REQUEST_CODE_KALENDER_READ = 2                    // Anfragecode für Lesezugriff auf Kalender
         private const val REQUEST_CODE_SEND_SMS = 3                         // Anfragecode für Senden von SMS
+        private const val REQUEST_CODE_POST_NOTIFICATION = 4                         // Anfragecode für Posten von Hintergrundnotification
     }
 
     private val contactBuffer by viewModels<ContactsSearchScreenViewModel> { AppViewModelProvider.Factory }     // ViewModel für die Kontaktsuche
@@ -152,6 +154,7 @@ class MainActivity : AppCompatActivity(),
         Log.d(TAG,"onDestroy() - MainActivity")                         // Debug-Nachricht
     }
 
+
     private fun checkAndRequestPermissions() {                         // Überprüft und fordert erforderliche Berechtigungen an, bei start der Acticity.
         if (!isPermissionGranted(Manifest.permission.READ_CONTACTS)) {
             ActivityCompat.requestPermissions(
@@ -170,6 +173,12 @@ class MainActivity : AppCompatActivity(),
                 this,
                 arrayOf(Manifest.permission.SEND_SMS),
                 REQUEST_CODE_SEND_SMS
+            )
+        }else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !isPermissionGranted(Manifest.permission.POST_NOTIFICATIONS)){
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                REQUEST_CODE_POST_NOTIFICATION
             )
         } else {
             contactBuffer.loadContactsWrapper(this)
@@ -192,7 +201,8 @@ class MainActivity : AppCompatActivity(),
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if ((requestCode == REQUEST_CODE_CONTACTS_READ || requestCode == REQUEST_CODE_KALENDER_READ) || requestCode == REQUEST_CODE_SEND_SMS && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        if ((requestCode == REQUEST_CODE_CONTACTS_READ || requestCode == REQUEST_CODE_KALENDER_READ) || requestCode == REQUEST_CODE_SEND_SMS || requestCode == REQUEST_CODE_POST_NOTIFICATION
+            && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             checkAndRequestPermissions()                              // Überprüft erneut die Berechtigungen
         }
     }

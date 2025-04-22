@@ -8,6 +8,8 @@ interface EventRepository {
 
     fun getEventWithContact(eventId: Int): Flow<EventWithContact>
 
+    fun getNotNotifiedEventsAndFromActualDateTime(dateNow: String,dateTo: String): Int
+
     fun getEventFromDateAndTimeParam(eventDate: String,eventTime: String): Flow<List<Event>>
 
     /**

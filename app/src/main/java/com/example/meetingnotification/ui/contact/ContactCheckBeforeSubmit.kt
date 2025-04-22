@@ -238,11 +238,9 @@ fun ContactCheckScreen(
                                 text = contactsZipedWithDate.firstOrNull { it.contactId == contact.id }
                                     ?.let {
                                         isContactInCalender = true
-                                        //Log.d("ContactInCalender"," set to true contact= ${contact.lastName} aktuall state isContactInCalender= $isContactInCalender")
                                         viewModel.getDayDuration(it.date)
                                     } ?: stringResource(R.string.deufault_message_status).also {
                                         isContactInCalender = false
-                                    //Log.d("NoContactInCalender"," set to false contact= ${contact.lastName} aktuall state isContactInCalender= $isContactInCalender")
                                 },
                                 color = if (isContactInCalender) Color.Green else Color.White.copy(alpha = 0.6f),
                                 fontSize = 12.sp,
