@@ -173,6 +173,7 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
                         //Hier wird geprüft ob contact schon in der datenbank eingetragen ist.
                         val contactFromDatabaseIfExists = contactRepository.getContactStream(id.toInt())
 
+                        //Wenn sich name von kontakt ändert im Telefon dann wird dieser in der datenbank room geupdated.
                         contactFromDatabaseIfExists?.let {
                             if (contactFromDatabaseIfExists.lastName != surname ||
                                 contactFromDatabaseIfExists.firstName != firstname ||

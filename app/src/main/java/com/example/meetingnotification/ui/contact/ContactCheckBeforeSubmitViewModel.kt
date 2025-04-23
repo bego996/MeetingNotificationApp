@@ -132,7 +132,7 @@ class ContactCheckBeforeSubmitViewModel(
                 meetingDateFormat
             )
         ).days // Tage bis zum Datum berechnen
-        return "$daysBeetweenNowAndMeetingDate Days Left"    // Gibt die verbleibenden Tage als Zeichenkette zurück
+        return "$daysBeetweenNowAndMeetingDate Tage Übrig"    // Gibt die verbleibenden Tage als Zeichenkette zurück
     }
 
 
@@ -201,14 +201,15 @@ class ContactCheckBeforeSubmitViewModel(
 
 
     // Aktualisiert die Nachrichten der Kontakte
-    private fun updateContactsMessageAfterZippingItWithDates(
-        zippedDateToContacts: MutableList<ContactZippedWithDate>,
-        contactList: List<Contact>
-    ) {
+    private fun updateContactsMessageAfterZippingItWithDates(zippedDateToContacts: MutableList<ContactZippedWithDate>, contactList: List<Contact>) {
         zippedDateToContacts.isNotEmpty()
             .let {                  // Nur wenn verknüpfte Daten vorhanden sind
                 viewModelScope.launch {
-                    for (zipValue in zippedDateToContacts) {      // Durchläuft die Liste der verknüpften Daten
+                    for (zipValue in zippedDateToContacts) { // Durchläuft die Liste der verknüpften Daten
+                        val germanDateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
+                        val dateConvertedToGermanFormat = LocalDate.parse(zipValue.date).format(germanDateFormatter)
+
+
                         contactList.firstOrNull { it.id == zipValue.contactId }
                             ?.let { contact ->                    // Sucht den passenden Kontakt
                                 contactRepository.updateItem(            // Aktualisiert den Kontakt mit der neuen Nachricht
@@ -221,7 +222,7 @@ class ContactCheckBeforeSubmitViewModel(
                                         phone = contact.phone,
                                         message = updateMessageWithCorrectDateTime(
                                             contact.message,
-                                            zipValue.date,
+                                            dateConvertedToGermanFormat,
                                             zipValue.time
                                         )                         // Aktualisiert die Nachricht
                                     )
@@ -240,8 +241,7 @@ private fun updateMessageWithCorrectDateTime(
     dateReplacement: String,
     timeReplacement: String
 ): String {
-    val regexForAllPossibleDates =
-        """(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])\.(\d{4})""".toRegex()
+    val regexForAllPossibleDates = """(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])\.(\d{4})""".toRegex()
     val regexForAllPossibleTimes = """(0[0-9]|1[0-9]|2[0-3]):(0[0-9]|[1-5][0-9])""".toRegex()
     var messageReplacement = originMessage
 

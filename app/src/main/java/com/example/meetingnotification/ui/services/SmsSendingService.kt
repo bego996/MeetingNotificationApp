@@ -67,7 +67,7 @@ class SmsSendingService : Service() {                         // Dienst(Service)
     //Callback function. Function to get the upcoming event for specific contact from the database.
     fun getUpcomingEventForContact(contactId: Int,callback: (Event) -> Unit){
         val dateTimeNow = LocalDateTime.now()
-        val dateFormated = DateTimeFormatter.ofPattern("dd.MM.yyyy")
+        val dateFormated = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
         serviceScope.launch {
             try {
