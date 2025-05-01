@@ -143,6 +143,7 @@ fun ContactCheckScreen(
                 content = {
                 items(uiState.value.contactUiState, key = {it.id}) { contact ->
 
+
                     var isContactInCalender = contactsZipedWithDate.any{it.contactId == contact.id}
                     //Wird mit if geprüft um beim ersten rendern zu warten bis launchefekt oben mit async funktion fertig ist, dann wird lazy column neu gerendert.
                     val isContactsNextEventNotified = if(contactsWithEvents.value.isNotEmpty()) viewModel.isContactNotifiedForUpcomingEvent(contact.id) else false
@@ -221,7 +222,6 @@ fun ContactCheckScreen(
                                             smsQueueToEdit.remove(contact.id)
                                             contactsFromSmsServiceQueueByIds = smsQueueToEdit
                                             removeContactFromSmsQueue(contact.id)
-                                            updatedList.add(MutablePairs2(contact.id, false))
                                         }else{
                                             if (index != -1) {
                                                 updatedList[index] = MutablePairs2(contact.id, !updatedList[index].second)

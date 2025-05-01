@@ -195,7 +195,10 @@ class ContactCheckBeforeSubmitViewModel(
             }
             Log.i(TAG, "Size of to be deleted Events: ${eventsToDelete.size}")
             //delete Events that are no more in calender but still in Database.
-            eventsToDelete.forEach { eventToDelete -> eventRepository.deleteItem(eventToDelete) }
+            if (eventsToDelete.isNotEmpty()){
+                eventsToDelete.forEach { eventToDelete -> eventRepository.deleteItem(eventToDelete) }
+                loadContactsWithEvents()
+            }
         }
     }
 
