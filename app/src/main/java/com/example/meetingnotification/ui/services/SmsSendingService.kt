@@ -10,11 +10,14 @@ import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import android.telephony.SmsManager
+import android.util.Log
 import android.widget.Toast
 import com.example.meetingnotification.ui.broadcastReceiver.SmsSentReceiver
 import com.example.meetingnotification.ui.contact.ContactReadyForSms
+import com.example.meetingnotification.ui.data.entities.DateMessageSent
 import com.example.meetingnotification.ui.data.entities.Event
 import com.example.meetingnotification.ui.data.repositories.ContactRepository
+import com.example.meetingnotification.ui.data.repositories.DateMessageSendRepository
 import com.example.meetingnotification.ui.data.repositories.EventRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -25,18 +28,22 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
+private val TAG = SmsSendingService::class.simpleName
+
 class SmsSendingService : Service() {                         // Dienst(Service), der SMS-Nachrichten versendet
     private lateinit var receiver: SmsSentReceiver            // Deklariert einen SMS-Empfänger(Broadcast)
     private lateinit var contactRepository: ContactRepository
     private lateinit var eventRepository: EventRepository
+    private lateinit var dateMessageSendRepository: DateMessageSendRepository
 
     private val serviceScope = CoroutineScope(Dispatchers.IO)
     private val binder = LocalBinder()                        // Binder für die Client-Anbindung an den Dienst
     var messageQueue = ArrayDeque<SmsMessage>()               // Warteschlange für SMS-Nachrichten
 
-    fun initialize(contactRepository: ContactRepository,eventRepository: EventRepository){
+    fun initialize(contactRepository: ContactRepository,eventRepository: EventRepository,dateMessageSendRepository: DateMessageSendRepository){
         this.contactRepository = contactRepository
         this.eventRepository = eventRepository
+        this.dateMessageSendRepository = dateMessageSendRepository
     }
 
     inner class LocalBinder : Binder() {                                // Innere Klasse, die den Binder für den lokalen Dienst bereitstellt
@@ -90,6 +97,13 @@ class SmsSendingService : Service() {                         // Dienst(Service)
         }
     }
 
+    fun insertDatesForSendMessages(dateMessageSent: DateMessageSent){
+        serviceScope.launch {
+            dateMessageSendRepository.insert(dateMessageSent)
+            Log.d(TAG,"Information for last sended inserted for date ${dateMessageSent.lastDateSendet} and time ${dateMessageSent.lastTimeSendet}")
+        }
+    }
+
     fun addMessageToQueue(contactInformation: List<ContactReadyForSms>) {                                   // Fügt eine Liste von Kontakten zur SMS-Warteschlange hinzu
         val contactMaper = contactInformation.map { SmsMessage(it.contactId,it.phoneNumber, it.message, it.fullName) }   // Wandelt die Kontakte in SMS-Nachrichten um
         contactMaper.forEach { contact ->
@@ -118,6 +132,7 @@ class SmsSendingService : Service() {                         // Dienst(Service)
             val smsIntent = PendingIntent.getBroadcast(
                 context, uniqueRequestCode, Intent("SMS_SENT").apply {  //hier kommt der unique requestcode rein. In meinem fall die contact id sowie unten (aber mit echtem namen contactId).
                     putExtra("contactId",nextMessage.contactId)     //Fügt die contactId zum Intent hinzu um den Receiver die id des erfolgreich gesendeten nachricht an contacts zu geben.
+                    putExtra("SmsQueueSize",messageQueue.size)
                 },     // Erzeugt ein PendingIntent für das "SMS_SENT"-Broadcast
                 PendingIntent.FLAG_IMMUTABLE
             )

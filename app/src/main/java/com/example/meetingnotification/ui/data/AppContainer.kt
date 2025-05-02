@@ -2,14 +2,16 @@ package com.example.meetingnotification.ui.data
 
 import android.content.Context
 import com.example.meetingnotification.ui.data.repositories.ContactRepository
+import com.example.meetingnotification.ui.data.repositories.DateMessageSendRepository
 import com.example.meetingnotification.ui.data.repositories.EventRepository
 import com.example.meetingnotification.ui.data.repositories.OfflineContactRepository
+import com.example.meetingnotification.ui.data.repositories.OfflineDateMessageSendRepository
 import com.example.meetingnotification.ui.data.repositories.OfflineEventRepository
 
 interface AppContainer {    // Schnittstelle, die ein App-Container-Konzept definiert
     val contactRepository: ContactRepository    // Deklariert eine Eigenschaft, die auf ein Kontakt-Repository verweist
     val eventRepository: EventRepository
-
+    val dateMessageSendRepository: DateMessageSendRepository
 }
 
 class AppDataContainer(private val context: Context) : AppContainer {   // Implementierung der AppContainer-Schnittstelle, um ein Daten-Repository zu verwalten
@@ -22,4 +24,9 @@ class AppDataContainer(private val context: Context) : AppContainer {   // Imple
     override val eventRepository: EventRepository by lazy{
         OfflineEventRepository(ContactDatabase.getDatabase(context).eventDAO())
     }
+
+    override val dateMessageSendRepository: DateMessageSendRepository by lazy {
+        OfflineDateMessageSendRepository(ContactDatabase.getDatabase(context).messageSendDAO())
+    }
+
 }

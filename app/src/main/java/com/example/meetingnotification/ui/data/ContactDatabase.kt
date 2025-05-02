@@ -6,7 +6,9 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.meetingnotification.ui.data.dao.ContactDao
 import com.example.meetingnotification.ui.data.dao.EventDao
+import com.example.meetingnotification.ui.data.dao.MessageSendDao
 import com.example.meetingnotification.ui.data.entities.Contact
+import com.example.meetingnotification.ui.data.entities.DateMessageSent
 import com.example.meetingnotification.ui.data.entities.Event
 
 
@@ -14,11 +16,12 @@ import com.example.meetingnotification.ui.data.entities.Event
 // entities = [Contact::class]: Enthält die Entität `Contact` (Tabelle in der Datenbank)
 // version = 2: Setzt die aktuelle Version der Datenbank auf 2
 // exportSchema = false: Verhindert, dass das Datenbankschema als JSON-Datei exportiert wird
-@Database(entities = [Contact::class, Event::class], version = 16, exportSchema = false)
+@Database(entities = [Contact::class, Event::class, DateMessageSent::class], version = 19, exportSchema = false)
 abstract class ContactDatabase : RoomDatabase() {
 
     abstract fun contactDao() : ContactDao  // Deklariert eine abstrakte Methode, die eine Instanz des DAO (Data Access Object) für "Contact" zurückgibt.
     abstract fun eventDAO() : EventDao
+    abstract fun messageSendDAO(): MessageSendDao
 
     // Ein Volatile-Attribut (flüchtig) stellt sicher, dass Änderungen an dieser Variablen sofort sichtbar sind, auch bei Zugriffen von mehreren Threads.
     companion object { @Volatile private var Instance : ContactDatabase? = null

@@ -53,7 +53,8 @@ class MainActivity : AppCompatActivity(),
                 val application = applicationContext as MeetingNotificationApplication
                 smsService.initialize(
                     application.container.contactRepository,
-                    application.container.eventRepository
+                    application.container.eventRepository,
+                    application.container.dateMessageSendRepository
                 )
                 Log.d(TAG,"serviceConnected() and Repositories initialized.")                              // Debug-Nachricht zur Bestätigung
             }
