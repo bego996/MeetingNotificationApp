@@ -55,7 +55,8 @@ class SmsSendingService : Service() {                         // Dienst(Service)
     }
 
 
-    override fun onCreate() {                                 // Wird beim Erstellen des Dienstes aufgerufen
+    override fun onCreate() { // Wird beim Erstellen des Dienstes aufgerufen
+        
         super.onCreate()
         println("ServiceOnCreate()")
         receiver = SmsSentReceiver(this)                      // Initialisiert den SMS-Empfänger

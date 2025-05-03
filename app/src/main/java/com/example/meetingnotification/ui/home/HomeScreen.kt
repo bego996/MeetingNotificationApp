@@ -71,6 +71,8 @@ fun HomeScreen(
         }
     }
 
+
+
     Box(modifier = Modifier.fillMaxSize()) {
         // Hintergrundbild (Platzhalter - ersetze mit deinem eigenen)
         Image(

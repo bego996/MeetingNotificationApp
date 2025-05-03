@@ -18,6 +18,6 @@ interface MessageSendDao {
     @Delete
     suspend fun delete(lastSendet: DateMessageSent)
 
-    @Query("SELECT * from dateMessagesSend ORDER BY lastDateSendet ASC LIMIT 1")
+    @Query("SELECT * from dateMessagesSend ORDER BY lastDateSendet DESC, lastTimeSendet DESC LIMIT 1")
     fun getLastSendetInfos(): Flow<DateMessageSent?>
 }

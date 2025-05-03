@@ -56,6 +56,52 @@ class ContactCheckBeforeSubmitViewModel(
     private var contactListReadyForSms by mutableStateOf(listOf<ContactReadyForSms>())      // Kontakte, die bereit für den SMS-Versand sind
 
 
+    //region testMethods
+
+//    fun loadCalenderDataTest(events: List<EventDateTitle>) {
+//
+//    }
+
+//    fun zipDatesToContactsTest(contacts: List<Contact>) {
+//
+//        //val dates = getCalenderState()                                             // Holt die aktuelle Liste der Kalenderereignisse
+//        val dates = eventRepository.get
+//        val listZipped = mutableListOf<ContactZippedWithDate>()                    // Eine Liste zur Speicherung der verknüpften Daten
+//        val outputFormatterDate = DateTimeFormatter.ofPattern("yyyy-MM-dd") // Ausgabeformat für das Datum
+//
+//        for (contact in contacts) {
+//                    listZipped.add(
+//                        ContactZippedWithDate(
+//                            contact.id,
+//                            date.eventDate.toLocalDate().format(outputFormatterDate),          // Formatiertes Datum
+//                            date.eventDate.toLocalTime().toString()    // Uhrzeit als Zeichenkette
+//                        )
+//                    )
+//                }
+//
+//        _calenderStateConnectedToContacts.value = listZipped           // Aktualisiert die MutableState-Liste mit den verknüpften Daten
+//        deleteEventsThatDontExistsInCalenderAnymoreFromDatabase(dates, contacts)
+//        insertEventForContact(listZipped)
+//        updateContactsMessageAfterZippingItWithDates(listZipped, contacts)   // Aktualisiert die Nachrichten der Kontakte nach der Verknüpfung
+//    }
+
+    fun loadContactsWithEventsTest() {
+        viewModelScope.launch {
+            val mutableListContactsWithEvents = mutableListOf<ContactWithEvents>()
+
+
+            contactUiState.value.contactUiState.forEach { contact ->
+
+                val contactAndEvents = contactRepository.getContactWithEvents(contact.id).first()
+
+                mutableListContactsWithEvents.add(contactAndEvents)
+            }
+            _contactWithEvents.value = mutableListContactsWithEvents
+        }
+    }
+
+    //endregion
+
     fun loadContactsWithEvents() {
         viewModelScope.launch {
             val mutableListContactsWithEvents = mutableListOf<ContactWithEvents>()
@@ -119,8 +165,7 @@ class ContactCheckBeforeSubmitViewModel(
     }
 
 
-    private fun getCalenderState(): List<EventDateTitle> =
-        calenderState.value      // Gibt die aktuelle Liste der Kalenderereignisse zurück
+    private fun getCalenderState(): List<EventDateTitle> = calenderState.value      // Gibt die aktuelle Liste der Kalenderereignisse zurück
 
 
     // Berechnet die Anzahl der Tage bis zum angegebenen Datum
@@ -158,7 +203,7 @@ class ContactCheckBeforeSubmitViewModel(
                 }
         }
         _calenderStateConnectedToContacts.value = listZipped           // Aktualisiert die MutableState-Liste mit den verknüpften Daten
-        deleteEventsThatDontExistsInCalenderAnymoreFromDatabase(dates, contacts)
+        //deleteEventsThatDontExistsInCalenderAnymoreFromDatabase(dates, contacts)
         insertEventForContact(listZipped)
         updateContactsMessageAfterZippingItWithDates(listZipped, contacts)   // Aktualisiert die Nachrichten der Kontakte nach der Verknüpfung
     }
