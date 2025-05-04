@@ -19,6 +19,14 @@ class OfflineEventRepository(private val eventDao: EventDao) : EventRepository {
         return eventDao.getEventFromDateAndTimeParam(eventDate,eventTime)
     }
 
+    override suspend fun getAllEventsStream(): List<Event> {
+        return eventDao.getAllEventsStream()
+    }
+
+    override suspend fun getEvents(contactOwnerId: Int): List<Event> {
+        return eventDao.getEvents(contactOwnerId)
+    }
+
     override suspend fun insertItem(event: Event) {
         eventDao.insert(event)
     }

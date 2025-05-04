@@ -23,6 +23,10 @@ interface EventDao {
     @Delete
     suspend fun delete(event: Event)
 
+    //TEST
+    @Query("SELECT * from events where contactOwnerId = :contactOwnerId")
+    suspend fun getEvents(contactOwnerId: Int): List<Event>
+
     @Transaction
     @Query("SELECT * FROM events WHERE eventId = :eventId")
     fun getEventWithContact(eventId: Int): Flow<EventWithContact>
@@ -33,4 +37,8 @@ interface EventDao {
 
     @Query("SELECT * FROM events WHERE eventDate = :eventDate AND eventTime = :eventTime")
     fun getEventFromDateAndTimeParam(eventDate: String,eventTime: String): Flow<List<Event>>
+
+    //Nur für testzweck aktivieren.
+    @Query("SELECT * FROM events ORDER BY eventId")
+    suspend fun getAllEventsStream(): List<Event>
 }

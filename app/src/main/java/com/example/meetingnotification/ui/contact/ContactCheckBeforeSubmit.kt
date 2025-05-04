@@ -90,9 +90,11 @@ fun ContactCheckScreen(
     //Weil hier async funktion vorhanden muss ich warten auf contactsWithEvents oben um die lazyColumn unten neu zu rendern.
     LaunchedEffect(uiState.value.contactUiState.size) {
         if (uiState.value.contactUiState.isNotEmpty()) {
-            viewModel.zipDatesToContacts(uiState.value.contactUiState)
+            //viewModel.zipDatesToContacts(uiState.value.contactUiState)
+            viewModel.zipDatesToContactsTest(uiState.value.contactUiState)
             Log.d(TAG,"Dates to Contacts Zipped in LaunchedEffect()")
-            viewModel.loadContactsWithEvents()
+            //viewModel.loadContactsWithEvents()
+            viewModel.loadContactsWithEventsTest() // TEST
             Log.d(TAG,"Contacts load with event called in LaunchedEffect()")
         }
     }
@@ -146,7 +148,7 @@ fun ContactCheckScreen(
 
                     var isContactInCalender = contactsZipedWithDate.any{it.contactId == contact.id}
                     //Wird mit if geprüft um beim ersten rendern zu warten bis launchefekt oben mit async funktion fertig ist, dann wird lazy column neu gerendert.
-                    val isContactsNextEventNotified = if(contactsWithEvents.value.isNotEmpty()) viewModel.isContactNotifiedForUpcomingEvent(contact.id) else false
+                    val isContactsNextEventNotified = if(contactsWithEvents.value.isNotEmpty()) viewModel.isContactNotifiedForUpcomingEventTest(contact.id) else false
                     val isContactSelectedInRadioButton = templateIdDepencysRadioButton.firstOrNull { it.first == contact.id }?.second ?: false
                     val isContactInMessageQueue = contactsFromSmsServiceQueueByIds.any { contactIdFromSmsQueue -> contactIdFromSmsQueue == contact.id }
 

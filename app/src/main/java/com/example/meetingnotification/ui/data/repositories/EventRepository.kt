@@ -12,6 +12,11 @@ interface EventRepository {
 
     fun getEventFromDateAndTimeParam(eventDate: String,eventTime: String): Flow<List<Event>>
 
+    //Nur für testzweck aktivieren.
+    suspend fun getAllEventsStream(): List<Event>
+
+    suspend fun getEvents(contactOwnerId: Int): List<Event>
+
     /**
      * Insert item in the data source
      */
