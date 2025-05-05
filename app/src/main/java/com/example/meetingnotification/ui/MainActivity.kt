@@ -201,7 +201,7 @@ class MainActivity : AppCompatActivity(),
             contactBuffer.loadCalender(this)                           //Lädt Kalenderdaten ins ViewModel
             Log.d(TAG,"loadCalender() called")
             //contactBuffer.insertContacts(this) //Test remove in release.
-            //val resultCodeEventInsertTry = contactBuffer.insertEvents(this) //Test remove in release
+            //contactBuffer.insertEvents(this) //Test remove in release
             //Log.d(TAG,"Result code from event insert = $resultCodeEventInsertTry") //Test remove in release
         }
     }

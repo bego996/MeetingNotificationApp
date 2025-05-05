@@ -26,7 +26,6 @@ import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
-import java.util.Calendar
 import java.util.TimeZone
 
 private val TAG = ContactsSearchScreenViewModel::class.simpleName
@@ -315,9 +314,12 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
     }
 
 
-    fun insertEvents(context: Context): Long{
+    fun insertEvents(context: Context) {
         fun getCalendarId(context: Context): Long? {
-            val projection = arrayOf(CalendarContract.Calendars._ID, CalendarContract.Calendars.CALENDAR_DISPLAY_NAME)
+            val projection = arrayOf(
+                CalendarContract.Calendars._ID,
+                CalendarContract.Calendars.CALENDAR_DISPLAY_NAME
+            )
             val uri = CalendarContract.Calendars.CONTENT_URI
             val cursor = context.contentResolver.query(uri, projection, null, null, null)
 
@@ -326,7 +328,7 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
                     val id = it.getLong(0)
                     val name = it.getString(1)
                     Log.d(TAG, "ID: $id, Name: $name")
-                    if (name.contains("Google") || name.contains("Kalender") || name.contains("simba.ibrahimovic6@gmail.com"))  {
+                    if (name.contains("Google") || name.contains("Kalender") || name.contains("simba.ibrahimovic6@gmail.com")) {
                         return id
                     }
                 }
@@ -334,23 +336,45 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
             return null
         }
 
-        val calendarId = getCalendarId(context)
-        Log.d(TAG, "ID: $calendarId")
-        val startMillis = Calendar.getInstance().apply {
-            set(2025, 4, 8, 10, 30)
-        }.timeInMillis
-        val endMillis = startMillis + 60 * 60 * 1000 // +1h
-
-        val values = ContentValues().apply {
-            put(CalendarContract.Events.DTSTART, startMillis)
-            put(CalendarContract.Events.DTEND, endMillis)
-            put(CalendarContract.Events.TITLE, "Ivan Potric")
-            put(CalendarContract.Events.CALENDAR_ID, calendarId)
-            put(CalendarContract.Events.EVENT_TIMEZONE, TimeZone.getDefault().id)
+        fun loadAllValidRecords(): List<EventSimpleTest> {
+            val events = mutableListOf<EventSimpleTest>()
+            try {
+                context.assets.open("insertEventsTestData.txt").bufferedReader().useLines { lines ->
+                    lines.forEach { line ->
+                        val parts = line.split(";")
+                        if (parts.size == 3) {
+                            val event = EventSimpleTest(
+                                title = parts[0],
+                                startTime = LocalDateTime.parse(parts[1]).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() ,
+                                endTime = LocalDateTime.parse(parts[2]).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+                            )
+                            events.add(event)
+                            Log.d(TAG, "Events geladen: $event")
+                        } else {
+                            Log.w(TAG, "Ungültiges Format in Zeile: $line")
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Fehler beim Laden der Evente aus Assets", e)
+            }
+            return events
         }
 
-        val uri: Uri? = context.contentResolver.insert(CalendarContract.Events.CONTENT_URI, values)
-        return uri?.lastPathSegment?.toLong() ?: -1
+        val listOfDummyEventsExtracted = loadAllValidRecords()
+
+        listOfDummyEventsExtracted.forEach { event ->
+            val calendarId = getCalendarId(context)
+
+            val values = ContentValues().apply {
+                put(CalendarContract.Events.DTSTART, event.startTime)
+                put(CalendarContract.Events.DTEND, event.endTime)
+                put(CalendarContract.Events.TITLE, event.title)
+                put(CalendarContract.Events.CALENDAR_ID, calendarId)
+                put(CalendarContract.Events.EVENT_TIMEZONE, TimeZone.getDefault().id)
+            }
+            val uri: Uri? = context.contentResolver.insert(CalendarContract.Events.CONTENT_URI, values)
+        }
     }
 
     //endregion
@@ -407,3 +431,5 @@ data class ContactsUiState2(val contactList: List<Contact> = listOf()) // Datenk
 data class EventDateTitle(val eventDate: LocalDateTime, val eventName: String) // Datenklasse für Ereignisse (Datum, Name)
 
 data class ContactSimpleTest(val firstName: String, val surname: String, val title: String, val number: String) //Test, remove on release.
+
+data class EventSimpleTest(val startTime: Long,val endTime: Long,val title: String)
