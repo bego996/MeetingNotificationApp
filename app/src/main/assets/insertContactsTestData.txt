@@ -1,0 +1,100 @@
+Sarah;Huber;BSc.;+43669320559
+Lukas;Lehner;Dr.;+43667498295
+Felix;Weber;Dr.;+43661475773
+Lukas;Hofer;Prof.;+43662276662
+Laura;Lehner;MSc.;+43662507721
+Tobias;Schmidt;Mag.;+43663972494
+Laura;Hofer;Dipl. Ing.;+43665530371
+Nina;Gruber;Dipl. Ing.;+43662709073
+Jonas;Weber;MSc.;+43661234117
+Max;Hofer;BSc.;+43667092941
+Lukas;Müller;Dr.;+43669883337
+Anna;Weber;Mag.;+43661907633
+Lukas;Müller;Mag.;+43665105593
+Max;Bauer;MSc.;+43663701703
+Lukas;Moser;Dr.;+43668113643
+Jonas;Lehner;Dr.;+43661683934
+Laura;Wagner;MSc.;+43666529975
+Nina;Bauer;Dr.;+43665205051
+Felix;Gruber;Prof.;+43667544942
+Laura;Weber;Prof.;+43667712478
+Laura;Weber;MSc.;+43665360866
+Anna;Müller;Ing.;+43661803093
+Nina;Lehner;none;+43661878631
+Tobias;Moser;none;+43664856368
+Tobias;Weber;MSc.;+43661924505
+Nina;Huber;BSc.;+43666192838
+Nina;Lehner;MSc.;+43666589830
+Tobias;Lehner;none;+43663947720
+Julia;Hofer;MSc.;+43665753514
+Lukas;Huber;BSc.;+43667293256
+Max;Müller;MSc.;+43666495489
+Anna;Lehner;Dipl. Ing.;+43664596647
+Nina;Gruber;BSc.;+43667796706
+Jonas;Wagner;none;+43662825485
+Max;Bauer;BSc.;+43669791501
+Julia;Huber;Prof.;+43665646173
+Anna;Lehner;BSc.;+43664095196
+Laura;Wagner;none;+43664238672
+Felix;Lehner;MSc.;+43663069208
+Felix;Bauer;MSc.;+43661696524
+Laura;Schmidt;Mag.;+43663997335
+Jonas;Gruber;Dr.;+43668540839
+Felix;Lehner;Dipl. Ing.;+43669437277
+Julia;Huber;Dipl. Ing.;+43663828229
+Felix;Gruber;BSc.;+43661482747
+Tobias;Hofer;MSc.;+43665170918
+Jonas;Wagner;none;+43665172629
+Max;Moser;Dr.;+43662962884
+Nina;Moser;none;+43668859001
+Nina;Wagner;BSc.;+43664949495
+Nina;Gruber;MSc.;+43667338317
+Julia;Moser;Dr.;+43667458361
+Sarah;Wagner;Dipl. Ing.;+43667313015
+Jonas;Huber;none;+43667042456
+Tobias;Müller;Prof.;+43667925812
+Lukas;Lehner;Dr.;+43662558094
+Anna;Lehner;Prof.;+43667518050
+Sarah;Gruber;Dr.;+43666158308
+Lukas;Müller;Prof.;+43669003112
+Sarah;Huber;Dr.;+43666286124
+Jonas;Weber;Dipl. Ing.;+43669092735
+Felix;Gruber;Prof.;+43667697711
+Sarah;Schmidt;Prof.;+43663873223
+Tobias;Schmidt;Ing.;+43668684992
+Anna;Moser;Dipl. Ing.;+43662632254
+Tobias;Weber;Dr.;+43662588578
+Nina;Wagner;Dipl. Ing.;+43664650935
+Julia;Huber;MSc.;+43668023834
+Lukas;Moser;MSc.;+43662061746
+Anna;Schmidt;MSc.;+43666850872
+Max;Schmidt;Ing.;+43667014069
+Laura;Bauer;Mag.;+43666606440
+Lukas;Moser;Dr.;+43667735515
+Julia;Huber;Ing.;+43664697120
+Julia;Hofer;none;+43668049689
+Anna;Müller;Dr.;+43668109325
+Felix;Müller;MSc.;+43662035613
+Anna;Moser;Dipl. Ing.;+43668850515
+Anna;Weber;Mag.;+43669666979
+Julia;Lehner;Mag.;+43663361291
+Felix;Wagner;MSc.;+43669406101
+Max;Müller;Mag.;+43667378265
+Felix;Bauer;Mag.;+43662425940
+Jonas;Müller;Prof.;+43662222061
+Jonas;Gruber;Mag.;+43664535830
+Julia;Hofer;Ing.;+43662929775
+Felix;Weber;BSc.;+43663520347
+Laura;Weber;Dipl. Ing.;+43666648425
+Sarah;Weber;BSc.;+43664390149
+Max;Hofer;BSc.;+43663432643
+Max;Weber;Prof.;+43665877156
+Tobias;Lehner;Prof.;+43666885360
+Tobias;Weber;Prof.;+43663104259
+Anna;Müller;none;+43662468202
+Max;Gruber;MSc.;+43663048954
+Tobias;Schmidt;Dipl. Ing.;+43668178940
+Jonas;Bauer;Prof.;+43663410825
+Tobias;Gruber;MSc.;+43665840802
+Tobias;Weber;Mag.;+43664356370
+Tobias;Wagner;none;+43663892382

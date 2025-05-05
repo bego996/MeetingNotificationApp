@@ -1,7 +1,10 @@
 package com.example.meetingnotification.ui.contact
 
 import android.annotation.SuppressLint
+import android.content.ContentProviderOperation
+import android.content.ContentValues
 import android.content.Context
+import android.net.Uri
 import android.provider.CalendarContract
 import android.provider.ContactsContract
 import android.util.Log
@@ -23,6 +26,8 @@ import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
+import java.util.Calendar
+import java.util.TimeZone
 
 private val TAG = ContactsSearchScreenViewModel::class.simpleName
 
@@ -205,6 +210,151 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
         return contactsReadOnly
     }
 
+    //region Test Insert Contacts/Events in Phone. Remove in Release
+
+    fun insertContacts(context: Context) {
+
+        fun loadAllValidRecords(): List<ContactSimpleTest> {
+            val contacts = mutableListOf<ContactSimpleTest>()
+
+            try {
+                context.assets.open("insertContactsTestData.txt").bufferedReader().useLines { lines ->
+                    lines.forEach { line ->
+                        val parts = line.split(";")
+                        if (parts.size == 4) {
+                            val contact = ContactSimpleTest(
+                                firstName = parts[0],
+                                surname = parts[1],
+                                title = parts[2],
+                                number = parts[3]
+                            )
+                            contacts.add(contact)
+                            Log.d(TAG, "Kontakt geladen: $contact")
+                        } else {
+                            Log.w(TAG, "Ungültiges Format in Zeile: $line")
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Fehler beim Laden der Kontakte aus Assets", e)
+            }
+            return contacts
+        }
+
+        val listOfDummyContactsExtracted = loadAllValidRecords()
+
+        listOfDummyContactsExtracted.forEach { dummyContact ->
+
+            val ops = ArrayList<ContentProviderOperation>()
+
+            // 1. Leeren RawContact erzeugen
+            ops.add(
+                ContentProviderOperation.newInsert(ContactsContract.RawContacts.CONTENT_URI)
+                    .withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, null)
+                    .withValue(ContactsContract.RawContacts.ACCOUNT_NAME, null)
+                    .build()
+            )
+
+            // 2. Titel (prefix)
+            ops.add(
+                ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+                    .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
+                    .withValue(
+                        ContactsContract.Data.MIMETYPE,
+                        ContactsContract.CommonDataKinds.Organization.CONTENT_ITEM_TYPE
+                    )
+                    .withValue(ContactsContract.CommonDataKinds.Organization.TITLE, dummyContact.title)
+                    .build()
+            )
+
+            // 3. Vor- & Nachname
+            ops.add(
+                ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+                    .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
+                    .withValue(
+                        ContactsContract.Data.MIMETYPE,
+                        ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE
+                    )
+                    .withValue(
+                        ContactsContract.CommonDataKinds.StructuredName.GIVEN_NAME,
+                        dummyContact.firstName
+                    )
+                    .withValue(
+                        ContactsContract.CommonDataKinds.StructuredName.FAMILY_NAME,
+                        dummyContact.surname
+                    )
+                    .build()
+            )
+
+            // 4. Telefonnummer
+            ops.add(
+                ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+                    .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
+                    .withValue(
+                        ContactsContract.Data.MIMETYPE,
+                        ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE
+                    )
+                    .withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, dummyContact.number)
+                    .withValue(
+                        ContactsContract.CommonDataKinds.Phone.TYPE,
+                        ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE
+                    )
+                    .build()
+            )
+
+            // Ausführen
+            try {
+                context.contentResolver.applyBatch(ContactsContract.AUTHORITY, ops)
+                Log.d(TAG,"Contact $dummyContact hinzugefügt!")
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Log.d(TAG,"Kontakt $dummyContact hinzufügen fehlgeschlagen!")
+            }
+
+        }
+    }
+
+
+    fun insertEvents(context: Context): Long{
+        fun getCalendarId(context: Context): Long? {
+            val projection = arrayOf(CalendarContract.Calendars._ID, CalendarContract.Calendars.CALENDAR_DISPLAY_NAME)
+            val uri = CalendarContract.Calendars.CONTENT_URI
+            val cursor = context.contentResolver.query(uri, projection, null, null, null)
+
+            cursor?.use {
+                while (it.moveToNext()) {
+                    val id = it.getLong(0)
+                    val name = it.getString(1)
+                    Log.d(TAG, "ID: $id, Name: $name")
+                    if (name.contains("Google") || name.contains("Kalender") || name.contains("simba.ibrahimovic6@gmail.com"))  {
+                        return id
+                    }
+                }
+            }
+            return null
+        }
+
+        val calendarId = getCalendarId(context)
+        Log.d(TAG, "ID: $calendarId")
+        val startMillis = Calendar.getInstance().apply {
+            set(2025, 4, 8, 10, 30)
+        }.timeInMillis
+        val endMillis = startMillis + 60 * 60 * 1000 // +1h
+
+        val values = ContentValues().apply {
+            put(CalendarContract.Events.DTSTART, startMillis)
+            put(CalendarContract.Events.DTEND, endMillis)
+            put(CalendarContract.Events.TITLE, "Ivan Potric")
+            put(CalendarContract.Events.CALENDAR_ID, calendarId)
+            put(CalendarContract.Events.EVENT_TIMEZONE, TimeZone.getDefault().id)
+        }
+
+        val uri: Uri? = context.contentResolver.insert(CalendarContract.Events.CONTENT_URI, values)
+        return uri?.lastPathSegment?.toLong() ?: -1
+    }
+
+    //endregion
+
 
     @SuppressLint("Range")
     fun loadCalender(context: Context) { // Lädt Kalenderereignisse aus der Systemdatenbank
@@ -255,3 +405,5 @@ data class MutablePairs(var first: Int, var second: Boolean)  // Datenklasse fü
 data class ContactsUiState2(val contactList: List<Contact> = listOf()) // Datenklasse für den Kontaktzustand der UI
 
 data class EventDateTitle(val eventDate: LocalDateTime, val eventName: String) // Datenklasse für Ereignisse (Datum, Name)
+
+data class ContactSimpleTest(val firstName: String, val surname: String, val title: String, val number: String) //Test, remove on release.

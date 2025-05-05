@@ -31,8 +31,10 @@ class MainActivity : AppCompatActivity(),
     companion object {                                                      // Begleitendes statisches Objekt für Konfigurationskonstanten
         private const val REQUEST_CODE_CONTACTS_READ = 1                    // Anfragecode für Lesezugriff auf Kontakte
         private const val REQUEST_CODE_KALENDER_READ = 2                    // Anfragecode für Lesezugriff auf Kalender
+        private const val REQUEST_CODE_KALENDER_WRITE = 6                    // TEST REMOVE ON RELEASE
         private const val REQUEST_CODE_SEND_SMS = 3                         // Anfragecode für Senden von SMS
-        private const val REQUEST_CODE_POST_NOTIFICATION = 4                         // Anfragecode für Posten von Hintergrundnotification
+        private const val REQUEST_CODE_POST_NOTIFICATION = 4                // Anfragecode für Posten von Hintergrundnotification
+        private const val REQUEST_CODE_CONTACTS_WRITE = 5                   // Test, remove ain release.
     }
 
     private val contactBuffer by viewModels<ContactsSearchScreenViewModel> { AppViewModelProvider.Factory }     // ViewModel für die Kontaktsuche
@@ -181,11 +183,26 @@ class MainActivity : AppCompatActivity(),
                 arrayOf(Manifest.permission.POST_NOTIFICATIONS),
                 REQUEST_CODE_POST_NOTIFICATION
             )
+        }else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !isPermissionGranted(Manifest.permission.WRITE_CONTACTS)){
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.WRITE_CONTACTS),
+                REQUEST_CODE_CONTACTS_WRITE
+            )
+        }else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !isPermissionGranted(Manifest.permission.WRITE_CALENDAR)){
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.WRITE_CALENDAR),
+                REQUEST_CODE_CONTACTS_WRITE
+            )
         } else {
             contactBuffer.loadContactsWrapper(this)
             Log.d(TAG,"loadcontacts() called")
             contactBuffer.loadCalender(this)                           //Lädt Kalenderdaten ins ViewModel
             Log.d(TAG,"loadCalender() called")
+            //contactBuffer.insertContacts(this) //Test remove in release.
+            //val resultCodeEventInsertTry = contactBuffer.insertEvents(this) //Test remove in release
+            //Log.d(TAG,"Result code from event insert = $resultCodeEventInsertTry") //Test remove in release
         }
     }
 
@@ -202,7 +219,7 @@ class MainActivity : AppCompatActivity(),
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if ((requestCode == REQUEST_CODE_CONTACTS_READ || requestCode == REQUEST_CODE_KALENDER_READ) || requestCode == REQUEST_CODE_SEND_SMS || requestCode == REQUEST_CODE_POST_NOTIFICATION
+        if ((requestCode == REQUEST_CODE_CONTACTS_READ || requestCode == REQUEST_CODE_KALENDER_READ) || requestCode == REQUEST_CODE_SEND_SMS || requestCode == REQUEST_CODE_POST_NOTIFICATION || requestCode == REQUEST_CODE_CONTACTS_WRITE || requestCode == REQUEST_CODE_KALENDER_WRITE
             && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             checkAndRequestPermissions()                              // Überprüft erneut die Berechtigungen
         }
