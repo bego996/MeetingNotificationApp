@@ -144,7 +144,7 @@ class ContactCheckBeforeSubmitViewModel(
                         ContactZippedWithDate(
                             contact.id,
                             date.eventDate.toLocalDate().format(outputFormatterDate),          // Formatiertes Datum
-                            date.eventDate.toLocalTime().toString()    // Uhrzeit als Zeichenkette
+                            date.eventDate.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm"))    // Uhrzeit als Zeichenkette
                         )
                     )
                 }

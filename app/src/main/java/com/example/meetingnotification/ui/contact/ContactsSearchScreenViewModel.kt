@@ -379,7 +379,6 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
 
     //endregion
 
-
     @SuppressLint("Range")
     fun loadCalender(context: Context) { // Lädt Kalenderereignisse aus der Systemdatenbank
         val eventList = mutableListOf<EventDateTitle>()       // Liste der geladenen Ereignisse
