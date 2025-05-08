@@ -17,7 +17,8 @@ object AppViewModelProvider {
             HomeScreenViewModel(
                 inventoryApplication().container.contactRepository,
                 inventoryApplication().container.eventRepository,
-                inventoryApplication().container.dateMessageSendRepository
+                inventoryApplication().container.dateMessageSendRepository,
+                inventoryApplication().resources
             )
         }
         initializer {

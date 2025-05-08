@@ -22,7 +22,7 @@ import com.example.meetingnotification.ui.home.HomeScreen
 fun MettingNavHost(                                           // Hauptfunktion für den Navigations-Host
     navController: NavHostController,                         // Controller zur Verwaltung des Navigationsverhaltens
     modifier: Modifier = Modifier,
-    viewModel: ContactsSearchScreenViewModel                 // ViewModel
+    viewModel: ContactsSearchScreenViewModel,                 // ViewModel
 ) {
     NavHost(
         navController = navController,                        // Bindet den NavController an den Host

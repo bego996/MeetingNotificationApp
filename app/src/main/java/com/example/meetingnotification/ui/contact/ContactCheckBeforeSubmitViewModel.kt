@@ -229,8 +229,7 @@ class ContactCheckBeforeSubmitViewModel(
     }
 
 
-    fun getContactsReadyForSms(): List<ContactReadyForSms> =
-        contactListReadyForSms         // Gibt die Liste der Kontakte für den SMS-Versand zurück
+    fun getContactsReadyForSms(): List<ContactReadyForSms> = contactListReadyForSms         // Gibt die Liste der Kontakte für den SMS-Versand zurück
 
 
     fun updateListReadyForSms(contacts: List<ContactReadyForSms>) {    // Aktualisiert die Liste der Kontakte für den SMS-Versand
@@ -266,7 +265,7 @@ class ContactCheckBeforeSubmitViewModel(
                 meetingDateFormat
             )
         ).days // Tage bis zum Datum berechnen
-        return "$daysBeetweenNowAndMeetingDate Tage Übrig"    // Gibt die verbleibenden Tage als Zeichenkette zurück
+        return "$daysBeetweenNowAndMeetingDate"    // Gibt die verbleibenden Tage als Zeichenkette zurück
     }
 
 

@@ -124,12 +124,12 @@ fun ContactCheckScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "Kontaktliste",
+                    stringResource(R.string.contact_list),
                     style = MaterialTheme.typography.titleLarge,
                     color = Color.White
                 )
                 Text(
-                    "${uiState.value.contactUiState.size} Kontakte",
+                    "${uiState.value.contactUiState.size} ${stringResource(R.string.contacts)}",
                     color = Color.White.copy(alpha = 0.8f)
                 )
             }
@@ -238,7 +238,7 @@ fun ContactCheckScreen(
                                 text = contactsZipedWithDate.firstOrNull { it.contactId == contact.id }
                                     ?.let {
                                         isContactInCalender = true
-                                        viewModel.getDayDuration(it.date)
+                                        "${viewModel.getDayDuration(it.date)} ${stringResource(R.string.days_left)}"
                                     } ?: stringResource(R.string.deufault_message_status).also {
                                         isContactInCalender = false
                                 },
@@ -264,7 +264,6 @@ fun ContactCheckScreen(
                 }
             }
         )
-
             // Footer-Buttons (originale Logik)
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -278,7 +277,7 @@ fun ContactCheckScreen(
                         contentColor = Color.White
                     )
                 ) {
-                    Text("Abbrechen")
+                    Text(stringResource(R.string.navigation_back))
                 }
 
                 Button(
@@ -292,7 +291,7 @@ fun ContactCheckScreen(
                                             it.id,
                                             it.phone,
                                             it.message,
-                                            it.firstName
+                                            "${it.firstName} ${it.lastName}"
                                         )
                                     }
                                 contactsReadyForSms?.let {
@@ -311,7 +310,7 @@ fun ContactCheckScreen(
                     ),
                     enabled =  templateIdDepencysRadioButton.any { it.second } || contactsFromSmsServiceQueueByIds.isNotEmpty()
                 ) {
-                    Text("Senden (${templateIdDepencysRadioButton.count { it.second } + contactsFromSmsServiceQueueByIds.size})")
+                    Text("${stringResource(R.string.send)} (${templateIdDepencysRadioButton.count { it.second } + contactsFromSmsServiceQueueByIds.size})")
                 }
             }
         }

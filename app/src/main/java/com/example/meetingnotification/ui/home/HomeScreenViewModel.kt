@@ -1,6 +1,7 @@
 package com.example.meetingnotification.ui.home
 
 
+import android.content.res.Resources
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.meetingnotification.ui.data.repositories.ContactRepository
@@ -12,13 +13,16 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
 private val TAG = HomeScreenViewModel::class.simpleName
-//Log.d(TAG,"data has value ${data.lastDateSendet} ${data.lastTimeSendet}")
 
 class HomeScreenViewModel(
     private val contactRepository: ContactRepository,
     private val eventRepository: EventRepository,
-    private val dateMessageSendRepository: DateMessageSendRepository
+    private val dateMessageSendRepository: DateMessageSendRepository,
+    private val resources: Resources
 ) : ViewModel() {
+
+    //Resources for strings and so on, direct from the factory injected.
+    val resourcesState = resources
 
     val dateMessageSendUiState: StateFlow<MessageSendDateTimeUiState> =
         // StateFlow zur Überwachung des UI-Zustands der Kontakte. Für events ist kein zur Überwachung nötig. Ich kann auch so insert,delete und updaten von events.

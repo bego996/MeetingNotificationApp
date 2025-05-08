@@ -1,0 +1,31 @@
+<resources>
+    <string name="app_name">Termin Erinnerung</string>
+    <string name="deufault_message_status">Undefiniert</string>
+    <string name="days_left">Tage übrig</string>
+    <string name="default_message_without_gender">Sehr geehrte%1$s %2$s %3$s%4$s, ihr Termin findet am %5$s um %6$s Uhr statt. Mit freundlichen Grüßen</string>
+    <string name="contact_gender_male">Männlich</string>
+    <string name="contact_gender_female">Weiblich</string>
+    <string name="gender">Geschlecht</string>
+    <string name="contacts">Kontakte</string>
+    <string name="contact_list">Kontaktliste</string>
+    <string name="navigation_back">Zurück</string>
+    <string name="send">Senden</string>
+    <string name="your_contact_list_is_empty">Deine Kontaktliste ist leer</string>
+    <string name="type_on_plus_to_add_some_contacts">Tippe auf das + unten, um neue Kontakte hinzuzufügen.</string>
+    <string name="add_contacts">Kontakte hinzufügen</string>
+    <string name="saved_contacts">Gespeicherte Kontakte</string>
+    <string name="title">Titel</string>
+    <string name="contact_name">Name</string>
+    <string name="search_field_place_holder">Gib die Suchoption ein</string>
+    <string name="contact_add_all_selected">Ausgewählte hinzufügen</string>
+    <string name="last_date_time_messages_sendet">Letzte Sendung am %1$s um %2$s Uhr durchgeführt.</string>
+    <string name="message_will_be_send_to_all_selected_contacts">Nachricht wird an alle ausgewählten Kontakte gesendet</string>
+    <string name="send_messages">NACHRICHTEN SENDEN</string>
+    <string name="check_templates">Zeige Nachricht Vorlagen</string>
+    <string name="sms_send_request">SMS SENDEN ANFRAGE</string>
+    <string name="do_you_want_to_send_the_notification_message_to_this_contacts">Möchtest du die Benachrichtigung an diese Kontakte senden</string>
+    <string name="accept">AKZEPTIEREN</string>
+    <string name="accepted">Akzeptiert</string>
+    <string name="deny">ABLEHNEN</string>
+    <string name="denied">Abgelehnt</string>
+</resources>

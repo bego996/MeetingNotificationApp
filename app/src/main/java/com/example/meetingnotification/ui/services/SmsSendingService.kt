@@ -12,6 +12,7 @@ import android.os.IBinder
 import android.telephony.SmsManager
 import android.util.Log
 import android.widget.Toast
+import com.example.meetingnotification.ui.R
 import com.example.meetingnotification.ui.broadcastReceiver.SmsSentReceiver
 import com.example.meetingnotification.ui.contact.ContactReadyForSms
 import com.example.meetingnotification.ui.data.entities.DateMessageSent
@@ -161,16 +162,16 @@ class SmsSendingService : Service() {                         // Dienst(Service)
 
     fun showMessageSendDialog(context: Context, fullName: String, onResult: (Boolean) -> Unit) {            // Zeigt einen Bestätigungsdialog an
         val builder = AlertDialog.Builder(context)           // Erstellt einen Dialog-Builder
-        builder.setTitle("SmS Send Request")                  // Setzt den Titel des Dialogs
-        builder.setMessage("Do you want to send the notification Message to this contacts: \n$fullName ?")  // Fragt den Benutzer, ob die Nachricht gesendet werden soll
+        builder.setTitle(context.resources.getString(R.string.sms_send_request))                  // Setzt den Titel des Dialogs
+        builder.setMessage("${context.resources.getString(R.string.do_you_want_to_send_the_notification_message_to_this_contacts)}: \n$fullName ?")  // Fragt den Benutzer, ob die Nachricht gesendet werden soll
 
-        builder.setPositiveButton("Accept") { dialog, which ->                  // Akzeptiert das Senden der Nachricht
-            Toast.makeText(context, "Accepted", Toast.LENGTH_SHORT).show()      // Zeigt eine Toast-Nachricht an
+        builder.setPositiveButton(context.resources.getString(R.string.accept)) { dialog, which ->                  // Akzeptiert das Senden der Nachricht
+            Toast.makeText(context, context.resources.getString(R.string.accepted), Toast.LENGTH_SHORT).show()      // Zeigt eine Toast-Nachricht an
             onResult(true)                                                           // Setzt das Ergebnis auf `true`
         }
 
-        builder.setNegativeButton("Deny") { dialog, which ->                    // Lehnt das Senden der Nachricht ab
-            Toast.makeText(context, "Denied", Toast.LENGTH_SHORT).show()        // Zeigt eine Toast-Nachricht an
+        builder.setNegativeButton(context.resources.getString(R.string.deny)) { dialog, which ->                    // Lehnt das Senden der Nachricht ab
+            Toast.makeText(context, context.resources.getString(R.string.denied), Toast.LENGTH_SHORT).show()        // Zeigt eine Toast-Nachricht an
             onResult(false)                                                          // Setzt das Ergebnis auf `false`
         }
 

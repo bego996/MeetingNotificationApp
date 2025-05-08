@@ -36,6 +36,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -60,14 +61,17 @@ fun HomeScreen(
     viewModel: HomeScreenViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val dateMessageSentUiState = viewModel.dateMessageSendUiState.collectAsState()
-    var dateLastTimeSendetMessages by remember { mutableStateOf( "Messages will be sent to all selected contacts") }
+    var dateLastTimeSendetMessages by remember { mutableStateOf( viewModel.resourcesState.getString(R.string.message_will_be_send_to_all_selected_contacts)) }
 
     LaunchedEffect(dateMessageSentUiState.value) {
         if (dateMessageSentUiState.value.lastDateSendet.isNotBlank()){
             Log.d("HomeScreen","if Statement entered, value is not blank.")
             dateLastTimeSendetMessages =
-                "Letzte Sendung am ${LocalDate.parse(dateMessageSentUiState.value.lastDateSendet).format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))} " +
-                        "um ${dateMessageSentUiState.value.lastTimeSendet} Uhr durchgeführt."
+                viewModel.resourcesState
+                    .getString(
+                        R.string.last_date_time_messages_sendet,
+                        LocalDate.parse(dateMessageSentUiState.value.lastDateSendet).format(DateTimeFormatter.ofPattern("dd.MM.yyyy")),dateMessageSentUiState.value.lastTimeSendet
+                    )
         }
     }
 
@@ -143,7 +147,7 @@ fun HomeScreen(
                     )
                 ) {
                     Text(
-                        "SEND MESSAGES",
+                        stringResource(R.string.send_messages),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -166,7 +170,7 @@ fun HomeScreen(
                         color = Color.White
                     )
                 ) {
-                    Text("Check Templates")
+                    Text(stringResource(R.string.check_templates))
                 }
 
                 // Info-Text
@@ -199,7 +203,7 @@ fun HomeScreen(
                     contentColor = Color.White
                 )
             ) {
-                Text("Saved Contacts", fontSize = 16.sp)
+                Text(stringResource(R.string.saved_contacts), fontSize = 16.sp)
             }
         }
     }

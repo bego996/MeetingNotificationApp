@@ -45,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.meetingnotification.ui.R
 import com.example.meetingnotification.ui.data.entities.Contact
@@ -110,7 +111,7 @@ fun SearchListScreen(
                 onValueChange = { newText ->
                     text = newText
                 },    // Aktualisiert den Suchtext-Wert
-                placeholder = { Text("Enter Search Options") },
+                placeholder = { Text(stringResource(R.string.search_field_place_holder)) },
                 maxLines = 1,
                 leadingIcon = { Icon(Icons.Default.Search,null) }
             )
@@ -151,7 +152,7 @@ fun SearchListScreen(
                     modifier = Modifier.weight(1f),
                     onClick = onCancelCLicked                // Abbruch
                 ) {
-                    Text("Cancel", color = Color.White)
+                    Text(stringResource(R.string.navigation_back), color = Color.White)
                 }
                 Spacer(modifier = Modifier.width(16.dp))     // Abstand zwischen Buttons
                 Button(
@@ -165,7 +166,7 @@ fun SearchListScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.White)
                 ) {
-                    Text("Add All Selected", color = Color.Black)
+                    Text(stringResource(R.string.contact_add_all_selected), color = Color.Black)
                 }
             }
         }
@@ -191,12 +192,12 @@ fun ContactRow(
         // 👤 Kontaktinformationen
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "Geschlecht -> ${if (contact.sex == 'W') "Weiblich" else "Männlich" }"
+                text = "${stringResource(R.string.gender)} -> ${if (contact.sex == 'W') stringResource(R.string.contact_gender_female) else stringResource(R.string.contact_gender_male) }"
             )
             Text(
-                text = "Titel -> ${contact.title}"
+                text = "${stringResource(R.string.title)} -> ${contact.title}"
             )
-            Text(text = "Name -> ${contact.firstName} ${contact.lastName}")
+            Text(text = "${stringResource(R.string.contact_name)} -> ${contact.firstName} ${contact.lastName}")
             Text(
                 text = "📞 ${contact.phone}",
                 style = MaterialTheme.typography.bodySmall,

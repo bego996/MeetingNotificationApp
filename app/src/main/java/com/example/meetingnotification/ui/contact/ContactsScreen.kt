@@ -44,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -116,14 +117,14 @@ fun EmptyListScreen(
         verticalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
-            text = "Deine Kontaktliste ist leer.",
+            text = stringResource(R.string.your_contact_list_is_empty),
             style = MaterialTheme.typography.headlineSmall,
             color = Color.White,
             textAlign = TextAlign.Center
         )
 
         Text(
-            text = "Tippe auf das + unten, um neue Kontakte hinzuzufügen.",
+            text = stringResource(R.string.type_on_plus_to_add_some_contacts),
             style = MaterialTheme.typography.bodyMedium,
             color = Color.White,
             textAlign = TextAlign.Center
@@ -141,7 +142,7 @@ fun EmptyListScreen(
                     contentColor = Color.White
                 )
             ) {
-                Text("Zurück")
+                Text(stringResource(R.string.navigation_back))
             }
 
             Spacer(modifier = Modifier.width(16.dp))
@@ -154,7 +155,7 @@ fun EmptyListScreen(
                     contentColor = Color.White
                 )
             ) {
-                Text("Kontakt hinzufügen")
+                Text(stringResource(R.string.add_contacts))
                 Spacer(modifier = Modifier.width(8.dp))
                 Icon(imageVector = Icons.Default.AddCircle, contentDescription = null)
             }
@@ -176,7 +177,7 @@ fun FilledListscreen(
             .padding(16.dp)
     ) {
         Text(
-            text = "Gespeicherte Kontakte",
+            text = stringResource(R.string.saved_contacts),
             style = MaterialTheme.typography.headlineSmall,
             color = Color.Green,
             modifier = Modifier.padding(bottom = 16.dp),
@@ -217,12 +218,12 @@ fun FilledListscreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "Geschlecht -> ${if (contact.sex == 'W') "Weiblich" else "Männlich" }"
+                                    text = "${stringResource(R.string.gender)} -> ${if (contact.sex == 'W') stringResource(R.string.contact_gender_female) else stringResource(R.string.contact_gender_male) }"
                                 )
                                 Text(
-                                    text = "Titel -> ${contact.title}"
+                                    text = "${stringResource(R.string.title)} -> ${contact.title}"
                                 )
-                                Text(text = "Name -> ${contact.firstName} ${contact.lastName}")
+                                Text(text = "${stringResource(R.string.contact_name)} -> ${contact.firstName} ${contact.lastName}")
                                 Text(
                                     text = "📞 ${contact.phone}",
                                     style = MaterialTheme.typography.bodySmall,
@@ -263,7 +264,7 @@ fun FilledListscreen(
                     contentColor = Color.White
                 )
             ) {
-                Text("Zurück")
+                Text(stringResource(R.string.navigation_back))
             }
 
             Spacer(modifier = Modifier.width(16.dp))
@@ -276,7 +277,7 @@ fun FilledListscreen(
                     contentColor = Color.White
                 )
             ) {
-                Text("Kontakt hinzufügen")
+                Text(stringResource(R.string.add_contacts))
                 Spacer(modifier = Modifier.width(8.dp))
                 Icon(imageVector = Icons.Default.AddCircle, contentDescription = null)
             }
