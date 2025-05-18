@@ -31,6 +31,10 @@ class OfflineEventRepository(private val eventDao: EventDao) : EventRepository {
         eventDao.insert(event)
     }
 
+    override suspend fun insertAllEvents(events: List<Event>) {
+        eventDao.insertAll(events)
+    }
+
     override suspend fun deleteItem(event: Event) {
         eventDao.delete(event)
     }

@@ -22,6 +22,8 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import kotlin.system.measureTimeMillis
+import kotlin.time.Duration.Companion.milliseconds
 
 private val TAG = ContactCheckBeforeSubmitViewModel::class.simpleName
 
@@ -40,8 +42,8 @@ class ContactCheckBeforeSubmitViewModel(
             )
 
     //alle kalenderereignisse die in der datenbank gespeichert sind, auch abgelaufene oder neue.
-    private var _contactWithEvents = MutableStateFlow<List<Event>>(emptyList())
-    val contactWithEvents: StateFlow<List<Event>> = _contactWithEvents
+    private val _contactWithEvents = mutableStateOf<List<Event>>(emptyList())
+    val contactWithEvents: State<List<Event>> = _contactWithEvents
 
     //alle kalendreignisse die wirkich eingetragen sind im kalender aber nicht unbedingt in der db sein müssen, keine zurückliegenden vorhanden..
     private val _calenderState = MutableStateFlow<List<EventDateTitle>>(emptyList())    // MutableStateFlow zur Verwaltung der Kalenderdaten
@@ -53,6 +55,9 @@ class ContactCheckBeforeSubmitViewModel(
 
     // Mit by wird der .value wert versteckt aber es ist equivalent zu einem State wie oben, nur das der State mit .value herausgeholt werden muss.
     private var contactListReadyForSms by mutableStateOf(listOf<ContactReadyForSms>())      // Kontakte, die bereit für den SMS-Versand sind
+
+    private val _isLoading = mutableStateOf(true)
+    val isLoading: State<Boolean> = _isLoading
 
 
     //region testMethods
@@ -126,110 +131,141 @@ class ContactCheckBeforeSubmitViewModel(
 
 
     // Lädt die Kalenderdaten in das MutableStateFlow
-    fun loadCalenderData(events: List<EventDateTitle>) { _calenderState.value = events }
+    fun loadCalenderData(events: List<EventDateTitle>) {
+        _calenderState.value = events
+    }
 
 
     // Verknüpft Kontakte mit Kalenderdaten
     fun zipDatesToContacts(contacts: List<Contact>) {
 
         val dates = getCalenderState()                                             // Holt die aktuelle Liste der Kalenderereignisse
-        val listZipped = mutableListOf<ContactZippedWithDate>()                    // Eine Liste zur Speicherung der verknüpften Daten
-        val outputFormatterDate = DateTimeFormatter.ofPattern("yyyy-MM-dd") // Ausgabeformat für das Datum
+        val listZipped =
+            mutableListOf<ContactZippedWithDate>()                    // Eine Liste zur Speicherung der verknüpften Daten
+        val outputFormatterDate =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd") // Ausgabeformat für das Datum
 
-        for (contact in contacts) {
-            dates.firstOrNull {
-                it.eventName.split(" ")[0] == contact.firstName.split(" ")[0] && it.eventName.split(" ")[1] == contact.lastName                       // Prüft, ob ein Kalenderereignis zum Kontakt passt
-            }?.let { date ->                                   // Wenn ein passendes Ereignis gefunden wird
-                    listZipped.add(
-                        ContactZippedWithDate(
-                            contact.id,
-                            date.eventDate.toLocalDate().format(outputFormatterDate),          // Formatiertes Datum
-                            date.eventDate.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm"))    // Uhrzeit als Zeichenkette
-                        )
-                    )
+        val duration = measureTimeMillis {
+            for (contact in contacts) {
+                dates.firstOrNull {
+                    it.eventName.split(" ")[0] == contact.firstName.split(" ")[0] && it.eventName.split(
+                        " "
+                    )[1] == contact.lastName                       // Prüft, ob ein Kalenderereignis zum Kontakt passt
                 }
-        }
-        _calenderStateConnectedToContacts.value = listZipped           // Aktualisiert die MutableState-Liste mit den verknüpften Daten
-        deleteEventsThatDontExistsInCalenderAnymoreFromDatabase(dates, contacts)
-        insertEventForContact(listZipped)
-        updateContactsMessageAfterZippingItWithDates(listZipped, contacts)   // Aktualisiert die Nachrichten der Kontakte nach der Verknüpfung
-    }
-
-
-    fun loadContactsWithEvents() {
-        viewModelScope.launch {
-            val mutableListContactsWithEvents = mutableListOf<Event>()
-
-            contactUiState.value.contactUiState.forEach { contact ->
-                val contactAndEvents = eventRepository.getEvents(contact.id)
-
-                mutableListContactsWithEvents.addAll(contactAndEvents)
+                    ?.let { date ->                                   // Wenn ein passendes Ereignis gefunden wird
+                        listZipped.add(
+                            ContactZippedWithDate(
+                                contact.id,
+                                date.eventDate.toLocalDate()
+                                    .format(outputFormatterDate),          // Formatiertes Datum
+                                date.eventDate.toLocalTime()
+                                    .format(DateTimeFormatter.ofPattern("HH:mm"))    // Uhrzeit als Zeichenkette
+                            )
+                        )
+                    }
             }
+        }.milliseconds
+        Log.d(TAG, "ZipDatesTocontacts() executionTime = $duration")
 
-            _contactWithEvents.value = mutableListContactsWithEvents
-        }
+        _calenderStateConnectedToContacts.value = listZipped           // Aktualisiert die MutableState-Liste mit den verknüpften Daten
     }
 
 
-        fun isContactNotifiedForUpcomingEvent(contactId: Int): Boolean {
-        val allEventsForChoosenContact = contactWithEvents.value.filter { contactWithEvents -> contactWithEvents.contactOwnerId == contactId }   //gibt event zurück oder false, falls es keine events hatt.
-        if (allEventsForChoosenContact.isEmpty()) return false
+    private fun loadContactsWithEvents() {
+            viewModelScope.launch {
+                val duration = measureTimeMillis {
+                    val mutableListContactsWithEvents = mutableListOf<Event>()
 
-        val dateTimeNow = LocalDateTime.now()
-        val dateFormated = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                    contactUiState.value.contactUiState.forEach { contact ->
+                        val contactAndEvents = eventRepository.getEvents(contact.id)
 
-        val upcomingEventSortedOut = allEventsForChoosenContact.filter { event ->
-            LocalDateTime.of(
-                LocalDate.parse(event.eventDate, dateFormated),
-                LocalTime.parse(event.eventTime)
-            ).isAfter(dateTimeNow)
-        }.sortedBy { event -> event.eventDate }
-        val upcomingEventNotified = upcomingEventSortedOut.firstOrNull()?.isNotified ?: return false
+                        mutableListContactsWithEvents.addAll(contactAndEvents)
+                    }
 
+                    _contactWithEvents.value = mutableListContactsWithEvents
+                }.milliseconds
+                Log.d(TAG, "LoadContactsWithEvents() executionTime = $duration")
+                _isLoading.value = false
+                Log.d(TAG, "LoadContactsWithEvents() is executed and loadingScreen is finished.")
+            }
+    }
+
+
+    fun isContactNotifiedForUpcomingEvent(contactId: Int): Boolean {
+        val upcomingEventNotified: Boolean
+
+        val duration = measureTimeMillis {
+            val allEventsForChoosenContact =
+                contactWithEvents.value.filter { contactWithEvents -> contactWithEvents.contactOwnerId == contactId }   //gibt event zurück oder false, falls es keine events hatt.
+            if (allEventsForChoosenContact.isEmpty()) return false
+
+            //Log.d(TAG, "event for contactId:$contactId = $allEventsForChoosenContact")
+
+            val dateTimeNow = LocalDateTime.now()
+            val dateFormated = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+            val upcomingEventSortedOut = allEventsForChoosenContact.filter { event ->
+                LocalDateTime.of(
+                    LocalDate.parse(event.eventDate, dateFormated),
+                    LocalTime.parse(event.eventTime)
+                ).isAfter(dateTimeNow)
+            }.sortedBy { event -> event.eventDate }
+
+
+            upcomingEventNotified = upcomingEventSortedOut.firstOrNull()?.isNotified ?: return false
+        }.milliseconds
+        //Log.d(TAG, "isContactNotifiedForUpcomingEvent() executionTime = $duration")
         return upcomingEventNotified
     }
 
 
-        private fun deleteEventsThatDontExistsInCalenderAnymoreFromDatabase(
-        allEventsInCalender: List<EventDateTitle>,
+    fun deleteEventsThatDontExistsInCalenderAnymoreFromDatabase(
+        allEventsInCalender: List<EventDateTitle> = getCalenderState(),
         contactsInDatabase: List<Contact>
     ) {
         viewModelScope.launch {
-            val outputFormatterDate = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-            val now = LocalDateTime.now()
+            val duration = measureTimeMillis {
+                val outputFormatterDate = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                val now = LocalDateTime.now()
 
-            val validEventsInDatabase = contactsInDatabase.flatMap { contact ->
-                contactRepository.getContactWithEvents(contact.id).first().events
-            }.filter { event ->
-                val eventDateTime = LocalDateTime.of(
-                    LocalDate.parse(event.eventDate, outputFormatterDate),
-                    LocalTime.parse(event.eventTime)
-                )
-                eventDateTime.isAfter(now)  // Event muss in der Zukunft liegen
-            }
-
-            // Events finden, die in der DB sind, aber nicht im Kalender vorkommen
-            val eventsToDelete = validEventsInDatabase.filter { validEvent ->
-                allEventsInCalender.none { event ->
-                    val actualEventDateTime = event.eventDate
-                    val validEventDateTime = LocalDateTime.of(
-                        LocalDate.parse(validEvent.eventDate, outputFormatterDate),
-                        LocalTime.parse(validEvent.eventTime)
+                val validEventsInDatabase = contactsInDatabase.flatMap { contact ->
+                    contactRepository.getContactWithEvents(contact.id).first().events
+                }.filter { event ->
+                    val eventDateTime = LocalDateTime.of(
+                        LocalDate.parse(event.eventDate, outputFormatterDate),
+                        LocalTime.parse(event.eventTime)
                     )
-                    actualEventDateTime == validEventDateTime
+                    eventDateTime.isAfter(now)  // Event muss in der Zukunft liegen
                 }
-            }
-            Log.i(TAG, "Size of to be deleted Events: ${eventsToDelete.size}")
-            //delete Events that are no more in calender but still in Database.
-            if (eventsToDelete.isNotEmpty()){
-                eventsToDelete.forEach { eventToDelete -> eventRepository.deleteItem(eventToDelete) }
-                loadContactsWithEvents()
-            }
+
+                // Events finden, die in der DB sind, aber nicht im Kalender vorkommen
+                val eventsToDelete = validEventsInDatabase.filter { validEvent ->
+                    allEventsInCalender.none { event ->
+                        val actualEventDateTime = event.eventDate
+                        val validEventDateTime = LocalDateTime.of(
+                            LocalDate.parse(validEvent.eventDate, outputFormatterDate),
+                            LocalTime.parse(validEvent.eventTime)
+                        )
+                        actualEventDateTime == validEventDateTime
+                    }
+                }
+                Log.i(TAG, "Size of to be deleted Events: ${eventsToDelete.size}")
+                //delete Events that are no more in calender but still in Database.
+                if (eventsToDelete.isNotEmpty()) {
+                    eventsToDelete.forEach { eventToDelete ->
+                        eventRepository.deleteItem(
+                            eventToDelete
+                        )
+                    }
+                    loadContactsWithEvents()
+                }
+            }.milliseconds
+            Log.d(TAG, "deleteEventsThatDontExistsInCalenderAnymoreFromDatabase() executionTime = $duration")
         }
     }
 
 
-    fun getContactsReadyForSms(): List<ContactReadyForSms> = contactListReadyForSms         // Gibt die Liste der Kontakte für den SMS-Versand zurück
+    fun getContactsReadyForSms(): List<ContactReadyForSms> =
+        contactListReadyForSms         // Gibt die Liste der Kontakte für den SMS-Versand zurück
 
 
     fun updateListReadyForSms(contacts: List<ContactReadyForSms>) {    // Aktualisiert die Liste der Kontakte für den SMS-Versand
@@ -244,11 +280,21 @@ class ContactCheckBeforeSubmitViewModel(
     }
 
 
-    private fun insertEventForContact(contactZippedWithDate: List<ContactZippedWithDate>) {
+    fun insertEventForContact(contactZippedWithDate: List<ContactZippedWithDate>) {
         viewModelScope.launch {
-            contactZippedWithDate.forEach {
-                eventRepository.insertItem(Event(eventDate = it.date, eventTime = it.time, contactOwnerId = it.contactId))
-            }
+            val duration = measureTimeMillis {
+                val events = contactZippedWithDate.map {
+                    event -> Event(
+                    eventDate = event.date,
+                    eventTime = event.time,
+                    contactOwnerId = event.contactId
+                    )
+                }
+
+                eventRepository.insertAllEvents(events)
+                loadContactsWithEvents()
+            }.milliseconds
+            Log.d(TAG, "insertEventForContact() executionTime = $duration")
         }
     }
 
@@ -258,7 +304,8 @@ class ContactCheckBeforeSubmitViewModel(
 
     // Berechnet die Anzahl der Tage bis zum angegebenen Datum
     fun getDayDuration(meetingDate: String): String {
-        val meetingDateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd") // Datumsformat für die Berechnung
+        val meetingDateFormat =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd") // Datumsformat für die Berechnung
         val daysBeetweenNowAndMeetingDate = LocalDate.now().until(
             LocalDate.parse(
                 meetingDate,
@@ -270,34 +317,42 @@ class ContactCheckBeforeSubmitViewModel(
 
 
     // Aktualisiert die Nachrichten der Kontakte
-    private fun updateContactsMessageAfterZippingItWithDates(zippedDateToContacts: MutableList<ContactZippedWithDate>, contactList: List<Contact>) {
+    fun updateContactsMessageAfterZippingItWithDates(
+        zippedDateToContacts: List<ContactZippedWithDate>,
+        contactList: List<Contact>
+    ) {
         zippedDateToContacts.isNotEmpty()
             .let {                  // Nur wenn verknüpfte Daten vorhanden sind
                 viewModelScope.launch {
-                    for (zipValue in zippedDateToContacts) { // Durchläuft die Liste der verknüpften Daten
-                        val germanDateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
-                        val dateConvertedToGermanFormat = LocalDate.parse(zipValue.date).format(germanDateFormatter)
 
 
-                        contactList.firstOrNull { it.id == zipValue.contactId }
-                            ?.let { contact ->                    // Sucht den passenden Kontakt
-                                contactRepository.updateItem(            // Aktualisiert den Kontakt mit der neuen Nachricht
-                                    Contact(
-                                        id = contact.id,
-                                        title = contact.title,
-                                        firstName = contact.firstName,
-                                        lastName = contact.lastName,
-                                        sex = contact.sex,
-                                        phone = contact.phone,
-                                        message = updateMessageWithCorrectDateTime(
-                                            contact.message,
-                                            dateConvertedToGermanFormat,
-                                            zipValue.time
-                                        )                         // Aktualisiert die Nachricht
+                    val duration = measureTimeMillis {
+                        for (zipValue in zippedDateToContacts) { // Durchläuft die Liste der verknüpften Daten
+                            val germanDateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
+                            val dateConvertedToGermanFormat = LocalDate.parse(zipValue.date).format(germanDateFormatter)
+
+
+                            contactList.firstOrNull { it.id == zipValue.contactId }
+                                ?.let { contact ->                    // Sucht den passenden Kontakt
+                                    contactRepository.updateItem(            // Aktualisiert den Kontakt mit der neuen Nachricht
+                                        Contact(
+                                            id = contact.id,
+                                            title = contact.title,
+                                            firstName = contact.firstName,
+                                            lastName = contact.lastName,
+                                            sex = contact.sex,
+                                            phone = contact.phone,
+                                            message = updateMessageWithCorrectDateTime(
+                                                contact.message,
+                                                dateConvertedToGermanFormat,
+                                                zipValue.time
+                                            )                         // Aktualisiert die Nachricht
+                                        )
                                     )
-                                )
-                            }
-                    }
+                                }
+                        }
+                    }.milliseconds
+                    Log.d(TAG, "updateContactsMessageAfterZippingItWithDates() executionTime = $duration")
                 }
             }
     }
@@ -310,7 +365,8 @@ private fun updateMessageWithCorrectDateTime(
     dateReplacement: String,
     timeReplacement: String
 ): String {
-    val regexForAllPossibleDates = """(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])\.(\d{4})""".toRegex()
+    val regexForAllPossibleDates =
+        """(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])\.(\d{4})""".toRegex()
     val regexForAllPossibleTimes = """(0[0-9]|1[0-9]|2[0-3]):(0[0-9]|[1-5][0-9])""".toRegex()
     var messageReplacement = originMessage
 

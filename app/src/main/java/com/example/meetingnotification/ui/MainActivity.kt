@@ -25,8 +25,7 @@ import com.example.meetingnotification.ui.services.SmsSendingServiceInteractor
 
 private val TAG = MainActivity::class.simpleName
 
-class MainActivity : AppCompatActivity(),
-    SmsSendingServiceInteractor {     // Hauptaktivität der App, die den SMS-Sending-Service Interactor implementiert
+class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
 
     companion object {                                                      // Begleitendes statisches Objekt für Konfigurationskonstanten
         private const val REQUEST_CODE_CONTACTS_READ = 1                    // Anfragecode für Lesezugriff auf Kontakte
@@ -102,8 +101,7 @@ class MainActivity : AppCompatActivity(),
         }
     }
 
-
-    override fun onCreate(savedInstanceState: Bundle?) {               // Wird beim Erstellen der Aktivität aufgerufen
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.d(TAG,"onCreate() - MainActivity")
 
@@ -119,6 +117,11 @@ class MainActivity : AppCompatActivity(),
                 )
             }
         }
+    }
+
+    override fun onRestart() {
+        super.onRestart()
+        Log.d(TAG,"onRestart() - MainActivity")
     }
 
     override fun onStart() {                                           // Wird beim Start der Aktivität aufgerufen
@@ -156,7 +159,6 @@ class MainActivity : AppCompatActivity(),
         contactBuffer.smsServiceInteractor = null                      // Entfernt die Verbindung zwischen Dienst und ViewModel
         Log.d(TAG,"onDestroy() - MainActivity")                         // Debug-Nachricht
     }
-
 
     private fun checkAndRequestPermissions() {                         // Überprüft und fordert erforderliche Berechtigungen an, bei start der Acticity.
         if (!isPermissionGranted(Manifest.permission.READ_CONTACTS)) {

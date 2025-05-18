@@ -22,6 +22,8 @@ interface EventRepository {
      */
     suspend fun insertItem(event: Event)
 
+    suspend fun insertAllEvents(events: List<Event>)
+
     /**
      * Delete item from the data source
      */

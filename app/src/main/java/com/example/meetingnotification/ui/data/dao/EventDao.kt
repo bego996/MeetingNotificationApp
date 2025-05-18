@@ -17,6 +17,9 @@ interface EventDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE) //Wenn ein Konflikt wie zb Contraintsbruch erfolgt, dann wird der problematische Datensatz ignoriert und nicht eingefügt.Die Transaction geht weiter.
     suspend fun insert(event: Event)
 
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertAll(events: List<Event>)
+
     @Update //Auch hier oder bei delete könnte man eine OnconflictStrategy auswählen. Merken: Abort Strategie ist immer Default wert bei Update,Insert,Delete.
     suspend fun update(event: Event)
 

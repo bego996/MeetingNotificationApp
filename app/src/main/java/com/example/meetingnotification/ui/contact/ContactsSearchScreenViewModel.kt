@@ -27,6 +27,8 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.TimeZone
+import kotlin.system.measureTimeMillis
+import kotlin.time.Duration.Companion.milliseconds
 
 private val TAG = ContactsSearchScreenViewModel::class.simpleName
 
@@ -98,62 +100,63 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
 
     @SuppressLint("Range", "CheckResult")
     suspend fun loadContacts(context: Context) {                     // Lädt die Kontakte aus dem System-Kontaktbuch
-        val contactList = mutableListOf<Contact>()           // Liste für die geladenen Kontakte
-        val contentResolver = context.contentResolver        // Holt den Content Resolver für Datenbank-Abfragen
-        var isContactJustToUpdate = false
+        val duration = measureTimeMillis {
+            val contactList = mutableListOf<Contact>()           // Liste für die geladenen Kontakte
+            val contentResolver = context.contentResolver        // Holt den Content Resolver für Datenbank-Abfragen
+            var isContactJustToUpdate = false
 
-        val cursor = contentResolver.query(
-            ContactsContract.Contacts.CONTENT_URI,
-            null,
-            null,
-            null,
-            ContactsContract.Contacts.DISPLAY_NAME.split(" ")[0] + " ASC"     // Sortierung nach Vorname
-        )                                                                                       // Abfrage aller Kontakte aus der Standard-Kontaktdatenbank des Systems
+            val cursor = contentResolver.query(
+                ContactsContract.Contacts.CONTENT_URI,
+                null,
+                null,
+                null,
+                ContactsContract.Contacts.DISPLAY_NAME.split(" ")[0] + " ASC"     // Sortierung nach Vorname
+            )                                                                                       // Abfrage aller Kontakte aus der Standard-Kontaktdatenbank des Systems
 
-        if (cursor != null && cursor.count > 0) {            // Wenn es Ergebnisse gibt
-            while (cursor.moveToNext()) { // Durchläuft jeden Kontakt im Cursor
+            if (cursor != null && cursor.count > 0) {            // Wenn es Ergebnisse gibt
+                while (cursor.moveToNext()) { // Durchläuft jeden Kontakt im Cursor
 
-                val id = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID)) // Kontakt-ID
+                    val id = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID)) // Kontakt-ID
 
-                val fullname = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME)).split(" ")           // Aufteilen des vollen Namens in Vor- und Nachname
+                    val fullname = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME)).split(" ")           // Aufteilen des vollen Namens in Vor- und Nachname
 
-                val firstname = fullname[0]                               // Vorname
+                    val firstname = fullname[0]                               // Vorname
 
-                val surname = fullname[if (fullname.size > 2) 2 else 1]   // Nachname, abhängig von der Namensstruktur
+                    val surname = fullname[if (fullname.size > 2) 2 else 1]   // Nachname, abhängig von der Namensstruktur
 
-                val sex = if (fullname.size > 2) fullname[1] else "X"     // Geschlecht (männlich/weiblich/unspezifisch)
+                    val sex = if (fullname.size > 2) fullname[1] else "X"     // Geschlecht (männlich/weiblich/unspezifisch)
 
-                val orgCursor = contentResolver.query(
-                    ContactsContract.Data.CONTENT_URI,
-                    null,
-                    ContactsContract.Data.CONTACT_ID + " = ? AND " + ContactsContract.Data.MIMETYPE + " = ?",
-                    arrayOf(id, ContactsContract.CommonDataKinds.Organization.CONTENT_ITEM_TYPE),
-                    null
-                )// Abfrage der Organisation des Kontakts
-
-                var title = "none"                            // Standardwert für den Titel
-                if (orgCursor != null && orgCursor.moveToFirst()) {
-                    title = orgCursor.getString(orgCursor.getColumnIndex(ContactsContract.CommonDataKinds.Organization.TITLE)) // Titel der Organisation
-                }
-                orgCursor?.close()
-
-                // Abfrage der Telefonnummer(n)
-                if (cursor.getInt(cursor.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER)) > 0) {
-                    val phoneCursor = contentResolver.query(
-                        ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                    val orgCursor = contentResolver.query(
+                        ContactsContract.Data.CONTENT_URI,
                         null,
-                        ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
-                        arrayOf(id),
+                        ContactsContract.Data.CONTACT_ID + " = ? AND " + ContactsContract.Data.MIMETYPE + " = ?",
+                        arrayOf(id, ContactsContract.CommonDataKinds.Organization.CONTENT_ITEM_TYPE),
                         null
-                    )
-                    while (phoneCursor?.moveToNext() == true) {
-                        val phoneNumber = phoneCursor.getString(
-                            phoneCursor.getColumnIndex(
-                                ContactsContract.CommonDataKinds.Phone.NUMBER
-                            )
+                    )// Abfrage der Organisation des Kontakts
+
+                    var title = "none"                            // Standardwert für den Titel
+                    if (orgCursor != null && orgCursor.moveToFirst()) {
+                        title = orgCursor.getString(orgCursor.getColumnIndex(ContactsContract.CommonDataKinds.Organization.TITLE)) // Titel der Organisation
+                    }
+                    orgCursor?.close()
+
+                    // Abfrage der Telefonnummer(n)
+                    if (cursor.getInt(cursor.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER)) > 0) {
+                        val phoneCursor = contentResolver.query(
+                            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                            null,
+                            ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
+                            arrayOf(id),
+                            null
                         )
-                        val isMale = sex.lowercase() == "m"               // Prüft, ob das Geschlecht männlich ist
-                        val defaultMessage = context.resources.getString( // Standardnachricht für jeden Kontakt mit Platzhaltern
+                        while (phoneCursor?.moveToNext() == true) {
+                            val phoneNumber = phoneCursor.getString(
+                                phoneCursor.getColumnIndex(
+                                    ContactsContract.CommonDataKinds.Phone.NUMBER
+                                )
+                            )
+                            val isMale = sex.lowercase() == "m"               // Prüft, ob das Geschlecht männlich ist
+                            val defaultMessage = context.resources.getString( // Standardnachricht für jeden Kontakt mit Platzhaltern
                                 R.string.default_message_without_gender,
                                 if (isMale) "r" else "",
                                 if (isMale) "Herr" else "Frau",
@@ -163,8 +166,8 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
                                 "HH:mm"
                             )
 
-                        contactList.add(Contact
-                            (                                      // Fügt den Kontakt zur Liste hinzu
+                            contactList.add(Contact
+                                (                                      // Fügt den Kontakt zur Liste hinzu
                                 id.toInt(),
                                 title,
                                 firstname,
@@ -173,36 +176,38 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
                                 phoneNumber,
                                 defaultMessage
                             )
-                        )
-                        //Hier wird geprüft ob contact schon in der datenbank eingetragen ist.
-                        val contactFromDatabaseIfExists = contactRepository.getContactStream(id.toInt())
+                            )
+                            //Hier wird geprüft ob contact schon in der datenbank eingetragen ist.
+                            val contactFromDatabaseIfExists = contactRepository.getContactStream(id.toInt())
 
-                        //Wenn sich name von kontakt ändert im Telefon dann wird dieser in der datenbank room geupdated.
-                        contactFromDatabaseIfExists?.let {
-                            if (contactFromDatabaseIfExists.lastName != surname ||
-                                contactFromDatabaseIfExists.firstName != firstname ||
-                                contactFromDatabaseIfExists.sex.toString() != sex ||
-                                contactFromDatabaseIfExists.title != title ||
-                                contactFromDatabaseIfExists.phone != phoneNumber){
-                                Log.d(TAG,"Contact is just to update in database()")
-                                isContactJustToUpdate = true
+                            //Wenn sich name von kontakt ändert im Telefon dann wird dieser in der datenbank room geupdated.
+                            contactFromDatabaseIfExists?.let {
+                                if (contactFromDatabaseIfExists.lastName != surname ||
+                                    contactFromDatabaseIfExists.firstName != firstname ||
+                                    contactFromDatabaseIfExists.sex.toString() != sex ||
+                                    contactFromDatabaseIfExists.title != title ||
+                                    contactFromDatabaseIfExists.phone != phoneNumber){
+                                    Log.d(TAG,"Contact is just to update in database()")
+                                    isContactJustToUpdate = true
+                                }
+                                if (isContactJustToUpdate){
+                                    updateContactInDatabase(Contact(id.toInt(),title,firstname,surname,sex[0],phoneNumber,defaultMessage))
+                                    isContactJustToUpdate = false
+                                }
                             }
-                            if (isContactJustToUpdate){
-                                updateContactInDatabase(Contact(id.toInt(),title,firstname,surname,sex[0],phoneNumber,defaultMessage))
-                                isContactJustToUpdate = false
-                            }
+
                         }
-
+                        phoneCursor?.close()
                     }
-                    phoneCursor?.close()
                 }
+                cursor.close()                                                //Schließt den cursor wenn fertig, wichtig!
             }
-            cursor.close()                                                //Schließt den cursor wenn fertig, wichtig!
-        }
 
-        // Aktualisiert die Kontakte in der Live-Datenstruktur. Wichtig : postValue() überschreibt immer alle alten Werte.
-        //Wenn wir neue Werte anhängen wollen, bleibt keine andere Möglichkeit, als die alte liste irgendwo abzuspeichern und dann neue einfügen und am schluss wiieder mit postValue() updaten.
-        contactsWriteOnly.postValue(contactList)
+            // Aktualisiert die Kontakte in der Live-Datenstruktur. Wichtig : postValue() überschreibt immer alle alten Werte.
+            //Wenn wir neue Werte anhängen wollen, bleibt keine andere Möglichkeit, als die alte liste irgendwo abzuspeichern und dann neue einfügen und am schluss wiieder mit postValue() updaten.
+            contactsWriteOnly.postValue(contactList)
+        }.milliseconds
+        Log.d(TAG,"Ausführungszeit von loadContacts() = $duration ")
     }
 
     fun getContacts(): LiveData<List<Contact>> {                          // Gibt die Live-Datenstruktur für Kontakte zurück
@@ -212,7 +217,6 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
     //region Test Insert Contacts/Events in Phone. Remove in Release
 
     fun insertContacts(context: Context) {
-
         fun loadAllValidRecords(): List<ContactSimpleTest> {
             val contacts = mutableListOf<ContactSimpleTest>()
 
