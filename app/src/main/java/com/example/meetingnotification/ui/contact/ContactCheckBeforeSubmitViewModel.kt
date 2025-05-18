@@ -14,7 +14,6 @@ import com.example.meetingnotification.ui.data.repositories.EventRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -228,7 +227,8 @@ class ContactCheckBeforeSubmitViewModel(
                 val now = LocalDateTime.now()
 
                 val validEventsInDatabase = contactsInDatabase.flatMap { contact ->
-                    contactRepository.getContactWithEvents(contact.id).first().events
+//                    contactRepository.getContactWithEvents(contact.id).first().events
+                    eventRepository.getEvents(contact.id)
                 }.filter { event ->
                     val eventDateTime = LocalDateTime.of(
                         LocalDate.parse(event.eventDate, outputFormatterDate),
@@ -324,17 +324,17 @@ class ContactCheckBeforeSubmitViewModel(
         zippedDateToContacts.isNotEmpty()
             .let {                  // Nur wenn verknüpfte Daten vorhanden sind
                 viewModelScope.launch {
-
-
                     val duration = measureTimeMillis {
+
+                        val contacts = mutableListOf<Contact>()
+
                         for (zipValue in zippedDateToContacts) { // Durchläuft die Liste der verknüpften Daten
                             val germanDateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
                             val dateConvertedToGermanFormat = LocalDate.parse(zipValue.date).format(germanDateFormatter)
 
-
                             contactList.firstOrNull { it.id == zipValue.contactId }
-                                ?.let { contact ->                    // Sucht den passenden Kontakt
-                                    contactRepository.updateItem(            // Aktualisiert den Kontakt mit der neuen Nachricht
+                                ?.let { contact ->
+                                    contacts.add(
                                         Contact(
                                             id = contact.id,
                                             title = contact.title,
@@ -346,13 +346,18 @@ class ContactCheckBeforeSubmitViewModel(
                                                 contact.message,
                                                 dateConvertedToGermanFormat,
                                                 zipValue.time
-                                            )                         // Aktualisiert die Nachricht
+                                            )
                                         )
                                     )
                                 }
                         }
+                        contactRepository.insertAllContacts(contacts)
+
                     }.milliseconds
-                    Log.d(TAG, "updateContactsMessageAfterZippingItWithDates() executionTime = $duration")
+                    Log.d(
+                        TAG,
+                        "updateContactsMessageAfterZippingItWithDates() executionTime = $duration"
+                    )
                 }
             }
     }

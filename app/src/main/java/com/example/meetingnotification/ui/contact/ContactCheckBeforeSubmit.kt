@@ -148,10 +148,7 @@ fun ContactCheckScreenContent(
             Log.d(TAG, "Delete Events that dont exist in Calender in LaunchedEffect()")
             viewModel.insertEventForContact(contactsZipedWithDate)
             Log.d(TAG, "Insert Events for Contacts called in LaunchedEffect()")
-            viewModel.updateContactsMessageAfterZippingItWithDates(
-                contactsZipedWithDate,
-                uiState.value.contactUiState
-            )
+            viewModel.updateContactsMessageAfterZippingItWithDates(contactsZipedWithDate, uiState.value.contactUiState)
         }
     }
 

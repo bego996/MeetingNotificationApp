@@ -15,10 +15,14 @@ interface ContactRepository {
      */
     suspend fun getContactStream(id: Int): Contact?
 
+
     /**
      * Insert item in the data source
      */
     suspend fun insertItem(contact: Contact)
+
+    suspend fun insertAllContacts(contacts: List<Contact>)
+
 
     /**
      * Delete item from the data source

@@ -33,6 +33,8 @@ class OfflineContactRepository(private val contactDao: ContactDao) : ContactRepo
 
     override suspend fun insertItem(contact: Contact) = contactDao.insert(contact)
 
+    override suspend fun insertAllContacts(contacts: List<Contact>) { contactDao.insertAll(contacts) }
+
     override suspend fun deleteItem(contact: Contact) = contactDao.delete(contact)
 
     override suspend fun updateItem(contact: Contact) = contactDao.update(contact)
