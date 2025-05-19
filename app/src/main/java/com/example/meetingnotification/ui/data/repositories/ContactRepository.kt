@@ -21,8 +21,7 @@ interface ContactRepository {
      */
     suspend fun insertItem(contact: Contact)
 
-    suspend fun insertAllContacts(contacts: List<Contact>)
-
+    suspend fun updateAll(contacts: List<Contact>)
 
     /**
      * Delete item from the data source

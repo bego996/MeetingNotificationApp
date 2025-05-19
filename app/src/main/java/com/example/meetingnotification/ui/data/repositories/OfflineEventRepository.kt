@@ -23,6 +23,10 @@ class OfflineEventRepository(private val eventDao: EventDao) : EventRepository {
         return eventDao.getAllEventsStream()
     }
 
+    override suspend fun getEventsAfterToday(dateNow: String): List<Event> {
+        return eventDao.getEventsAfterToday(dateNow)
+    }
+
     override suspend fun getEvents(contactOwnerId: Int): List<Event> {
         return eventDao.getEvents(contactOwnerId)
     }

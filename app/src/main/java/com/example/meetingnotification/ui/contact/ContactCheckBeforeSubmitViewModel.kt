@@ -139,10 +139,8 @@ class ContactCheckBeforeSubmitViewModel(
     fun zipDatesToContacts(contacts: List<Contact>) {
 
         val dates = getCalenderState()                                             // Holt die aktuelle Liste der Kalenderereignisse
-        val listZipped =
-            mutableListOf<ContactZippedWithDate>()                    // Eine Liste zur Speicherung der verknüpften Daten
-        val outputFormatterDate =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd") // Ausgabeformat für das Datum
+        val listZipped = mutableListOf<ContactZippedWithDate>()                    // Eine Liste zur Speicherung der verknüpften Daten
+        val outputFormatterDate = DateTimeFormatter.ofPattern("yyyy-MM-dd") // Ausgabeformat für das Datum
 
         val duration = measureTimeMillis {
             for (contact in contacts) {
@@ -171,22 +169,22 @@ class ContactCheckBeforeSubmitViewModel(
 
 
     private fun loadContactsWithEvents() {
-            viewModelScope.launch {
-                val duration = measureTimeMillis {
-                    val mutableListContactsWithEvents = mutableListOf<Event>()
+        viewModelScope.launch {
+            val duration = measureTimeMillis {
 
-                    contactUiState.value.contactUiState.forEach { contact ->
-                        val contactAndEvents = eventRepository.getEvents(contact.id)
+                val mutableListContactsWithEvents = mutableListOf<Event>()
+                val dateNow = LocalDate.now()
+                val contactAndEvents = eventRepository.getEventsAfterToday(dateNow.toString())
 
-                        mutableListContactsWithEvents.addAll(contactAndEvents)
-                    }
+                mutableListContactsWithEvents.addAll(contactAndEvents)
 
-                    _contactWithEvents.value = mutableListContactsWithEvents
-                }.milliseconds
-                Log.d(TAG, "LoadContactsWithEvents() executionTime = $duration")
-                _isLoading.value = false
-                Log.d(TAG, "LoadContactsWithEvents() is executed and loadingScreen is finished.")
-            }
+
+                _contactWithEvents.value = mutableListContactsWithEvents
+            }.milliseconds
+            Log.d(TAG, "LoadContactsWithEvents() executionTime = $duration")
+            _isLoading.value = false
+            Log.d(TAG, "LoadContactsWithEvents() is executed and loadingScreen is finished.")
+        }
     }
 
 
@@ -217,36 +215,24 @@ class ContactCheckBeforeSubmitViewModel(
     }
 
 
-    fun deleteEventsThatDontExistsInCalenderAnymoreFromDatabase(
+    suspend fun deleteEventsThatDontExistsInCalenderAnymoreFromDatabase(
         allEventsInCalender: List<EventDateTitle> = getCalenderState(),
-        contactsInDatabase: List<Contact>
     ) {
-        viewModelScope.launch {
             val duration = measureTimeMillis {
                 val outputFormatterDate = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-                val now = LocalDateTime.now()
+                val dateNow = LocalDate.now()
+                val calenderDateTimes = allEventsInCalender.map { it.eventDate }.toSet()
 
-                val validEventsInDatabase = contactsInDatabase.flatMap { contact ->
-//                    contactRepository.getContactWithEvents(contact.id).first().events
-                    eventRepository.getEvents(contact.id)
-                }.filter { event ->
-                    val eventDateTime = LocalDateTime.of(
-                        LocalDate.parse(event.eventDate, outputFormatterDate),
-                        LocalTime.parse(event.eventTime)
-                    )
-                    eventDateTime.isAfter(now)  // Event muss in der Zukunft liegen
-                }
+                val allFutureEvents = eventRepository.getEventsAfterToday(dateNow.toString())
 
                 // Events finden, die in der DB sind, aber nicht im Kalender vorkommen
-                val eventsToDelete = validEventsInDatabase.filter { validEvent ->
-                    allEventsInCalender.none { event ->
-                        val actualEventDateTime = event.eventDate
-                        val validEventDateTime = LocalDateTime.of(
+                val eventsToDelete = allFutureEvents.filter { validEvent ->
+                        val eventDateTime = LocalDateTime.of(
                             LocalDate.parse(validEvent.eventDate, outputFormatterDate),
                             LocalTime.parse(validEvent.eventTime)
                         )
-                        actualEventDateTime == validEventDateTime
-                    }
+                        eventDateTime !in calenderDateTimes
+
                 }
                 Log.i(TAG, "Size of to be deleted Events: ${eventsToDelete.size}")
                 //delete Events that are no more in calender but still in Database.
@@ -260,7 +246,6 @@ class ContactCheckBeforeSubmitViewModel(
                 }
             }.milliseconds
             Log.d(TAG, "deleteEventsThatDontExistsInCalenderAnymoreFromDatabase() executionTime = $duration")
-        }
     }
 
 
@@ -280,8 +265,7 @@ class ContactCheckBeforeSubmitViewModel(
     }
 
 
-    fun insertEventForContact(contactZippedWithDate: List<ContactZippedWithDate>) {
-        viewModelScope.launch {
+    suspend fun insertEventForContact(contactZippedWithDate: List<ContactZippedWithDate>) {
             val duration = measureTimeMillis {
                 val events = contactZippedWithDate.map {
                     event -> Event(
@@ -295,7 +279,6 @@ class ContactCheckBeforeSubmitViewModel(
                 loadContactsWithEvents()
             }.milliseconds
             Log.d(TAG, "insertEventForContact() executionTime = $duration")
-        }
     }
 
 
@@ -334,8 +317,7 @@ class ContactCheckBeforeSubmitViewModel(
 
                             contactList.firstOrNull { it.id == zipValue.contactId }
                                 ?.let { contact ->
-                                    contacts.add(
-                                        Contact(
+                                    contacts.add(Contact(
                                             id = contact.id,
                                             title = contact.title,
                                             firstName = contact.firstName,
@@ -351,13 +333,9 @@ class ContactCheckBeforeSubmitViewModel(
                                     )
                                 }
                         }
-                        contactRepository.insertAllContacts(contacts)
-
+                        contactRepository.updateAll(contacts)
                     }.milliseconds
-                    Log.d(
-                        TAG,
-                        "updateContactsMessageAfterZippingItWithDates() executionTime = $duration"
-                    )
+                    Log.d(TAG, "updateContactsMessageAfterZippingItWithDates() executionTime = $duration")
                 }
             }
     }

@@ -144,11 +144,12 @@ fun ContactCheckScreenContent(
         if (uiState.value.contactUiState.isNotEmpty()) {
             viewModel.zipDatesToContacts(uiState.value.contactUiState)
             Log.d(TAG, "Dates to Contacts Zipped in LaunchedEffect()")
-            viewModel.deleteEventsThatDontExistsInCalenderAnymoreFromDatabase(contactsInDatabase = uiState.value.contactUiState)
+            viewModel.deleteEventsThatDontExistsInCalenderAnymoreFromDatabase()
             Log.d(TAG, "Delete Events that dont exist in Calender in LaunchedEffect()")
             viewModel.insertEventForContact(contactsZipedWithDate)
             Log.d(TAG, "Insert Events for Contacts called in LaunchedEffect()")
             viewModel.updateContactsMessageAfterZippingItWithDates(contactsZipedWithDate, uiState.value.contactUiState)
+            Log.d(TAG, "Update contacts messages called in LaunchedEffect()")
         }
     }
 
@@ -414,7 +415,7 @@ fun LoadingScreen(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     CircularProgressIndicator()
                     Spacer(modifier = Modifier.height(16.dp))
-                    Text("Wird geladen...", color = Color.White)
+                    Text("${stringResource(R.string.loading)}...", color = Color.White)
                 }
             }
         }

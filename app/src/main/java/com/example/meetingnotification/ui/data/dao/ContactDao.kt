@@ -17,11 +17,11 @@ interface ContactDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(contact: Contact)
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertAll(contacts: List<Contact>)
-
     @Update
     suspend fun update(contact: Contact)
+
+    @Update
+    suspend fun updateAll(contacts: List<Contact>)
 
     @Delete
     suspend fun delete(contact: Contact)

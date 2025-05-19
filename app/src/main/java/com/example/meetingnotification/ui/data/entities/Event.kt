@@ -15,6 +15,7 @@ import androidx.room.PrimaryKey
     )],
     indices = [
         Index(value = ["contactOwnerId"]), //Mit indices wird abfrage geschwindigkeit mit zb select verbessert auch die foreignkey abfragen sind schneller und auch zb Joins zwischen den Tabellen.
+        Index(value = ["contactOwnerId","eventDate"]),
         Index(value = ["eventDate", "eventTime", "contactOwnerId"], unique = true)] //Unique constraint!
 )
 data class Event(

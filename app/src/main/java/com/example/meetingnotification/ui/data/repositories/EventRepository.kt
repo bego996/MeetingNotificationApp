@@ -15,7 +15,12 @@ interface EventRepository {
     //Nur für testzweck aktivieren.
     suspend fun getAllEventsStream(): List<Event>
 
+
+    suspend fun getEventsAfterToday(dateNow: String): List<Event>
+
     suspend fun getEvents(contactOwnerId: Int): List<Event>
+
+
 
     /**
      * Insert item in the data source

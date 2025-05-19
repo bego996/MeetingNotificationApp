@@ -28,4 +28,5 @@
     <string name="accepted">Akzeptiert</string>
     <string name="deny">ABLEHNEN</string>
     <string name="denied">Abgelehnt</string>
+    <string name="loading">Wird geladen</string>
 </resources>
