@@ -66,12 +66,13 @@ fun SavedContacts(
     modifier: Modifier,
     viewModel: ContactsScreenViewModel = viewModel(factory = AppViewModelProvider.Factory),
     deleteContactFromSmsQueueIfExisting: (contactId: Int) -> Unit
-) {
+    ) {
     val uiState = viewModel.contactsUiState.collectAsState()
+    val defaultBackgroundPicture = viewModel.selectedBackgroundPictureId.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
-            painter = painterResource(R.drawable.background_light2),
+            painter = painterResource(defaultBackgroundPicture.value),
             contentDescription = "Hintergrundbild",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
@@ -96,7 +97,8 @@ fun SavedContacts(
                 onCancelClicked = onCancelClicked,
                 navigateToSearchContactScreen = navigateToSearchContactScreen,
                 savedContacts = viewModel,
-                deleteContactFromSmsQueueIfExists = { deleteContactFromSmsQueueIfExisting(it) }
+                deleteContactFromSmsQueueIfExists = { deleteContactFromSmsQueueIfExisting(it) },
+
             )
         }
     }
@@ -142,7 +144,7 @@ fun EmptyListScreen(
                     contentColor = Color.White
                 )
             ) {
-                Text(stringResource(R.string.navigation_back))
+                Text(stringResource(R.string.navigation_cancel))
             }
 
             Spacer(modifier = Modifier.width(16.dp))
@@ -264,7 +266,7 @@ fun FilledListscreen(
                     contentColor = Color.White
                 )
             ) {
-                Text(stringResource(R.string.navigation_back))
+                Text(stringResource(R.string.navigation_cancel))
             }
 
             Spacer(modifier = Modifier.width(16.dp))

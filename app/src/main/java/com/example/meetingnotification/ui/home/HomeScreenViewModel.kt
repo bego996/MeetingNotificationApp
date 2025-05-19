@@ -4,6 +4,8 @@ package com.example.meetingnotification.ui.home
 import android.content.res.Resources
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.meetingnotification.ui.R
+import com.example.meetingnotification.ui.data.repositories.BackgroundImageManagerRepository
 import com.example.meetingnotification.ui.data.repositories.ContactRepository
 import com.example.meetingnotification.ui.data.repositories.DateMessageSendRepository
 import com.example.meetingnotification.ui.data.repositories.EventRepository
@@ -11,6 +13,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 private val TAG = HomeScreenViewModel::class.simpleName
 
@@ -18,11 +21,22 @@ class HomeScreenViewModel(
     private val contactRepository: ContactRepository,
     private val eventRepository: EventRepository,
     private val dateMessageSendRepository: DateMessageSendRepository,
-    private val resources: Resources
+    private val resources: Resources,
+    private val backgroundImageManagerRepository: BackgroundImageManagerRepository
 ) : ViewModel() {
 
     //Resources for strings and so on, direct from the factory injected.
     val resourcesState = resources
+
+    val selectedBackgroundPictureId: StateFlow<Int> =
+        backgroundImageManagerRepository.get()
+            .stateIn(viewModelScope,SharingStarted.WhileSubscribed(5000),R.drawable.background_picture_1)
+
+    fun changeDefaultImageInDatastore(){
+        viewModelScope.launch {
+            backgroundImageManagerRepository.save()
+        }
+    }
 
     val dateMessageSendUiState: StateFlow<MessageSendDateTimeUiState> =
         // StateFlow zur Überwachung des UI-Zustands der Kontakte. Für events ist kein zur Überwachung nötig. Ich kann auch so insert,delete und updaten von events.

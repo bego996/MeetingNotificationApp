@@ -18,25 +18,29 @@ object AppViewModelProvider {
                 inventoryApplication().container.contactRepository,
                 inventoryApplication().container.eventRepository,
                 inventoryApplication().container.dateMessageSendRepository,
-                inventoryApplication().resources
+                inventoryApplication().resources,
+                inventoryApplication().backgroundImageRepository
             )
         }
         initializer {
             ContactsSearchScreenViewModel(
                 inventoryApplication().container.contactRepository,
-                inventoryApplication().container.eventRepository
+                inventoryApplication().container.eventRepository,
+                inventoryApplication().backgroundImageRepository
             )
         }
         initializer {
             ContactsScreenViewModel(
                 inventoryApplication().container.contactRepository,
-                inventoryApplication().container.eventRepository
+                inventoryApplication().container.eventRepository,
+                inventoryApplication().backgroundImageRepository
             )
         }
         initializer {
             ContactCheckBeforeSubmitViewModel(
                 inventoryApplication().container.contactRepository,
-                inventoryApplication().container.eventRepository
+                inventoryApplication().container.eventRepository,
+                inventoryApplication().backgroundImageRepository
             )
         }
     }

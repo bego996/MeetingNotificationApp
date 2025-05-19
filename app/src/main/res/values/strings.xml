@@ -8,7 +8,7 @@
     <string name="gender">Gender</string>
     <string name="contacts">Contacts</string>
     <string name="contact_list">Contactlist</string>
-    <string name="navigation_back">Back</string>
+    <string name="navigation_cancel">Cancel</string>
     <string name="send">Send</string>
     <string name="your_contact_list_is_empty">Your contact list is empty</string>
     <string name="type_on_plus_to_add_some_contacts">Press the + bellow to add some contacts.</string>
@@ -29,4 +29,6 @@
     <string name="deny">DENY</string>
     <string name="denied">Denied</string>
     <string name="loading">Loading</string>
+    <string name="change_design">Change design</string>
+    <string name="instructions">Instructions</string>
 </resources>

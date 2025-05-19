@@ -14,6 +14,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.meetingnotification.ui.R
 import com.example.meetingnotification.ui.data.entities.Contact
+import com.example.meetingnotification.ui.data.repositories.BackgroundImageManagerRepository
 import com.example.meetingnotification.ui.data.repositories.ContactRepository
 import com.example.meetingnotification.ui.data.repositories.EventRepository
 import com.example.meetingnotification.ui.services.ServiceAction
@@ -34,8 +35,13 @@ private val TAG = ContactsSearchScreenViewModel::class.simpleName
 
 class ContactsSearchScreenViewModel(                          // ViewModel zur Verwaltung von Kontakten im Suchbildschirm
     private val contactRepository: ContactRepository,         // Repository für den Zugriff auf die Kontakt-Datenbank
-    private val eventRepository: EventRepository              // Repo für Zugriff auf die Event-Datenbank, kein stateflow nötig, weil kein nutzen vorhanden (weil über contact alle events geholt werden), bei contact jedoch doch.
+    private val eventRepository: EventRepository,              // Repo für Zugriff auf die Event-Datenbank, kein stateflow nötig, weil kein nutzen vorhanden (weil über contact alle events geholt werden), bei contact jedoch doch.
+    private val backgroundImageManagerRepository: BackgroundImageManagerRepository
 ) : ViewModel() {
+
+    val selectedBackgroundPictureId: StateFlow<Int> =
+        backgroundImageManagerRepository.get()
+            .stateIn(viewModelScope,SharingStarted.WhileSubscribed(5000), R.drawable.background_picture_1)
 
     val contactsUiState: StateFlow<ContactsUiState2> =
         // StateFlow zur Überwachung des UI-Zustands der Kontakte. Für events ist kein zur Überwachung nötig. Ich kann auch so insert,delete und updaten von events.

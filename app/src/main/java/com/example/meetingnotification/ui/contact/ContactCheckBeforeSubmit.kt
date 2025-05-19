@@ -68,7 +68,7 @@ fun ContactCheckScreen(
     sendContactsToSmsService: (List<ContactReadyForSms>) -> Unit,
     contactsInSmsQueueById: List<Int>,
     removeContactFromSmsQueue: (Int) -> Unit,
-    viewModel: ContactCheckBeforeSubmitViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    viewModel: ContactCheckBeforeSubmitViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val dataStillLoading by viewModel.isLoading
 
@@ -125,6 +125,7 @@ fun ContactCheckScreenContent(
     var templateIdDepencysRadioButton by remember { mutableStateOf(listOf<MutablePairs2>()) }
     var contactsFromSmsServiceQueueByIds by remember { mutableStateOf(contactsInSmsQueueById) }
     val contactsWithEvents by viewModel.contactWithEvents      //Nur nötig um beim ersten rendern die lazycolumn unten zu aktualisieren.
+    val defaultBackgroundPicture = viewModel.selectedBackgroundPictureId.collectAsState()
 
     // Deine originalen LaunchedEffects
     LaunchedEffect(uiState.value) {
@@ -157,7 +158,7 @@ fun ContactCheckScreenContent(
     Box(modifier = Modifier.fillMaxSize()) {
         // Hintergrund (original)
         Image(
-            painter = painterResource(R.drawable.background_light2),
+            painter = painterResource(defaultBackgroundPicture.value),
             contentDescription = "Hintergrundbild",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
@@ -220,7 +221,7 @@ fun ContactCheckScreenContent(
                                 .fillMaxWidth()
                                 .padding(vertical = 4.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor = Color.White.copy(alpha = 0.1f)
+                                containerColor = Color.White.copy(alpha = 0.2f)
                             )
                         ) {
                             Column(
@@ -353,7 +354,7 @@ fun ContactCheckScreenContent(
                         contentColor = Color.White
                     )
                 ) {
-                    Text(stringResource(R.string.navigation_back))
+                    Text(stringResource(R.string.navigation_cancel))
                 }
 
                 Button(
@@ -382,8 +383,10 @@ fun ContactCheckScreenContent(
                     },
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF4CAF50), // Grün
-                        contentColor = Color.White
+                        containerColor = Color(0xFF1BB625), // Grün
+                        contentColor = Color.White,
+                        disabledContentColor = Color.White,
+                        disabledContainerColor = Color(0xFF046406)
                     ),
                     enabled = templateIdDepencysRadioButton.any { it.second } || contactsFromSmsServiceQueueByIds.isNotEmpty()
                 ) {

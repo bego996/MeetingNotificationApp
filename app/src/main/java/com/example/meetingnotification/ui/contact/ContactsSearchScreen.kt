@@ -64,12 +64,13 @@ fun SearchListScreen(
     modifier: Modifier = Modifier,
     viewModel: ContactsSearchScreenViewModel,                 // ViewModel zur Bereitstellung von Daten
     onCancelCLicked: () -> Unit,                              // Callback für "Cancel"-Button
-    navigateToSavedContacts: () -> Unit                       // Callback zum Navigieren zur gespeicherten Kontaktliste
+    navigateToSavedContacts: () -> Unit                      // Callback zum Navigieren zur gespeicherten Kontaktliste
 ) {
     val uiState = viewModel.contactsUiState.collectAsState()  // Beobachtet den aktuellen Zustand der gespeicherten Kontakte
     val contactBuffer = viewModel.getContacts().observeAsState(emptyList()) // Holt alle Kontakte aus dem LiveData
     var text by remember { mutableStateOf("") }               // Suchtext-State für das Eingabefeld
     val debouncedText = rememberDebounceText(text)
+    val defaultBackgroundPicture = viewModel.selectedBackgroundPictureId.collectAsState()
 
     val contactBufferSorted by remember(debouncedText,contactBuffer.value) {
         derivedStateOf {
@@ -89,7 +90,7 @@ fun SearchListScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
-            painter = painterResource(R.drawable.background_light2),
+            painter = painterResource(defaultBackgroundPicture.value),
             contentDescription = "Hintergrundbild",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop // Skaliert das Bild, um es zu füllen
@@ -152,7 +153,7 @@ fun SearchListScreen(
                     modifier = Modifier.weight(1f),
                     onClick = onCancelCLicked                // Abbruch
                 ) {
-                    Text(stringResource(R.string.navigation_back), color = Color.White)
+                    Text(stringResource(R.string.navigation_cancel), color = Color.White)
                 }
                 Spacer(modifier = Modifier.width(16.dp))     // Abstand zwischen Buttons
                 Button(

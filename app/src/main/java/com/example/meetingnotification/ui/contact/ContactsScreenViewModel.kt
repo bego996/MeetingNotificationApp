@@ -2,7 +2,9 @@ package com.example.meetingnotification.ui.contact
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.meetingnotification.ui.R
 import com.example.meetingnotification.ui.data.entities.Contact
+import com.example.meetingnotification.ui.data.repositories.BackgroundImageManagerRepository
 import com.example.meetingnotification.ui.data.repositories.ContactRepository
 import com.example.meetingnotification.ui.data.repositories.EventRepository
 import kotlinx.coroutines.flow.SharingStarted
@@ -13,8 +15,13 @@ import kotlinx.coroutines.launch
 
 class ContactsScreenViewModel(                             // ViewModel zur Verwaltung der Kontakte in einer UI
     private val contactRepository: ContactRepository,       // Repository, das die Datenquelle für die Kontakte darstellt
-    private val eventRepository: EventRepository
+    private val eventRepository: EventRepository,
+    private val backgroundImageManagerRepository: BackgroundImageManagerRepository
 ) : ViewModel() {
+
+    val selectedBackgroundPictureId: StateFlow<Int> =
+        backgroundImageManagerRepository.get()
+            .stateIn(viewModelScope,SharingStarted.WhileSubscribed(5000), R.drawable.background_picture_1)
 
     val contactsUiState: StateFlow<ContactUiState> =       // StateFlow zur Bereitstellung des Kontaktzustands in der UI
         contactRepository.getAllContactsStream().map { ContactUiState(it) } // Holt alle Kontakte aus dem Repository und wandelt sie in ein UI-Format um

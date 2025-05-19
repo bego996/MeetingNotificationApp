@@ -7,8 +7,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.meetingnotification.ui.R
 import com.example.meetingnotification.ui.data.entities.Contact
 import com.example.meetingnotification.ui.data.entities.Event
+import com.example.meetingnotification.ui.data.repositories.BackgroundImageManagerRepository
 import com.example.meetingnotification.ui.data.repositories.ContactRepository
 import com.example.meetingnotification.ui.data.repositories.EventRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,8 +30,13 @@ private val TAG = ContactCheckBeforeSubmitViewModel::class.simpleName
 
 class ContactCheckBeforeSubmitViewModel(
     private val contactRepository: ContactRepository,                // Repository, das zur Datenverwaltung verwendet wird
-    private val eventRepository: EventRepository
+    private val eventRepository: EventRepository,
+    private val backgroundImageManagerRepository: BackgroundImageManagerRepository
 ) : ViewModel() {
+
+    val selectedBackgroundPictureId: StateFlow<Int> =
+        backgroundImageManagerRepository.get()
+            .stateIn(viewModelScope,SharingStarted.WhileSubscribed(5000), R.drawable.background_picture_1)
 
     // Ein StateFlow-Objekt, das den aktuellen Zustand der Kontakte verwaltet
     val contactUiState: StateFlow<ContactsUiState3> =

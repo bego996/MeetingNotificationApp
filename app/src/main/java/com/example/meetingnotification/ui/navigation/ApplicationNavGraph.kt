@@ -22,7 +22,7 @@ import com.example.meetingnotification.ui.home.HomeScreen
 fun MettingNavHost(                                           // Hauptfunktion für den Navigations-Host
     navController: NavHostController,                         // Controller zur Verwaltung des Navigationsverhaltens
     modifier: Modifier = Modifier,
-    viewModel: ContactsSearchScreenViewModel,                 // ViewModel
+    viewModel: ContactsSearchScreenViewModel                  // ViewModel
 ) {
     NavHost(
         navController = navController,                        // Bindet den NavController an den Host
@@ -34,12 +34,18 @@ fun MettingNavHost(                                           // Hauptfunktion f
                 modifier = Modifier,
                 navigateToSavedContacts = { navController.navigate(SavedContactsDestination.route) },   // Navigiert zu den gespeicherten Kontakten
                 navigateToTemplateScreen = { navController.navigate(BeforeTemplateDestination.route) }, // Navigiert zum Vorlagen-Screen
-                onSendMessagesClicked = { viewModel.sendCommandToSendAllMessages() }                                                  // Ruft die Funktion für das Senden von Nachrichten auf
+                onSendMessagesClicked = { viewModel.sendCommandToSendAllMessages() }                                                // Ruft die Funktion für das Senden von Nachrichten auf
             )
         }
         composable(route = BeforeTemplateDestination.route) {                         // Vorlagen-Screen für die Kontaktüberprüfung
             ContactCheckScreen(
-                navigateToHomeScreen = { navController.popBackStack() },                   // Navigiert zurück zur vorherigen Route
+                navigateToHomeScreen = {
+                    navController.navigate(HomeDestination.route) {
+                        popUpTo(navController.graph.startDestinationId) {
+                        }
+                        launchSingleTop = true
+                    }
+                },                   // Navigiert zurück zur vorherigen Route
                 calenderEvents = viewModel.getCalender(),                             // Ruft die Kalenderereignisse aus dem ViewModel ab
                 sendContactsToSmsService = { viewModel.insertContactsToSmsQueue(it) }, // Fügt Kontakte zur SMS-Warteschlange hinzu
                 contactsInSmsQueueById = viewModel.getContactsFromSmsQueue() ?: emptyList(),
@@ -65,7 +71,14 @@ fun MettingNavHost(                                           // Hauptfunktion f
             SearchListScreen(
                 modifier = Modifier.background(Color.DarkGray),
                 viewModel = viewModel,
-                onCancelCLicked = {navController.popBackStack()},
+                onCancelCLicked = {
+                    navController.navigate(HomeDestination.route) {
+                        popUpTo(navController.graph.startDestinationId) {
+                        }
+                        launchSingleTop = true
+                    }
+
+                },
                 navigateToSavedContacts = { navController.popBackStack() }      // Geht zum vorherigen Bildschirm zurück
             )
         }

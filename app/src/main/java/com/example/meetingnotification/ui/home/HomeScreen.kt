@@ -12,15 +12,20 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -62,6 +67,8 @@ fun HomeScreen(
 ) {
     val dateMessageSentUiState = viewModel.dateMessageSendUiState.collectAsState()
     var dateLastTimeSendetMessages by remember { mutableStateOf( viewModel.resourcesState.getString(R.string.message_will_be_send_to_all_selected_contacts)) }
+    val defaultBackgroundPic = viewModel.selectedBackgroundPictureId.collectAsState()
+
 
     LaunchedEffect(dateMessageSentUiState.value) {
         if (dateMessageSentUiState.value.lastDateSendet.isNotBlank()){
@@ -80,7 +87,7 @@ fun HomeScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         // Hintergrundbild (Platzhalter - ersetze mit deinem eigenen)
         Image(
-            painter = painterResource(R.drawable.background_light2),
+            painter = painterResource(defaultBackgroundPic.value),
             contentDescription = "Hintergrundbild",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
@@ -113,15 +120,7 @@ fun HomeScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                IconButton(
-                    onClick = { /* Settings oder Menü */ },
-                    colors = IconButtonDefaults.iconButtonColors(
-                        containerColor = Color.White.copy(alpha = 0.2f),
-                        contentColor = Color.White
-                    )
-                ) {
-                    Icon(Icons.Default.MoreVert, contentDescription = "Menü")
-                }
+                DropdownMenuExpanded { viewModel.changeDefaultImageInDatastore() }
             }
 
             // Hauptinhalt
@@ -138,7 +137,7 @@ fun HomeScreen(
                         .height(60.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFE53935),
+                        containerColor = Color(0xFF4BC91B),
                         contentColor = Color.White
                     ),
                     elevation = ButtonDefaults.buttonElevation(
@@ -149,7 +148,8 @@ fun HomeScreen(
                     Text(
                         stringResource(R.string.send_messages),
                         fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFE6E7E2)
                     )
                 }
 
@@ -209,6 +209,46 @@ fun HomeScreen(
     }
 }
 
+@Composable
+fun DropdownMenuExpanded(
+    changeDesignClicked: () -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentSize(Alignment.TopEnd) // Positioniert den Button am rechten oberen Rand
+    ) {
+        IconButton(onClick = { expanded = true }) {
+            Icon(Icons.Default.Menu, contentDescription = "Mehr", tint = Color(0xFF0E0909), modifier = Modifier.size(50.dp))
+        }
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            containerColor = Color(0xFFD3D3AA)
+        ) {
+            DropdownMenuItem(
+                colors = MenuDefaults.itemColors(textColor = Color(0xFF100F0F)),
+                text = { Text("1. ${stringResource(R.string.change_design)}")},
+                onClick = {
+                    expanded = false
+                    changeDesignClicked()
+                }
+            )
+            HorizontalDivider(thickness = 0.5.dp, color = Color.Black, modifier = Modifier.padding(horizontal = 8.dp))
+            DropdownMenuItem(
+                colors = MenuDefaults.itemColors(textColor = Color(0xFF100F0F)),
+                text = { Text("2. ${stringResource(R.string.instructions)}") },
+                onClick = {
+                    expanded = false
+                    // TODO: Handle click
+                }
+            )
+        }
+    }
+}
 
 
 
