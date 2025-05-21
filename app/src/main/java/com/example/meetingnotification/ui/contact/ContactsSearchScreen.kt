@@ -54,8 +54,8 @@ import kotlinx.coroutines.delay
 
 
 object SearchContactDestination : NavigationDestination {        // Objekt für die Such-Route
-    override val route =
-        "searchScreen"                          // Legt die Route auf "searchScreen" fest
+    override val route = "searchScreen"                          // Legt die Route auf "searchScreen" fest
+    override val titleRes: Int = R.string.search_contacts
 }
 
 

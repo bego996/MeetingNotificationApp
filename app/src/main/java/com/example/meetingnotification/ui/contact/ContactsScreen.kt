@@ -57,6 +57,8 @@ import kotlinx.coroutines.delay
 
 object SavedContactsDestination : NavigationDestination {     // Definiert eine statische Route für "SavedContacts"
     override val route = "saved"                              // Route-Name: "saved"
+    override val titleRes: Int = R.string.saved_contacts
+
 }
 
 @Composable

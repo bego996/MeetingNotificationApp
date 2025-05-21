@@ -1,5 +1,6 @@
 package com.example.meetingnotification.ui.navigation
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -7,6 +8,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.meetingnotification.ui.R
 import com.example.meetingnotification.ui.contact.BeforeTemplateDestination
 import com.example.meetingnotification.ui.contact.ContactCheckScreen
 import com.example.meetingnotification.ui.contact.ContactsSearchScreenViewModel
@@ -16,6 +18,7 @@ import com.example.meetingnotification.ui.contact.SearchContactDestination
 import com.example.meetingnotification.ui.contact.SearchListScreen
 import com.example.meetingnotification.ui.home.HomeDestination
 import com.example.meetingnotification.ui.home.HomeScreen
+
 
 
 @Composable

@@ -55,8 +55,8 @@ import com.example.meetingnotification.ui.R
 import com.example.meetingnotification.ui.navigation.NavigationDestination
 
 object BeforeTemplateDestination : NavigationDestination {
-    override val route =
-        "beforeTemplate"                         // Definiert die Route als "beforeTemplate"
+    override val route = "beforeTemplate"                         // Definiert die Route als "beforeTemplate"
+    override val titleRes: Int = R.string.contact_list
 }
 
 private const val TAG = "ContactCheckBeforeSubmitScreen"

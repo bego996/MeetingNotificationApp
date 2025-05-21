@@ -31,4 +31,6 @@
     <string name="loading">Wird geladen</string>
     <string name="change_design">Design ändern</string>
     <string name="instructions">Anleitung</string>
+    <string name="search_contacts">Suche Kontakt/e</string>
+    <string name="back">Zurück</string>
 </resources>

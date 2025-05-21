@@ -54,6 +54,7 @@ import java.time.format.DateTimeFormatter
 
 object HomeDestination : NavigationDestination {
     override val route: String = "home"
+    override val titleRes: Int = R.string.app_name
 }
 
 
@@ -81,7 +82,6 @@ fun HomeScreen(
                     )
         }
     }
-
 
 
     Box(modifier = Modifier.fillMaxSize()) {
