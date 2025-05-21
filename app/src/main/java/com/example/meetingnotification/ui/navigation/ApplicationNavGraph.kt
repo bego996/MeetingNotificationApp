@@ -1,14 +1,10 @@
 package com.example.meetingnotification.ui.navigation
 
-import androidx.annotation.StringRes
-import androidx.compose.foundation.background
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.meetingnotification.ui.R
 import com.example.meetingnotification.ui.contact.BeforeTemplateDestination
 import com.example.meetingnotification.ui.contact.ContactCheckScreen
 import com.example.meetingnotification.ui.contact.ContactsSearchScreenViewModel
@@ -18,7 +14,6 @@ import com.example.meetingnotification.ui.contact.SearchContactDestination
 import com.example.meetingnotification.ui.contact.SearchListScreen
 import com.example.meetingnotification.ui.home.HomeDestination
 import com.example.meetingnotification.ui.home.HomeScreen
-
 
 
 @Composable
@@ -52,7 +47,8 @@ fun MettingNavHost(                                           // Hauptfunktion f
                 calenderEvents = viewModel.getCalender(),                             // Ruft die Kalenderereignisse aus dem ViewModel ab
                 sendContactsToSmsService = { viewModel.insertContactsToSmsQueue(it) }, // Fügt Kontakte zur SMS-Warteschlange hinzu
                 contactsInSmsQueueById = viewModel.getContactsFromSmsQueue() ?: emptyList(),
-                removeContactFromSmsQueue = { viewModel.removeContactIfInSmsQueue(it) }
+                removeContactFromSmsQueue = { viewModel.removeContactIfInSmsQueue(it) },
+                onNavigateUp = {navController.popBackStack()}
             )
         }
         composable(route = SavedContactsDestination.route) {            // Route für den Screen der gespeicherten Kontakte
@@ -67,12 +63,13 @@ fun MettingNavHost(                                           // Hauptfunktion f
                         }
                         launchSingleTop = true // Verhindert das Duplizieren der Home-Destination im Backstack genau wie unten.
                     }
-                }
+                },
+                onNavigateUp = {navController.popBackStack()}
             )
         }
         composable(route = SearchContactDestination.route) { // Route für den Suchbildschirm
             SearchListScreen(
-                modifier = Modifier.background(Color.DarkGray),
+                modifier = Modifier,
                 viewModel = viewModel,
                 onCancelCLicked = {
                     navController.navigate(HomeDestination.route) {
@@ -82,7 +79,8 @@ fun MettingNavHost(                                           // Hauptfunktion f
                     }
 
                 },
-                navigateToSavedContacts = { navController.popBackStack() }      // Geht zum vorherigen Bildschirm zurück
+                navigateToSavedContacts = { navController.popBackStack() },      // Geht zum vorherigen Bildschirm zurück
+                onNavigateUp = {navController.popBackStack()}
             )
         }
     }

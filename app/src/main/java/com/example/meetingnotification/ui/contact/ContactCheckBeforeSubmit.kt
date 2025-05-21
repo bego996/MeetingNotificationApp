@@ -7,34 +7,39 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonColors
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,10 +52,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.meetingnotification.ui.AppViewModelProvider
+import com.example.meetingnotification.ui.MettingTopAppBar
 import com.example.meetingnotification.ui.R
 import com.example.meetingnotification.ui.navigation.NavigationDestination
 
@@ -61,26 +68,43 @@ object BeforeTemplateDestination : NavigationDestination {
 
 private const val TAG = "ContactCheckBeforeSubmitScreen"
 
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContactCheckScreen(
+    modifier: Modifier = Modifier,
     navigateToHomeScreen: () -> Unit,
     calenderEvents: List<EventDateTitle>,
     sendContactsToSmsService: (List<ContactReadyForSms>) -> Unit,
     contactsInSmsQueueById: List<Int>,
     removeContactFromSmsQueue: (Int) -> Unit,
-    viewModel: ContactCheckBeforeSubmitViewModel = viewModel(factory = AppViewModelProvider.Factory)
+    viewModel: ContactCheckBeforeSubmitViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    onNavigateUp: () -> Unit
 ) {
     val dataStillLoading by viewModel.isLoading
 
-    LoadingScreen(isLoading = dataStillLoading) {
-        ContactCheckScreenContent(
-            navigateToHomeScreen,
-            calenderEvents,
-            sendContactsToSmsService,
-            contactsInSmsQueueById,
-            removeContactFromSmsQueue,
-            viewModel
-        )
+    Scaffold(
+        modifier = modifier.fillMaxSize(),
+        topBar = {
+            MettingTopAppBar(
+                modifier = modifier,
+                title = stringResource(BeforeTemplateDestination.titleRes),
+                canNavigateBack = true,
+                navigateUp = onNavigateUp
+            )
+        }
+    ) { innerPadding ->
+        LoadingScreen(isLoading = dataStillLoading) {
+            ContactCheckScreenContent(
+                navigateToHomeScreen,
+                calenderEvents,
+                sendContactsToSmsService,
+                contactsInSmsQueueById,
+                removeContactFromSmsQueue,
+                viewModel,
+                innerPadding
+            )
+        }
     }
 }
 
@@ -117,7 +141,8 @@ fun ContactCheckScreenContent(
     sendContactsToSmsService: (List<ContactReadyForSms>) -> Unit,
     contactsInSmsQueueById: List<Int>,
     removeContactFromSmsQueue: (Int) -> Unit,
-    viewModel: ContactCheckBeforeSubmitViewModel
+    viewModel: ContactCheckBeforeSubmitViewModel,
+    paddingValueForTopBar: PaddingValues
 ) {
     val uiState = viewModel.contactUiState.collectAsState()
     val contactsZipedWithDate by viewModel.calenderStateConnectedToContacts
@@ -126,6 +151,17 @@ fun ContactCheckScreenContent(
     var contactsFromSmsServiceQueueByIds by remember { mutableStateOf(contactsInSmsQueueById) }
     val contactsWithEvents by viewModel.contactWithEvents      //Nur nötig um beim ersten rendern die lazycolumn unten zu aktualisieren.
     val defaultBackgroundPicture = viewModel.selectedBackgroundPictureId.collectAsState()
+    var text by remember { mutableStateOf("") }               // Suchtext-State für das Eingabefeld
+    val debouncedText = rememberDebounceText(text)
+
+    val contactBufferSorted by remember(debouncedText,uiState.value) {
+        derivedStateOf {
+            if (debouncedText.isBlank()) uiState.value.contactUiState
+            else uiState.value.contactUiState.filter {
+                it.firstName.contains(debouncedText, ignoreCase = true) // Filtert Kontakte nach Vornamen
+            }
+        }
+    }
 
     // Deine originalen LaunchedEffects
     LaunchedEffect(uiState.value) {
@@ -155,7 +191,10 @@ fun ContactCheckScreenContent(
     }
 
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .padding(paddingValueForTopBar)
+    ) {
         // Hintergrund (original)
         Image(
             painter = painterResource(defaultBackgroundPicture.value),
@@ -168,7 +207,7 @@ fun ContactCheckScreenContent(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.3f))
+                .background(Color.Black.copy(alpha = 0.4f))
         )
 
         Column(
@@ -177,21 +216,28 @@ fun ContactCheckScreenContent(
                 .padding(16.dp)
         ) {
             // Header
-            Row(
+            // 🔍 Suchfeld mit Icon
+            TextField(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .size(55.dp),                                // Setzt die Höhe des Textfelds auf 55 dp
+                value = text,                                     // Bindet den aktuellen Suchtext-Wert
+                onValueChange = { newText ->
+                    text = newText
+                },    // Aktualisiert den Suchtext-Wert
+                placeholder = { Text(stringResource(R.string.search_field_place_holder)) },
+                maxLines = 1,
+                leadingIcon = { Icon(Icons.Default.Search, null) }
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                "${uiState.value.contactUiState.size} ${stringResource(R.string.contacts)}",
+                color = Color.White.copy(alpha = 0.8f),
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    stringResource(R.string.contact_list),
-                    style = MaterialTheme.typography.titleLarge,
-                    color = Color.White
-                )
-                Text(
-                    "${uiState.value.contactUiState.size} ${stringResource(R.string.contacts)}",
-                    color = Color.White.copy(alpha = 0.8f)
-                )
-            }
+                textAlign = TextAlign.End
+            )
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -200,29 +246,20 @@ fun ContactCheckScreenContent(
                 modifier = Modifier
                     .weight(1f),
                 content = {
-                    items(uiState.value.contactUiState, key = { it.id }) { contact ->
+                    items(contactBufferSorted, key = { it.id }) { contact ->
 
-
-                        var isContactInCalender =
-                            contactsZipedWithDate.any { it.contactId == contact.id }
+                        var isContactInCalender = contactsZipedWithDate.any { it.contactId == contact.id }
                         //Wird mit if geprüft um beim ersten rendern zu warten bis launchefekt oben mit async funktion fertig ist, dann wird lazy column neu gerendert.
                         val isContactsNextEventNotified =
-                            if (contactsWithEvents.isNotEmpty()) viewModel.isContactNotifiedForUpcomingEvent(
-                                contact.id
-                            ) else false
-                        val isContactSelectedInRadioButton =
-                            templateIdDepencysRadioButton.firstOrNull { it.first == contact.id }?.second
-                                ?: false
-                        val isContactInMessageQueue =
-                            contactsFromSmsServiceQueueByIds.any { contactIdFromSmsQueue -> contactIdFromSmsQueue == contact.id }
+                            if (contactsWithEvents.isNotEmpty()) viewModel.isContactNotifiedForUpcomingEvent(contact.id) else false
+                        val isContactSelectedInRadioButton = templateIdDepencysRadioButton.firstOrNull { it.first == contact.id }?.second ?: false
+                        val isContactInMessageQueue = contactsFromSmsServiceQueueByIds.any { contactIdFromSmsQueue -> contactIdFromSmsQueue == contact.id }
 
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 4.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = Color.White.copy(alpha = 0.2f)
-                            )
+                            colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.3f))
                         ) {
                             Column(
                                 modifier = Modifier.padding(12.dp)
@@ -411,7 +448,7 @@ fun LoadingScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Color.Black.copy(alpha = 0.5f))
-                    .pointerInput(Unit){}
+                    .pointerInput(Unit) {}
                 ,
                 contentAlignment = Alignment.Center
             ) {
@@ -424,4 +461,3 @@ fun LoadingScreen(
         }
     }
 }
-

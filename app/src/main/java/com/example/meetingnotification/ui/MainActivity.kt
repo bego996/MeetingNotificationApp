@@ -13,6 +13,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
@@ -103,6 +104,7 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        supportActionBar?.hide()
         Log.d(TAG,"onCreate() - MainActivity")
 
         //checkAndRequestPermissions()                                   // Überprüft und fordert erforderliche Berechtigungen an
@@ -110,7 +112,8 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
 
         setContent {
             Surface(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
+                color = MaterialTheme.colorScheme.background
             ) {
                 NotificationApp(
                     viewModel = contactBuffer

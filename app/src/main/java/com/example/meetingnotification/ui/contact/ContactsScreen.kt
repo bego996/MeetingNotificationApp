@@ -16,25 +16,32 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,12 +52,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.meetingnotification.ui.AppViewModelProvider
+import com.example.meetingnotification.ui.MettingTopAppBar
 import com.example.meetingnotification.ui.R
+import com.example.meetingnotification.ui.data.entities.Contact
 import com.example.meetingnotification.ui.navigation.NavigationDestination
 import kotlinx.coroutines.delay
 
@@ -61,47 +69,68 @@ object SavedContactsDestination : NavigationDestination {     // Definiert eine 
 
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SavedContacts(
     navigateToSearchContactScreen: () -> Unit,
     onCancelClicked: () -> Unit,
     modifier: Modifier,
     viewModel: ContactsScreenViewModel = viewModel(factory = AppViewModelProvider.Factory),
-    deleteContactFromSmsQueueIfExisting: (contactId: Int) -> Unit
+    deleteContactFromSmsQueueIfExisting: (contactId: Int) -> Unit,
+    onNavigateUp: () -> Unit
     ) {
+
     val uiState = viewModel.contactsUiState.collectAsState()
     val defaultBackgroundPicture = viewModel.selectedBackgroundPictureId.collectAsState()
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Image(
-            painter = painterResource(defaultBackgroundPicture.value),
-            contentDescription = "Hintergrundbild",
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
 
-        // semi-transparent overlay for better readability
+    Scaffold(
+        modifier = modifier.fillMaxSize(),
+        topBar = {
+            MettingTopAppBar(
+                modifier = modifier,
+                title = stringResource(SavedContactsDestination.titleRes),
+                canNavigateBack = true,
+                navigateUp = onNavigateUp
+            )
+        }
+    ) { innerPadding ->
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.4f))
-        )
-
-        if (uiState.value.contactUiState.isEmpty()) {
-            EmptyListScreen(
-                modifier = modifier,
-                navigateToSearchContactScreen = navigateToSearchContactScreen,
-                onCancelClicked = onCancelClicked
+                .padding(innerPadding)
+        ) {
+            Image(
+                painter = painterResource(defaultBackgroundPicture.value),
+                contentDescription = "Hintergrundbild",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
             )
-        } else {
-            FilledListscreen(
-                modifier = modifier,
-                onCancelClicked = onCancelClicked,
-                navigateToSearchContactScreen = navigateToSearchContactScreen,
-                savedContacts = viewModel,
-                deleteContactFromSmsQueueIfExists = { deleteContactFromSmsQueueIfExisting(it) },
 
+            // semi-transparent overlay for better readability
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.4f))
             )
+
+            if (uiState.value.contactUiState.isEmpty()) {
+                EmptyListScreen(
+                    modifier = modifier,
+                    navigateToSearchContactScreen = navigateToSearchContactScreen,
+                    onCancelClicked = onCancelClicked
+                )
+            } else {
+                FilledListscreen(
+                    modifier = modifier,
+                    onCancelClicked = onCancelClicked,
+                    navigateToSearchContactScreen = navigateToSearchContactScreen,
+                    viemodel = viewModel,
+                    deleteContactFromSmsQueueIfExists = { deleteContactFromSmsQueueIfExisting(it) },
+                    uiState = uiState.value.contactUiState
+                )
+            }
         }
     }
 }
@@ -172,34 +201,59 @@ fun FilledListscreen(
     modifier: Modifier = Modifier,
     onCancelClicked: () -> Unit,
     navigateToSearchContactScreen: () -> Unit,
-    savedContacts: ContactsScreenViewModel,
-    deleteContactFromSmsQueueIfExists: (contactId: Int) -> Unit
+    viemodel: ContactsScreenViewModel,
+    deleteContactFromSmsQueueIfExists: (contactId: Int) -> Unit,
+    uiState: List<Contact>
 ) {
+
+    var text by remember { mutableStateOf("") }               // Suchtext-State für das Eingabefeld
+    val debouncedText = rememberDebounceText(text)
+
+
+    val contactBufferSorted by remember(debouncedText,uiState) {
+        derivedStateOf {
+            if (debouncedText.isBlank()) uiState
+            else uiState.filter {
+                it.firstName.contains(debouncedText, ignoreCase = true) // Filtert Kontakte nach Vornamen
+            }
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Text(
-            text = stringResource(R.string.saved_contacts),
-            style = MaterialTheme.typography.headlineSmall,
-            color = Color.Green,
-            modifier = Modifier.padding(bottom = 16.dp),
-            fontWeight = FontWeight.Bold)
+        // Header
+        // 🔍 Suchfeld mit Icon
+        TextField(
+            modifier = Modifier
+                .fillMaxWidth()
+                .size(55.dp),                                // Setzt die Höhe des Textfelds auf 55 dp
+            value = text,                                     // Bindet den aktuellen Suchtext-Wert
+            onValueChange = { newText ->
+                text = newText
+            },    // Aktualisiert den Suchtext-Wert
+            placeholder = { Text(stringResource(R.string.search_field_place_holder)) },
+            maxLines = 1,
+            leadingIcon = { Icon(Icons.Default.Search, null) }
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
 
         LazyColumn(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
         ) {
-            items(savedContacts.contactsUiState.value.contactUiState, key = {it.id}) { contact ->
+            items(contactBufferSorted, key = {it.id}) { contact ->
                 var visible by remember { mutableStateOf(true) }
                 var pendingDelete by remember { mutableStateOf(false) }
 
                 if (pendingDelete){
                     LaunchedEffect(true) {
                         delay(300)
-                        savedContacts.deleteContact(contact)
+                        viemodel.deleteContact(contact)
                         deleteContactFromSmsQueueIfExists(contact.id)
                     }
                 }
