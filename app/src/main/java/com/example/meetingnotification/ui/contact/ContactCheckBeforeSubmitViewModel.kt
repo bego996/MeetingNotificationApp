@@ -1,5 +1,6 @@
 package com.example.meetingnotification.ui.contact
 
+import android.os.Parcelable
 import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.parcelize.Parcelize
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -33,6 +35,10 @@ class ContactCheckBeforeSubmitViewModel(
     private val eventRepository: EventRepository,
     private val backgroundImageManagerRepository: BackgroundImageManagerRepository
 ) : ViewModel() {
+
+    init {
+        Log.i(TAG,"Viewmode created")
+    }
 
     val selectedBackgroundPictureId: StateFlow<Int> =
         backgroundImageManagerRepository.get()
@@ -379,7 +385,8 @@ private fun updateMessageWithCorrectDateTime(
 data class ContactZippedWithDate(val contactId: Int, val date: String, val time: String)
 
 // Datenklasse für Paare von Kontakt-ID und Status
-data class MutablePairs2(var first: Int, var second: Boolean)
+@Parcelize
+data class MutablePairs2(var first: Int, var second: Boolean) : Parcelable
 
 // Datenklasse zur Verwaltung des UI-Zustands der Kontakte
 data class ContactsUiState3(val contactUiState: List<Contact> = listOf())

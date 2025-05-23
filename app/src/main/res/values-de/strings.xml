@@ -7,7 +7,7 @@
     <string name="contact_gender_female">Weiblich</string>
     <string name="gender">Geschlecht</string>
     <string name="contacts">Kontakte</string>
-    <string name="contact_list">Kontaktliste</string>
+    <string name="contact_list">Nachrichtenvorlagen</string>
     <string name="navigation_cancel">Abbrechen</string>
     <string name="send">Senden</string>
     <string name="your_contact_list_is_empty">Deine Kontaktliste ist leer</string>
@@ -33,4 +33,66 @@
     <string name="instructions">Anleitung</string>
     <string name="search_contacts">Suche Kontakt/e</string>
     <string name="back">Zurück</string>
+    <string name="help_title_functionality">📲 Funktionweise der App</string>
+    <string name="help_title_first_steps">🏃‍♂️ Erste Schritte</string>
+    <string name="help_title_saved_contacts">📇 Gespeicherte Kontakte Bildschirm</string>
+    <string name="help_title_search_contacts">🔍 Suche Kontakte Bildschirm</string>
+    <string name="help_title_template_check">📝 Zeige Nachricht Vorlagen Bildschirm</string>
+    <string name="help_title_home">🏠 Start Bildschirm</string>
+    <string name="help_title_refresh">🔄 Aktualisierungen</string>
+    <!-- Allgemeine Beschreibung -->
+    <string name="help_functionality">
+        Diese App verknüpft automatisch deine gespeicherten Kontakte mit passenden Kalendereinträgen und erstellt individuelle SMS-Erinnerungen.
+        Du kannst Kontakte auswählen, Termine überprüfen, die Nachricht anpassen und sie mit nur einem Klick versenden.
+        Zusätzlich wirst du wöchentlich benachrichtigt, wie viele Kontakte für eine Benachrichtigung in den nächsten sieben Tagen bereitstehen.
+    </string>
+    <!-- Erste Schritte -->
+    <string name="help_first_steps_contacts">
+        - Erstelle einen Kontakt in deinem Telefonbuch.\n
+        • Für die Geschlechtserkennung: Ergänze den Vornamen mit „m“ (männlich) oder „w“ (weiblich), z. B. „Julia w“.\n
+        • Wird kein Kürzel angegeben, erkennt die App den Kontakt automatisch als weiblich.\n
+        • Gib optional einen akademischen Titel an (z. B. Dr., Mag.), um ihn in der Anrede zu verwenden.\n
+        • Die Telefonnummer ist verpflichtend.\n
+        • Sobald der Kontakt gespeichert ist, erscheint er in der App.
+    </string>
+    <string name="help_first_steps_events">
+        - Erstelle einen Kalendereintrag mit dem exakten Vor- und Nachnamen des Kontakts.\n
+        • Das Ereignis muss ein Datum und eine Uhrzeit haben – ganztägige Ereignisse werden ignoriert.\n
+        • Nur zukünftige Termine werden berücksichtigt.\n
+        • Nach dem Speichern wird der Kontakt automatisch mit dem Ereignis verknüpft.
+    </string>
+    <!-- Gespeicherte Kontakte -->
+    <string name="help_saved_contacts">
+        - Zeigt alle in der App-Datenbank gespeicherten Kontakte an.\n
+        • Kontakte können über das „X“-Symbol dauerhaft gelöscht werden.
+    </string>
+    <!-- Suche Kontakte -->
+    <string name="help_search_contacts">
+        - Listet alle Telefonbuchkontakte auf.\n
+        • Nach Auswahl und Klick auf „Ausgewählte hinzufügen“ werden sie in der App-Datenbank gespeichert.\n
+        • Automatische Verknüpfung mit passenden Kalenderereignissen folgt im Anschluss.
+    </string>
+    <!-- Nachrichtenvorlagen -->
+    <string name="help_template_check">
+        - Kontakte auswählen und per Button zur SMS-Warteschlange hinzufügen.\n
+        • Vor dem Versenden kannst du die Nachricht bearbeiten.
+    </string>
+    <string name="help_template_edit">
+        - Jeder Kontakt erhält beim Hinzufügen eine standardisierte Nachricht.\n
+        • Die Nachricht enthält: Titel (falls vorhanden), Vorname, Nachname, Datum und Uhrzeit.\n
+        • Die Nachricht kann beliebig oft geändert werden.\n
+        ⚠️ Wichtig: Datum und Uhrzeit müssen im Text enthalten bleiben, da sie automatisch ersetzt werden.
+    </string>
+    <!-- Startbildschirm -->
+    <string name="help_home_screen">
+        - Hauptfunktion: „Nachrichten senden“ → zeigt die aktuelle SMS-Warteschlange.\n
+        • Nach Bestätigung wird die SMS automatisch über die Standard-SMS-App versendet.\n
+        • Menü oben rechts: Design ändern oder diese Anleitung anzeigen.\n
+        • Das Datum und die Uhrzeit der letzten SMS-Sendung wird unten eingeblendet.
+    </string>
+    <!-- Aktualisierung -->
+    <string name="help_refresh_info">
+        - Änderungen an Kontakten oder Kalendereinträgen werden übernommen, sobald du zum Startbildschirm zurückkehrst.\n
+        • Wird die App komplett geschlossen (nicht nur in den Hintergrund gelegt), erfolgt die Aktualisierung beim nächsten Öffnen automatisch.
+    </string>
 </resources>

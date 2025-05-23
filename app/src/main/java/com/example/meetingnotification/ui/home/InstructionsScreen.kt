@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.example.meetingnotification.ui.MettingTopAppBar
 import com.example.meetingnotification.ui.R
 import com.example.meetingnotification.ui.navigation.NavigationDestination
+import java.util.Locale
 
 object InstructionsDestination : NavigationDestination {
     override val route: String = "help"
@@ -36,6 +37,8 @@ fun InstructionsScreen(
     onBack: () -> Unit,
     modifier: Modifier,
 ) {
+    val currentLocale = Locale.getDefault().language
+
     Scaffold(
         topBar = {
             MettingTopAppBar(
@@ -52,77 +55,24 @@ fun InstructionsScreen(
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            HelpSection("📲 Funktionweise der App", """
-                Diese App verknüpft automatisch deine Kontakte mit passenden Kalendereinträgen und erstellt individuelle SMS-Erinnerungen. 
-                Wähle Kontakte aus, überprüfe Termine im Kalender, passe die Nachricht an und sende sie mit einem Klick.
-                Die App benachrichtigt Wöchentlich, wie viele Kontakte man für die nächsten 7 Tage benachrichtigen kann.
-            """.trimIndent(),null)
-
+            HelpSection(stringResource(R.string.help_title_functionality), stringResource(R.string.help_functionality).trimIndent(), null)
             HelpSectionFirstSteps(
-                "\uD83C\uDFC3\uD83C\uDFFC Erste Schritte",
-                """
-                    - Erstelle (oder nutze) einen Kontakt in deinem Telefonbuch.
-                    o Wenn der Contact Mänlich ist, dann füge ein "m" oder "M" neben seinem Vornamen hinzu
-                      anderfalls ein "w" oder "W" für Weiblich. Wenn "m" oder "w" weggelassen wird,
-                      dann wird der Contact als Weiblich in der App erkannt.
-                    o Wenn der Contact einen akademischen Titel hatt und man diesen in der Anrede haben will,
-                      dann sollte man auch diesen beim hinzufügen des Kontakts angeben.
-                    o Eine Telefonnummer muss auch angegeben werden.
-                    o Nachdem der Kontakt hinzugefügt wurde und man in die App zurückkehrt, wird er dort erkannt.
-                """.trimIndent(),
-                R.drawable.addcontact,
-                """
-                   
-                    - Erstelle ein Erreignis im Kalender passend zum vorhandenen Kontakt Vornamen und Nachnamen.
-                    o Das Ereigniss muss ein Datum sowie eine Zeit haben und darf nicht Ganztätig sein, es muss auch in der Zukunft liegen.
-                    o Nachdem das Ereigniss gepeichert wird und man in die App zurückkehrt, wird der Kontakt mit dem Erreigniss automatisch gekoppelt.
-                """.trimIndent(),
-                R.drawable.addevent
+                stringResource(R.string.help_title_first_steps),
+                stringResource(R.string.help_first_steps_contacts).trimIndent(),
+                if (currentLocale == "de") R.drawable.addcontact else R.drawable.addcontacten,
+                stringResource(R.string.help_first_steps_events).trimIndent(),
+                if (currentLocale == "de") R.drawable.addevent else R.drawable.addeventen
             )
-
-            HelpSection("📇 Gespeicherte Kontakte Bildschirm", """
-                - Zeigt alle bereits in der App Datenbank gespeicherten Kontakte.
-                - Lösche den Kontakt aus der App Datenbank über das „X“ Symbol.
-            """.trimIndent(),R.drawable.savedcontact)
-
-            HelpSection("\uD83D\uDD0D Suche Kontakte Bildschirm", """
-                - Hier werden alle Kontakte aus dem Telefonbuch augelistet.
-                - Wenn man welche auswählt und auf "Ausgewählte hinzufügen" klickt,
-                  dann werden sie in der App Datenbank gespeichert und mit Events gekoppelt in der App.
-            """.trimIndent(),R.drawable.searchcontact)
-
-            HelpSection("\uD83D\uDCDD Zeige Nachricht Vorlagen Bildschirm", """
-                - Kontakte auswählen.
-                - Klick auf „Senden“ fügt sie zur SMS Warteschlange hinzu.
-            """.trimIndent(),R.drawable.templatecheck)
-            HelpSectionChangeMessage("""
-                - Jeder in der App Datenbank gespeicherte Kontakt hatt von anfang an eine Standart Nachricht
-                - Die Nachricht ist auf seinen Titel (falls enthalten) sowie seinen Namen angepasst.
-                - Die Nachricht kann hier belibig oft bearbeitete werden und wird dauerhaft in der App gespeichert.
-                - Wichtig zu beachten beim ändern der Nachricht: Das Datum sowie die Uhrzeit in der Nachricht
-                  darf nicht verändert werden, da die App diese automatisch anpasst, alles andere kann verändert werden.
-            """.trimIndent(),R.drawable.templatechange
-            )
-
-            HelpSection(
-                "\uD83C\uDFE0 Start Bildschirm",
-                """
-                - Hauptfunktion: „Nachrichten senden“:
-                Wenn man draufklickt, dann sieht man nochmal alle in der SmS Warteschlange hinzugefügten Kontakte,
-                nachdem akzeptieren versendet man SmS Errinerungen zum Termin im Hintergrund per Standard SMS App.
-                - Menü rechts oben im Eck um das Design der App zu ändern oder um die Anleitung der app anzuzeigen.
-                - Letztes Versand Datum sowie Uhrzeit von Errinerungen wird unten angezeigt.
-            """.trimIndent(), R.drawable.homescreen
-            )
-
-            HelpSection("🔄 Aktualisierungen", """
-                - Änderungen (z. B. im Kalender oder Telefonbuch) erfordern Zurücknavigieren zum Startbildschirm, wenn man zur App zurückkehrt.
-                Wenn die App jedoch komplett geschlossen wurde (Tab geschlossen) und man änderungen vornimmt und wieder die App öffnet, wird
-                alles automatisch aktualisiert.
-            """.trimIndent(),null)
+            HelpSection("\n${stringResource(R.string.help_title_saved_contacts)}", stringResource(R.string.help_saved_contacts).trimIndent(),if (currentLocale == "de") R.drawable.savedcontact else R.drawable.savedcontacten)
+            HelpSection("\n${stringResource(R.string.help_title_search_contacts)}", stringResource(R.string.help_search_contacts).trimIndent(),if (currentLocale == "de") R.drawable.searchcontact else R.drawable.searchcontacten)
+            HelpSection("\n${stringResource(R.string.help_title_template_check)}", stringResource(R.string.help_template_check).trimIndent(),if (currentLocale == "de") R.drawable.templatecheckde else R.drawable.templatechecken)
+            HelpSectionChangeMessage(stringResource(R.string.help_template_edit).trimIndent(),if (currentLocale == "de") R.drawable.templatechange else R.drawable.templatechangeen)
+            HelpSection("\n${stringResource(R.string.help_title_home)}", stringResource(R.string.help_home_screen).trimIndent(),if (currentLocale == "de")  R.drawable.homescreen else R.drawable.homescreenen)
+            HelpSection("\n${stringResource(R.string.help_title_refresh)}", stringResource(R.string.help_refresh_info).trimIndent(),null)
         }
     }
 }
+
 
 @Composable
 fun HelpSection(title: String,description: String,picRes:Int?) {

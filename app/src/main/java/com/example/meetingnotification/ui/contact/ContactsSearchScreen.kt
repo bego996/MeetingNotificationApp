@@ -41,6 +41,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -72,7 +73,7 @@ fun SearchListScreen(
 ) {
     val uiState = viewModel.contactsUiState.collectAsState()  // Beobachtet den aktuellen Zustand der gespeicherten Kontakte
     val contactBuffer = viewModel.getContacts().observeAsState(emptyList()) // Holt alle Kontakte aus dem LiveData
-    var text by remember { mutableStateOf("") }               // Suchtext-State für das Eingabefeld
+    var text by rememberSaveable { mutableStateOf("") }               // Suchtext-State für das Eingabefeld
     val debouncedText = rememberDebounceText(text)
     val defaultBackgroundPicture = viewModel.selectedBackgroundPictureId.collectAsState()
 
@@ -85,12 +86,7 @@ fun SearchListScreen(
         }
     }
 
-    var contactIdsRadioDepency by remember(contactBufferSorted) {
-        mutableStateOf(
-            contactBufferSorted.map { contact -> MutablePairs(contact.id, false) } // Initialisiert die RadioButton-Abhängigkeiten
-        )
-    }
-
+    var contactIdsRadioDepency by rememberSaveable { mutableStateOf(contactBufferSorted.map { contact -> MutablePairs(contact.id, false) }) }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),

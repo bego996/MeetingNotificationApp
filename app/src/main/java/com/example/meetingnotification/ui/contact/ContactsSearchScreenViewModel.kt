@@ -5,6 +5,7 @@ import android.content.ContentProviderOperation
 import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
+import android.os.Parcelable
 import android.provider.CalendarContract
 import android.provider.ContactsContract
 import android.util.Log
@@ -24,6 +25,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.parcelize.Parcelize
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -38,6 +40,10 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
     private val eventRepository: EventRepository,              // Repo für Zugriff auf die Event-Datenbank, kein stateflow nötig, weil kein nutzen vorhanden (weil über contact alle events geholt werden), bei contact jedoch doch.
     private val backgroundImageManagerRepository: BackgroundImageManagerRepository
 ) : ViewModel() {
+
+    init {
+        Log.i(TAG,"viewmodel loaded")
+    }
 
     val selectedBackgroundPictureId: StateFlow<Int> =
         backgroundImageManagerRepository.get()
@@ -433,7 +439,8 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
     }
 }
 
-data class MutablePairs(var first: Int, var second: Boolean)  // Datenklasse für Paare (ID, Status)
+@Parcelize
+data class MutablePairs(var first: Int, var second: Boolean) : Parcelable
 
 data class ContactsUiState2(val contactList: List<Contact> = listOf()) // Datenklasse für den Kontaktzustand der UI
 

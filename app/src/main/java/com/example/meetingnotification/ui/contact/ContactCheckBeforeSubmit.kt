@@ -43,6 +43,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -112,7 +113,7 @@ fun ContactCheckScreen(
 // TemplateOverwatch unverändert (wie original)
 @Composable
 fun TemplateOverwatch(receiveMessage: String, sendMessageToUpdateContact: (String) -> Unit) {
-    var defaultText by remember { mutableStateOf(receiveMessage) }
+    var defaultText by rememberSaveable { mutableStateOf(receiveMessage) }
     Column {
         Row {
             TextField(
@@ -146,12 +147,12 @@ fun ContactCheckScreenContent(
 ) {
     val uiState = viewModel.contactUiState.collectAsState()
     val contactsZipedWithDate by viewModel.calenderStateConnectedToContacts
-    var templateIdDepencysMailIcon by remember { mutableStateOf(listOf<MutablePairs2>()) }
-    var templateIdDepencysRadioButton by remember { mutableStateOf(listOf<MutablePairs2>()) }
-    var contactsFromSmsServiceQueueByIds by remember { mutableStateOf(contactsInSmsQueueById) }
+    var templateIdDepencysMailIcon by rememberSaveable { mutableStateOf(listOf<MutablePairs2>()) }
+    var templateIdDepencysRadioButton by rememberSaveable { mutableStateOf(listOf<MutablePairs2>()) }
+    var contactsFromSmsServiceQueueByIds by rememberSaveable { mutableStateOf(contactsInSmsQueueById) }
     val contactsWithEvents by viewModel.contactWithEvents      //Nur nötig um beim ersten rendern die lazycolumn unten zu aktualisieren.
     val defaultBackgroundPicture = viewModel.selectedBackgroundPictureId.collectAsState()
-    var text by remember { mutableStateOf("") }               // Suchtext-State für das Eingabefeld
+    var text by rememberSaveable { mutableStateOf("") }               // Suchtext-State für das Eingabefeld
     val debouncedText = rememberDebounceText(text)
 
     val contactBufferSorted by remember(debouncedText,uiState.value) {
@@ -165,8 +166,10 @@ fun ContactCheckScreenContent(
 
     // Deine originalen LaunchedEffects
     LaunchedEffect(uiState.value) {
-        templateIdDepencysMailIcon =
-            uiState.value.contactUiState.map { MutablePairs2(it.id, false) }
+            Log.d(TAG, "templateIds updated")
+            if (templateIdDepencysMailIcon.isEmpty()) {
+                templateIdDepencysMailIcon = uiState.value.contactUiState.map { MutablePairs2(it.id, false) }
+            }
     }
 
 
@@ -250,10 +253,10 @@ fun ContactCheckScreenContent(
 
                         var isContactInCalender = contactsZipedWithDate.any { it.contactId == contact.id }
                         //Wird mit if geprüft um beim ersten rendern zu warten bis launchefekt oben mit async funktion fertig ist, dann wird lazy column neu gerendert.
-                        val isContactsNextEventNotified =
-                            if (contactsWithEvents.isNotEmpty()) viewModel.isContactNotifiedForUpcomingEvent(contact.id) else false
+                        val isContactsNextEventNotified = if (contactsWithEvents.isNotEmpty()) viewModel.isContactNotifiedForUpcomingEvent(contact.id) else false
                         val isContactSelectedInRadioButton = templateIdDepencysRadioButton.firstOrNull { it.first == contact.id }?.second ?: false
                         val isContactInMessageQueue = contactsFromSmsServiceQueueByIds.any { contactIdFromSmsQueue -> contactIdFromSmsQueue == contact.id }
+                        val isContactMessageTemplateOpen = templateIdDepencysMailIcon.firstOrNull { it.first == contact.id }?.second ?:false
 
                         Card(
                             modifier = Modifier
@@ -286,10 +289,8 @@ fun ContactCheckScreenContent(
                                     // Originale Icon/RadioButton-Logik
                                     IconButton(
                                         onClick = {
-                                            val updatedList =
-                                                templateIdDepencysMailIcon.toMutableList()
-                                            val index =
-                                                updatedList.indexOfFirst { it.first == contact.id }
+                                            val updatedList = templateIdDepencysMailIcon.toMutableList()
+                                            val index = updatedList.indexOfFirst { it.first == contact.id }
                                             if (index != -1) {
                                                 updatedList[index] = MutablePairs2(
                                                     contact.id,
@@ -319,15 +320,11 @@ fun ContactCheckScreenContent(
                                         ),
                                         enabled = (!isContactsNextEventNotified && isContactInCalender),
                                         onClick = {
-                                            val updatedList =
-                                                templateIdDepencysRadioButton.toMutableList()
-                                            val index =
-                                                updatedList.indexOf(updatedList.firstOrNull { it.first == contact.id }
-                                                    ?: -1)
+                                            val updatedList = templateIdDepencysRadioButton.toMutableList()
+                                            val index = updatedList.indexOf(updatedList.firstOrNull { it.first == contact.id } ?: -1)
 
                                             if (isContactInMessageQueue) {
-                                                val smsQueueToEdit =
-                                                    contactsFromSmsServiceQueueByIds.toMutableList()
+                                                val smsQueueToEdit = contactsFromSmsServiceQueueByIds.toMutableList()
                                                 smsQueueToEdit.remove(contact.id)
                                                 contactsFromSmsServiceQueueByIds = smsQueueToEdit
                                                 removeContactFromSmsQueue(contact.id)
@@ -363,13 +360,21 @@ fun ContactCheckScreenContent(
 
                                 // Template Editor (original)
                                 if (templateIdDepencysMailIcon.any { it.first == contact.id && it.second }) {
+                                    Log.i(TAG,"templateWithicon bollean found")
                                     Spacer(modifier = Modifier.height(8.dp))
                                     TemplateOverwatch(
                                         contact.message,
                                         sendMessageToUpdateContact = { newMessage ->
-                                            viewModel.updateContact(
-                                                contact.copy(message = newMessage)
-                                            )
+                                            viewModel.updateContact(contact.copy(message = newMessage))
+                                            val updatedList = templateIdDepencysMailIcon.toMutableList()
+                                            val index = updatedList.indexOfFirst { it.first == contact.id }
+                                            if (index != -1) {
+                                                updatedList[index] = MutablePairs2(
+                                                    contact.id,
+                                                    !updatedList[index].second
+                                                )
+                                                templateIdDepencysMailIcon = updatedList
+                                            }
                                         }
                                     )
                                 }
