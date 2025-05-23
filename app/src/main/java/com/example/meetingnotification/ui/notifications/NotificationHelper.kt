@@ -17,7 +17,7 @@ object NotificationHelper {
         createChannel(context)
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.drawable.baseline_email_24) // Stelle sicher, dass du ein Icon hast
+            .setSmallIcon(R.drawable.calendar_icon_no_orange) // Stelle sicher, dass du ein Icon hast
             .setContentTitle("Erinnerungen für diese Woche")
             .setContentText("Du kannst $count Kontakte in dieser Woche erinnern.")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)

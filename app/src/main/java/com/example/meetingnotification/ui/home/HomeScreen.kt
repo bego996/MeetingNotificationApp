@@ -68,7 +68,8 @@ fun HomeScreen(
     navigateToSavedContacts: () -> Unit,
     navigateToTemplateScreen: () -> Unit,
     onSendMessagesClicked: () -> Unit,
-    viewModel: HomeScreenViewModel = viewModel(factory = AppViewModelProvider.Factory)
+    viewModel: HomeScreenViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    openInstructions: () -> Unit
 ) {
     val dateMessageSentUiState = viewModel.dateMessageSendUiState.collectAsState()
     var dateLastTimeSendetMessages by remember { mutableStateOf( viewModel.resourcesState.getString(R.string.message_will_be_send_to_all_selected_contacts)) }
@@ -96,7 +97,10 @@ fun HomeScreen(
                     title = stringResource(HomeDestination.titleRes),
                     canNavigateBack = false,
                     actions = {
-                        DropdownMenuExpanded { viewModel.changeDefaultImageInDatastore() }
+                        DropdownMenuExpanded (
+                            changeDesignClicked = { viewModel.changeDefaultImageInDatastore() },
+                            openInstructions = { openInstructions() }
+                        )
                     }
                 )
         }
@@ -229,7 +233,8 @@ fun HomeScreen(
 
 @Composable
 fun DropdownMenuExpanded(
-    changeDesignClicked: () -> Unit
+    changeDesignClicked: () -> Unit,
+    openInstructions: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -265,7 +270,7 @@ fun DropdownMenuExpanded(
             text = { Text("2. ${stringResource(R.string.instructions)}") },
             onClick = {
                 expanded = false
-                // TODO: Handle click
+                openInstructions()
             }
         )
     }

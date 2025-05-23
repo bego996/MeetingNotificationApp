@@ -14,6 +14,8 @@ import com.example.meetingnotification.ui.contact.SearchContactDestination
 import com.example.meetingnotification.ui.contact.SearchListScreen
 import com.example.meetingnotification.ui.home.HomeDestination
 import com.example.meetingnotification.ui.home.HomeScreen
+import com.example.meetingnotification.ui.home.InstructionsDestination
+import com.example.meetingnotification.ui.home.InstructionsScreen
 
 
 @Composable
@@ -32,7 +34,8 @@ fun MettingNavHost(                                           // Hauptfunktion f
                 modifier = Modifier,
                 navigateToSavedContacts = { navController.navigate(SavedContactsDestination.route) },   // Navigiert zu den gespeicherten Kontakten
                 navigateToTemplateScreen = { navController.navigate(BeforeTemplateDestination.route) }, // Navigiert zum Vorlagen-Screen
-                onSendMessagesClicked = { viewModel.sendCommandToSendAllMessages() }                                                // Ruft die Funktion für das Senden von Nachrichten auf
+                onSendMessagesClicked = { viewModel.sendCommandToSendAllMessages() },                   // Ruft die Funktion für das Senden von Nachrichten auf
+                openInstructions = {navController.navigate(InstructionsDestination.route)}
             )
         }
         composable(route = BeforeTemplateDestination.route) {                         // Vorlagen-Screen für die Kontaktüberprüfung
@@ -81,6 +84,12 @@ fun MettingNavHost(                                           // Hauptfunktion f
                 },
                 navigateToSavedContacts = { navController.popBackStack() },      // Geht zum vorherigen Bildschirm zurück
                 onNavigateUp = {navController.popBackStack()}
+            )
+        }
+        composable(route = InstructionsDestination.route) {
+            InstructionsScreen(
+                modifier = Modifier,
+                onBack = {navController.popBackStack()}
             )
         }
     }
