@@ -256,7 +256,7 @@ fun ContactCheckScreenContent(
                         val isContactsNextEventNotified = if (contactsWithEvents.isNotEmpty()) viewModel.isContactNotifiedForUpcomingEvent(contact.id) else false
                         val isContactSelectedInRadioButton = templateIdDepencysRadioButton.firstOrNull { it.first == contact.id }?.second ?: false
                         val isContactInMessageQueue = contactsFromSmsServiceQueueByIds.any { contactIdFromSmsQueue -> contactIdFromSmsQueue == contact.id }
-                        val isContactMessageTemplateOpen = templateIdDepencysMailIcon.firstOrNull { it.first == contact.id }?.second ?:false
+                        templateIdDepencysMailIcon.firstOrNull { it.first == contact.id }?.second ?:false
 
                         Card(
                             modifier = Modifier
@@ -453,8 +453,7 @@ fun LoadingScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Color.Black.copy(alpha = 0.5f))
-                    .pointerInput(Unit) {}
-                ,
+                    .pointerInput(Unit) {},
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {

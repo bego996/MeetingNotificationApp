@@ -31,7 +31,8 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
     companion object {                                                      // Begleitendes statisches Objekt für Konfigurationskonstanten
         private const val REQUEST_CODE_CONTACTS_READ = 1                    // Anfragecode für Lesezugriff auf Kontakte
         private const val REQUEST_CODE_KALENDER_READ = 2                    // Anfragecode für Lesezugriff auf Kalender
-        private const val REQUEST_CODE_KALENDER_WRITE = 6                    // TEST REMOVE ON RELEASE
+        private const val REQUEST_CODE_KALENDER_WRITE = 6                   // TEST REMOVE ON RELEASE
+        private const val REQUEST_CODE_READ_PHONE_STATE = 7                 // Just needed for Api 26
         private const val REQUEST_CODE_SEND_SMS = 3                         // Anfragecode für Senden von SMS
         private const val REQUEST_CODE_POST_NOTIFICATION = 4                // Anfragecode für Posten von Hintergrundnotification
         private const val REQUEST_CODE_CONTACTS_WRITE = 5                   // Test, remove ain release.
@@ -200,6 +201,12 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
                 arrayOf(Manifest.permission.WRITE_CALENDAR),
                 REQUEST_CODE_CONTACTS_WRITE
             )
+        }else if (Build.VERSION.SDK_INT == Build.VERSION_CODES.O && !isPermissionGranted(Manifest.permission.READ_PHONE_STATE)){
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.READ_PHONE_STATE),
+                REQUEST_CODE_READ_PHONE_STATE)
+
         } else {
             contactBuffer.loadContactsWrapper(this)
             Log.d(TAG,"loadcontacts() called")
@@ -224,7 +231,7 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if ((requestCode == REQUEST_CODE_CONTACTS_READ || requestCode == REQUEST_CODE_KALENDER_READ) || requestCode == REQUEST_CODE_SEND_SMS || requestCode == REQUEST_CODE_POST_NOTIFICATION || requestCode == REQUEST_CODE_CONTACTS_WRITE || requestCode == REQUEST_CODE_KALENDER_WRITE
+        if ((requestCode == REQUEST_CODE_CONTACTS_READ || requestCode == REQUEST_CODE_KALENDER_READ) || requestCode == REQUEST_CODE_SEND_SMS || requestCode == REQUEST_CODE_POST_NOTIFICATION || requestCode == REQUEST_CODE_CONTACTS_WRITE || requestCode == REQUEST_CODE_KALENDER_WRITE || requestCode == REQUEST_CODE_READ_PHONE_STATE
             && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             checkAndRequestPermissions()                              // Überprüft erneut die Berechtigungen
         }

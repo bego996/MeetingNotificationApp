@@ -17,7 +17,6 @@ import com.example.meetingnotification.ui.R
 import com.example.meetingnotification.ui.data.entities.Contact
 import com.example.meetingnotification.ui.data.repositories.BackgroundImageManagerRepository
 import com.example.meetingnotification.ui.data.repositories.ContactRepository
-import com.example.meetingnotification.ui.data.repositories.EventRepository
 import com.example.meetingnotification.ui.services.ServiceAction
 import com.example.meetingnotification.ui.services.SmsSendingServiceInteractor
 import kotlinx.coroutines.flow.SharingStarted
@@ -37,8 +36,7 @@ private val TAG = ContactsSearchScreenViewModel::class.simpleName
 
 class ContactsSearchScreenViewModel(                          // ViewModel zur Verwaltung von Kontakten im Suchbildschirm
     private val contactRepository: ContactRepository,         // Repository für den Zugriff auf die Kontakt-Datenbank
-    private val eventRepository: EventRepository,              // Repo für Zugriff auf die Event-Datenbank, kein stateflow nötig, weil kein nutzen vorhanden (weil über contact alle events geholt werden), bei contact jedoch doch.
-    private val backgroundImageManagerRepository: BackgroundImageManagerRepository
+    backgroundImageManagerRepository: BackgroundImageManagerRepository
 ) : ViewModel() {
 
     init {
@@ -49,8 +47,8 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
         backgroundImageManagerRepository.get()
             .stateIn(viewModelScope,SharingStarted.WhileSubscribed(5000), R.drawable.background_picture_1)
 
+    // StateFlow zur Überwachung des UI-Zustands der Kontakte. Für events ist kein zur Überwachung nötig. Ich kann auch so insert,delete und updaten von events.
     val contactsUiState: StateFlow<ContactsUiState2> =
-        // StateFlow zur Überwachung des UI-Zustands der Kontakte. Für events ist kein zur Überwachung nötig. Ich kann auch so insert,delete und updaten von events.
         contactRepository.getAllContactsStream()
             .map { ContactsUiState2(it) } // Wandelt die Daten in das UI-Format um
             .stateIn(
@@ -406,7 +404,7 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
         val cursor = contentResolver.query(
             CalendarContract.Events.CONTENT_URI,                         // URI, die auf die Kalenderereignisse verweist
             null,                                              // Spalten, die zurückgegeben werden sollen (null bedeutet alle Spalten)
-            "${CalendarContract.Events.DTSTART} >= ?",         // WHERE-Klausel, um Ereignisse ab dem heutigen Tag zu filtern. Das ? ist der platzhalter.
+            "${CalendarContract.Events.DTSTART} >= ? AND ${CalendarContract.Events.DELETED} != 1",         // WHERE-Klausel, um Ereignisse ab dem heutigen Tag zu filtern. Das ? ist der platzhalter.
             arrayOf(todayMillis.toString()),                           // Argumente für die Platzhalter in der WHERE-Klausel (heutiges Datum in Millisekunden)
             CalendarContract.Events.DTSTART + " ASC"          // ORDER BY-Klausel, um die Ereignisse nach Startzeit aufsteigend zu sortieren
         )                                                             //Die ganze abfrage oben ist äquvivalent zu dieser SQL abfrage : SELECT * FROM events WHERE DTSTART >= 1704115200000 ORDER BY DTSTART ASC;

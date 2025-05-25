@@ -15,8 +15,6 @@ object AppViewModelProvider {
     val Factory = viewModelFactory {
         initializer {
             HomeScreenViewModel(
-                inventoryApplication().container.contactRepository,
-                inventoryApplication().container.eventRepository,
                 inventoryApplication().container.dateMessageSendRepository,
                 inventoryApplication().resources,
                 inventoryApplication().backgroundImageRepository
@@ -25,14 +23,12 @@ object AppViewModelProvider {
         initializer {
             ContactsSearchScreenViewModel(
                 inventoryApplication().container.contactRepository,
-                inventoryApplication().container.eventRepository,
                 inventoryApplication().backgroundImageRepository
             )
         }
         initializer {
             ContactsScreenViewModel(
                 inventoryApplication().container.contactRepository,
-                inventoryApplication().container.eventRepository,
                 inventoryApplication().backgroundImageRepository
             )
         }

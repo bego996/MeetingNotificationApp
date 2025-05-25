@@ -6,9 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.meetingnotification.ui.R
 import com.example.meetingnotification.ui.data.repositories.BackgroundImageManagerRepository
-import com.example.meetingnotification.ui.data.repositories.ContactRepository
 import com.example.meetingnotification.ui.data.repositories.DateMessageSendRepository
-import com.example.meetingnotification.ui.data.repositories.EventRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -18,10 +16,8 @@ import kotlinx.coroutines.launch
 private val TAG = HomeScreenViewModel::class.simpleName
 
 class HomeScreenViewModel(
-    private val contactRepository: ContactRepository,
-    private val eventRepository: EventRepository,
-    private val dateMessageSendRepository: DateMessageSendRepository,
-    private val resources: Resources,
+    dateMessageSendRepository: DateMessageSendRepository,
+    resources: Resources,
     private val backgroundImageManagerRepository: BackgroundImageManagerRepository
 ) : ViewModel() {
 

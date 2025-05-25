@@ -55,6 +55,7 @@ import com.example.meetingnotification.ui.R
 import com.example.meetingnotification.ui.data.entities.Contact
 import com.example.meetingnotification.ui.navigation.NavigationDestination
 import kotlinx.coroutines.delay
+import java.util.Locale
 
 
 object SearchContactDestination : NavigationDestination {        // Objekt für die Such-Route
@@ -76,6 +77,7 @@ fun SearchListScreen(
     var text by rememberSaveable { mutableStateOf("") }               // Suchtext-State für das Eingabefeld
     val debouncedText = rememberDebounceText(text)
     val defaultBackgroundPicture = viewModel.selectedBackgroundPictureId.collectAsState()
+    val localLanguage = Locale.getDefault().language
 
     val contactBufferSorted by remember(debouncedText,contactBuffer.value) {
         derivedStateOf {
@@ -161,7 +163,8 @@ fun SearchListScreen(
                                     contactIdsRadioDepency = contactIdsRadioDepency.map {
                                         if (it.first == contact.id) it.copy(second = !it.second) else it
                                     } // Schaltet RadioButton-Zustand um
-                                }
+                                },
+                                systemLanguage = localLanguage
                             )
                         }
                     }
@@ -207,7 +210,8 @@ fun ContactRow(
     contact: Contact,                   // Einzelkontakt
     alreadySaved: Boolean,             // Gibt an, ob der Kontakt bereits gespeichert ist
     isSelected: Boolean,               // Aktueller Radio-Button-Status
-    onToggle: () -> Unit               // Callback zum Umschalten des Auswahlstatus
+    onToggle: () -> Unit,               // Callback zum Umschalten des Auswahlstatus
+    systemLanguage : String
 ) {
     Log.d("RECOMPOSE","ContactRow for ${contact.firstName}")
     Row(
@@ -219,18 +223,12 @@ fun ContactRow(
     ) {
         // 👤 Kontaktinformationen
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = "${stringResource(R.string.gender)} -> ${if (contact.sex == 'W') stringResource(R.string.contact_gender_female) else stringResource(R.string.contact_gender_male) }"
-            )
-            Text(
-                text = "${stringResource(R.string.title)} -> ${contact.title}"
-            )
+            if (systemLanguage == "de") {
+                Text(text = "${stringResource(R.string.gender)} -> ${if (contact.sex == 'W') stringResource(R.string.contact_gender_female) else stringResource(R.string.contact_gender_male)}")
+            }
+            Text(text = "${stringResource(R.string.title)} -> ${contact.title}")
             Text(text = "${stringResource(R.string.contact_name)} -> ${contact.firstName} ${contact.lastName}")
-            Text(
-                text = "📞 ${contact.phone}",
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.DarkGray
-            )
+            Text(text = "📞 ${contact.phone}", style = MaterialTheme.typography.bodySmall, color = Color.DarkGray)
         }
 
         // ✅ Auswahlstatus

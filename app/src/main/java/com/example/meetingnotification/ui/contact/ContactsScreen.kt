@@ -62,6 +62,7 @@ import com.example.meetingnotification.ui.R
 import com.example.meetingnotification.ui.data.entities.Contact
 import com.example.meetingnotification.ui.navigation.NavigationDestination
 import kotlinx.coroutines.delay
+import java.util.Locale
 
 
 object SavedContactsDestination : NavigationDestination {     // Definiert eine statische Route für "SavedContacts"
@@ -209,6 +210,7 @@ fun FilledListscreen(
 
     var text by rememberSaveable { mutableStateOf("") }               // Suchtext-State für das Eingabefeld
     val debouncedText = rememberDebounceText(text)
+    val localeLanguage = Locale.getDefault().language
 
 
     val contactBufferSorted by remember(debouncedText,uiState) {
@@ -276,9 +278,9 @@ fun FilledListscreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "${stringResource(R.string.gender)} -> ${if (contact.sex == 'W') stringResource(R.string.contact_gender_female) else stringResource(R.string.contact_gender_male) }"
-                                )
+                                if (localeLanguage == "de"){
+                                    Text(text = "${stringResource(R.string.gender)} -> ${if (contact.sex == 'W') stringResource(R.string.contact_gender_female) else stringResource(R.string.contact_gender_male) }")
+                                }
                                 Text(
                                     text = "${stringResource(R.string.title)} -> ${contact.title}"
                                 )

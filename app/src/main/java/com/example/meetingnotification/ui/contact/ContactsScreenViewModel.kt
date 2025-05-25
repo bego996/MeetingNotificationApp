@@ -6,7 +6,6 @@ import com.example.meetingnotification.ui.R
 import com.example.meetingnotification.ui.data.entities.Contact
 import com.example.meetingnotification.ui.data.repositories.BackgroundImageManagerRepository
 import com.example.meetingnotification.ui.data.repositories.ContactRepository
-import com.example.meetingnotification.ui.data.repositories.EventRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -15,8 +14,7 @@ import kotlinx.coroutines.launch
 
 class ContactsScreenViewModel(                             // ViewModel zur Verwaltung der Kontakte in einer UI
     private val contactRepository: ContactRepository,       // Repository, das die Datenquelle für die Kontakte darstellt
-    private val eventRepository: EventRepository,
-    private val backgroundImageManagerRepository: BackgroundImageManagerRepository
+    backgroundImageManagerRepository: BackgroundImageManagerRepository
 ) : ViewModel() {
 
     val selectedBackgroundPictureId: StateFlow<Int> =

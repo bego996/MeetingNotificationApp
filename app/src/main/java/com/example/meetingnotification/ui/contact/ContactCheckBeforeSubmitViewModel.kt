@@ -33,16 +33,15 @@ private val TAG = ContactCheckBeforeSubmitViewModel::class.simpleName
 class ContactCheckBeforeSubmitViewModel(
     private val contactRepository: ContactRepository,                // Repository, das zur Datenverwaltung verwendet wird
     private val eventRepository: EventRepository,
-    private val backgroundImageManagerRepository: BackgroundImageManagerRepository
+    backgroundImageManagerRepository: BackgroundImageManagerRepository
 ) : ViewModel() {
 
     init {
         Log.i(TAG,"Viewmode created")
     }
 
-    val selectedBackgroundPictureId: StateFlow<Int> =
-        backgroundImageManagerRepository.get()
-            .stateIn(viewModelScope,SharingStarted.WhileSubscribed(5000), R.drawable.background_picture_1)
+    val selectedBackgroundPictureId: StateFlow<Int> = backgroundImageManagerRepository
+        .get().stateIn(viewModelScope,SharingStarted.WhileSubscribed(5000), R.drawable.background_picture_1)
 
     // Ein StateFlow-Objekt, das den aktuellen Zustand der Kontakte verwaltet
     val contactUiState: StateFlow<ContactsUiState3> =
@@ -223,7 +222,7 @@ class ContactCheckBeforeSubmitViewModel(
 
             upcomingEventNotified = upcomingEventSortedOut.firstOrNull()?.isNotified ?: return false
         }.milliseconds
-        //Log.d(TAG, "isContactNotifiedForUpcomingEvent() executionTime = $duration")
+        Log.d(TAG, "isContactNotifiedForUpcomingEvent() executionTime = $duration")
         return upcomingEventNotified
     }
 

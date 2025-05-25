@@ -14,7 +14,6 @@ class BackgroundImageManagerRepository(private val context: Context) {
     private val picturesInRessource: Array<Int> = arrayOf(
         R.drawable.background_picture_1,
         R.drawable.background_picture_2,
-        R.drawable.background_picture_3,
         R.drawable.background_picture_4,
         R.drawable.background_picture_5,
     )
@@ -26,7 +25,7 @@ class BackgroundImageManagerRepository(private val context: Context) {
 
             var pictureIndex = picturesInRessource.indexOf(get().first())
 
-            if (pictureIndex in 0..3) {
+            if (pictureIndex in 0..2) {
                 pictureIndex += 1
             } else {
                 pictureIndex = 0

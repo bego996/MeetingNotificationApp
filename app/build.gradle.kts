@@ -33,6 +33,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
+        isCoreLibraryDesugaringEnabled = true
     }
     kotlinOptions {
         jvmTarget = "1.8"
@@ -63,6 +64,9 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3:1.3.2")
     implementation ("com.google.android.material:material:1.12.0")
+
+    //Nötig um auf älteren apis room korrekt zu nutzen.
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.3")
 
     implementation("androidx.navigation:navigation-compose:2.8.3")
 

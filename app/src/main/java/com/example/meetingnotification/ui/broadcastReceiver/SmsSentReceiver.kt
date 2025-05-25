@@ -21,7 +21,6 @@ class SmsSentReceiver(private val service: SmsSendingService) : BroadcastReceive
 
             val contactId = intent.getIntExtra("contactId",-1)  //Hier wird der Integer Extra entnommen der im intent übergeben wurde.
             val messageQueueSize = intent.getIntExtra("SmsQueueSize",-1)
-            val dateTimeLogInfosForLastSendMessages :String
             val actualDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
             val actualTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))
             Log.d(TAG,"Message for contactId: $contactId is send.")
