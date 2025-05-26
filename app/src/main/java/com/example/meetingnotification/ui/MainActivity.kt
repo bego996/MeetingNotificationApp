@@ -5,12 +5,15 @@ import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
+import android.provider.Settings
 import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -28,14 +31,8 @@ private val TAG = MainActivity::class.simpleName
 
 class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
 
-    companion object {                                                      // Begleitendes statisches Objekt für Konfigurationskonstanten
-        private const val REQUEST_CODE_CONTACTS_READ = 1                    // Anfragecode für Lesezugriff auf Kontakte
-        private const val REQUEST_CODE_KALENDER_READ = 2                    // Anfragecode für Lesezugriff auf Kalender
-        private const val REQUEST_CODE_KALENDER_WRITE = 6                   // TEST REMOVE ON RELEASE
-        private const val REQUEST_CODE_READ_PHONE_STATE = 7                 // Just needed for Api 26
-        private const val REQUEST_CODE_SEND_SMS = 3                         // Anfragecode für Senden von SMS
-        private const val REQUEST_CODE_POST_NOTIFICATION = 4                // Anfragecode für Posten von Hintergrundnotification
-        private const val REQUEST_CODE_CONTACTS_WRITE = 5                   // Test, remove ain release.
+    companion object { // Begleitendes statisches Objekt für Konfigurationskonstanten
+        private const val REQUEST_CODE_FOR_ALL_NEEDED_PERMISSIONS = 1
     }
 
     private val contactBuffer by viewModels<ContactsSearchScreenViewModel> { AppViewModelProvider.Factory }     // ViewModel für die Kontaktsuche
@@ -164,76 +161,98 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
         Log.d(TAG,"onDestroy() - MainActivity")                         // Debug-Nachricht
     }
 
-    private fun checkAndRequestPermissions() {                         // Überprüft und fordert erforderliche Berechtigungen an, bei start der Acticity.
-        if (!isPermissionGranted(Manifest.permission.READ_CONTACTS)) {
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(Manifest.permission.READ_CONTACTS),
-                REQUEST_CODE_CONTACTS_READ
-            )
-        } else if (!isPermissionGranted(Manifest.permission.READ_CALENDAR)) {
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(Manifest.permission.READ_CALENDAR),
-                REQUEST_CODE_KALENDER_READ
-            )
-        } else if (!isPermissionGranted(Manifest.permission.SEND_SMS)) {
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(Manifest.permission.SEND_SMS),
-                REQUEST_CODE_SEND_SMS
-            )
-        }else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !isPermissionGranted(Manifest.permission.POST_NOTIFICATIONS)){
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-                REQUEST_CODE_POST_NOTIFICATION
-            )
-        }else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !isPermissionGranted(Manifest.permission.WRITE_CONTACTS)){
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(Manifest.permission.WRITE_CONTACTS),
-                REQUEST_CODE_CONTACTS_WRITE
-            )
-        }else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !isPermissionGranted(Manifest.permission.WRITE_CALENDAR)){
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(Manifest.permission.WRITE_CALENDAR),
-                REQUEST_CODE_CONTACTS_WRITE
-            )
-        }else if (Build.VERSION.SDK_INT == Build.VERSION_CODES.O && !isPermissionGranted(Manifest.permission.READ_PHONE_STATE)){
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(Manifest.permission.READ_PHONE_STATE),
-                REQUEST_CODE_READ_PHONE_STATE)
+    private fun checkAndRequestPermissions() {
+        val permissionsToRequest = mutableListOf<String>()
 
-        } else {
+        if (!isPermissionGranted(Manifest.permission.READ_CONTACTS)) {
+            permissionsToRequest.add(Manifest.permission.READ_CONTACTS)
+        }
+        if (!isPermissionGranted(Manifest.permission.READ_CALENDAR)) {
+            permissionsToRequest.add(Manifest.permission.READ_CALENDAR)
+        }
+        if (!isPermissionGranted(Manifest.permission.SEND_SMS)) {
+            permissionsToRequest.add(Manifest.permission.SEND_SMS)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !isPermissionGranted(Manifest.permission.POST_NOTIFICATIONS)) {
+            permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS)
+        }
+
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.O && !isPermissionGranted(Manifest.permission.READ_PHONE_STATE)) {
+            permissionsToRequest.add(Manifest.permission.READ_PHONE_STATE)
+        }
+
+        if (permissionsToRequest.size == 1 && permissionsToRequest[0] == Manifest.permission.POST_NOTIFICATIONS) {
             contactBuffer.loadContactsWrapper(this)
-            Log.d(TAG,"loadcontacts() called")
-            contactBuffer.loadCalender(this)                           //Lädt Kalenderdaten ins ViewModel
-            Log.d(TAG,"loadCalender() called")
-            //contactBuffer.insertContacts(this) //Test remove in release.
-            //contactBuffer.insertEvents(this) //Test remove in release
-            //Log.d(TAG,"Result code from event insert = $resultCodeEventInsertTry") //Test remove in release
+            contactBuffer.loadCalender(this)
+            Log.d(TAG, "Permissions granted for all except the Post_Notifications. Loading Calender and Contacts...")
+        } else if (permissionsToRequest.isNotEmpty()) {
+            ActivityCompat.requestPermissions(
+                this,
+                permissionsToRequest.toTypedArray(), // Alle benötigten permissions in einem Array.
+                REQUEST_CODE_FOR_ALL_NEEDED_PERMISSIONS //  Alle Permissions unter gleichem Code,
+            )
+        } else {
+            // Nur wenn ALLE Berechtigungen erteilt wurden, App starten
+            contactBuffer.loadContactsWrapper(this)
+            contactBuffer.loadCalender(this)
+            Log.d(TAG, "Permissions granted for all. Loading data...")
         }
     }
 
-    private fun isPermissionGranted(permission: String): Boolean {    // Überprüft, ob eine Berechtigung erteilt wurde
-        return ContextCompat.checkSelfPermission(
-            this,
-            permission
-        ) == PackageManager.PERMISSION_GRANTED
+    private fun showPermissionExplanationDialog(ungrantedPermissions: List<String>) {
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.permission_dialog_title))
+            .setMessage(getString(R.string.permission_dialog_message))
+            .setPositiveButton(getString(R.string.permission_dialog_positive)) { _, _ ->
+                ActivityCompat.requestPermissions(
+                    this,
+                    ungrantedPermissions.toTypedArray(),
+                    REQUEST_CODE_FOR_ALL_NEEDED_PERMISSIONS
+                )
+            }
+            .setNegativeButton(getString(R.string.permission_dialog_negative), null)
+            .show()
     }
 
-    override fun onRequestPermissionsResult(                          // Wird aufgerufen, wenn eine Berechtigung angefordert wurde
+    private fun isPermissionGranted(permission: String): Boolean {    // Überprüft, ob eine Berechtigung erteilt wurde
+        return ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
+    }
+
+    override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if ((requestCode == REQUEST_CODE_CONTACTS_READ || requestCode == REQUEST_CODE_KALENDER_READ) || requestCode == REQUEST_CODE_SEND_SMS || requestCode == REQUEST_CODE_POST_NOTIFICATION || requestCode == REQUEST_CODE_CONTACTS_WRITE || requestCode == REQUEST_CODE_KALENDER_WRITE || requestCode == REQUEST_CODE_READ_PHONE_STATE
-            && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            checkAndRequestPermissions()                              // Überprüft erneut die Berechtigungen
+
+        if (requestCode == REQUEST_CODE_FOR_ALL_NEEDED_PERMISSIONS) {
+
+            val deniedPermissions = permissions.filterIndexed { index, _ -> grantResults[index] != PackageManager.PERMISSION_GRANTED }
+
+            if (deniedPermissions.isEmpty() || (deniedPermissions.size == 1 && deniedPermissions[0] == Manifest.permission.POST_NOTIFICATIONS) ) {
+                contactBuffer.loadContactsWrapper(this)
+                contactBuffer.loadCalender(this)
+                Log.d(TAG, "Alle Berechtigungen akzeptiert oder nur Benachrichtigungen abgelehnt")
+            } else {
+                val shouldShowRationale = deniedPermissions.any {
+                    ActivityCompat.shouldShowRequestPermissionRationale(this, it)
+                }
+
+                if (shouldShowRationale) {
+                    showPermissionExplanationDialog(deniedPermissions)
+                } else {
+                    AlertDialog.Builder(this)
+                        .setTitle(getString(R.string.permission_permanently_denied_title))
+                        .setMessage(getString(R.string.permission_permanently_denied_message))
+                        .setPositiveButton(getString(R.string.permission_go_to_settings)) { _, _ ->
+                            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                            intent.data = Uri.fromParts("package", packageName, null)
+                            startActivity(intent)
+                        }
+                        .setNegativeButton(getString(R.string.permission_dialog_negative), null)
+                        .show()
+                }
+            }
         }
     }
 }

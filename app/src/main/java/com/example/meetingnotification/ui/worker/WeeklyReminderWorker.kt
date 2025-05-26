@@ -15,10 +15,7 @@ class WeeklyReminderWorker(context: Context, workerParams: WorkerParameters) : W
         val today = LocalDate.now().toString()
         val endOfWeek = LocalDate.parse(today).plusDays(7).toString()
 
-        val eventCountForThisWeek = dao.getNotNotifiedEventsAndFromActualDateTime(
-            today,
-            endOfWeek
-        )
+        val eventCountForThisWeek = dao.getNotNotifiedEventsAndFromActualDateTime(today, endOfWeek)
 
         NotificationHelper.showWeeklyReminder(applicationContext, eventCountForThisWeek)
         return Result.success()

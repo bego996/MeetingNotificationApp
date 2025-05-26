@@ -33,6 +33,8 @@
     <string name="instructions">Anleitung</string>
     <string name="search_contacts">Suche Kontakt/e</string>
     <string name="back">Zurück</string>
+
+    <!-- help section -->
     <string name="help_title_functionality">📲 Funktionweise der App</string>
     <string name="help_title_first_steps">🏃‍♂️ Erste Schritte</string>
     <string name="help_title_saved_contacts">📇 Gespeicherte Kontakte Bildschirm</string>
@@ -49,8 +51,8 @@
     <!-- Erste Schritte -->
     <string name="help_first_steps_contacts">
         - Erstelle einen Kontakt in deinem Telefonbuch.\n
-        • Für die Geschlechtserkennung: Ergänze den Vornamen mit „m“ (männlich) oder „w“ (weiblich), z. B. „Julia w“.\n
-        • Wird kein Kürzel angegeben, erkennt die App den Kontakt automatisch als weiblich.\n
+        • Für die Geschlechtserkennung: Ergänze den Vornamen mit „m“ (männlich) oder „w“ (weiblich), z. B. „Anna w“.\n
+        • Wird kein Kürzel angegeben, erkennt die App den Kontakt automatisch als männlich, also könnte man sich den Kürzel bei männlichen Kontakten sparen.\n
         • Gib optional einen akademischen Titel an (z. B. Dr., Mag.), um ihn in der Anrede zu verwenden.\n
         • Die Telefonnummer ist verpflichtend.\n
         • Sobald der Kontakt gespeichert ist, erscheint er in der App.
@@ -81,12 +83,14 @@
         - Jeder Kontakt erhält beim Hinzufügen eine standardisierte Nachricht.\n
         • Die Nachricht enthält: Titel (falls vorhanden), Vorname, Nachname, Datum und Uhrzeit.\n
         • Die Nachricht kann beliebig oft geändert werden.\n
-        ⚠️ Wichtig: Datum und Uhrzeit müssen im Text enthalten bleiben, da sie automatisch ersetzt werden.
+        ⚠️ Wichtig: Datum und Uhrzeit müssen im Text enthalten bleiben, da sie automatisch ersetzt werden.\n
+        ⚠️ Der Titel kann, muss aber nicht in der Nachricht aufbewahrt werden. Falls man ihn behält, wird er automatisch aktualisiert.
     </string>
     <!-- Startbildschirm -->
     <string name="help_home_screen">
         - Hauptfunktion: „Nachrichten senden“ → zeigt die aktuelle SMS-Warteschlange.\n
         • Nach Bestätigung wird die SMS automatisch über die Standard-SMS-App versendet.\n
+        ⚠️ Falls man SMS an mehr als 30 Kontakte gleichzeitig senden möchte, erscheint eine Bestätigungsmeldung. Klicke einfach jedes Mal auf „Akzeptieren“, bis keine Meldung mehr erscheint.\n
         • Menü oben rechts: Design ändern oder diese Anleitung anzeigen.\n
         • Das Datum und die Uhrzeit der letzten SMS-Sendung wird unten eingeblendet.
     </string>
@@ -95,4 +99,20 @@
         - Änderungen an Kontakten oder Kalendereinträgen werden übernommen, sobald du zum Startbildschirm zurückkehrst.\n
         • Wird die App komplett geschlossen (nicht nur in den Hintergrund gelegt), erfolgt die Aktualisierung beim nächsten Öffnen automatisch.
     </string>
+
+    <!-- Permission section -->
+    <string name="permission_dialog_title">Berechtigungen erforderlich</string>
+    <string name="permission_dialog_message">Diese App benötigt Zugriff auf Kontakte, Kalender und SMS, um korrekt zu funktionieren. Nur die Benachrichtigungen dürfen abgelehnt werden.</string>
+    <string name="permission_dialog_positive">Erneut anfragen</string>
+    <string name="permission_dialog_negative">Abbrechen</string>
+    <string name="permission_permanently_denied_title">Berechtigungen dauerhaft abgelehnt</string>
+    <string name="permission_permanently_denied_message">
+    Du wirst nun zu den Einstellungen weitergeleitet. Bitte aktiviere alle Berechtigungen außer der „Benachrichtigungen“, falls du diese nicht brauchst, und kehre danach zur App zurück. Ansonsten funktioniert die App nicht wie sie soll.
+    </string>
+    <string name="permission_go_to_settings">Zu den Einstellungen</string>
+
+    <!-- Notification helper section -->
+    <string name="notification_title">Erinnerungen für diese Woche</string>
+    <string name="notification_text">Du kannst %1$d Kontakte für nächste Woche erinnern.</string>
+
 </resources>

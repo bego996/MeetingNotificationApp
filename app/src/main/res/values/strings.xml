@@ -34,6 +34,7 @@
     <string name="search_contacts">Search Contacts</string>
     <string name="back">Back</string>
 
+    <!-- Help section -->
     <string name="help_title_functionality">📲 App Functionality</string>
     <string name="help_title_first_steps">🏃‍♂️ Getting Started</string>
     <string name="help_title_saved_contacts">📇 Saved Contacts Screen</string>
@@ -80,18 +81,34 @@
         - Each contact receives a default message when added.\n
         • It includes their title (if any), full name, appointment date and time.\n
         • You may edit the message freely.\n
-        ⚠️ Important: The date and time placeholders must remain in the text, as they are automatically updated.
+        ⚠️ Important: The date and time placeholders must remain in the text, as they are automatically updated.\n
+        ⚠️ The title can, but must not be kept. If you keep the title, then it will be automatically updated.
     </string>
     <!-- Home Screen -->
     <string name="help_home_screen">
         - Main function: “Send Messages” → displays the current SMS queue.\n
         • After confirmation, SMS will be sent using your default messaging app.\n
         • Top-right menu lets you change the app design or open this instruction.\n
-        • The date and time of the last message batch is shown at the bottom.
+        • The date and time of the last message batch is shown at the bottom.\n
+        ⚠️ If you want to send SMS to more than 30 contacts at once, a confirmation prompt will appear. Simply click „Accept“ each time until no further prompts appear.
     </string>
     <!-- Refresh Behavior -->
     <string name="help_refresh_info">
         - Changes in contacts or calendar entries are synced when returning to the home screen.\n
         • If the app was fully closed, all data will automatically refresh upon reopening.
     </string>
+
+    <!-- Permission section -->
+    <string name="permission_dialog_title">Permissions required</string>
+    <string name="permission_dialog_message">This app needs access to your contacts, calendar, and SMS to work properly. Only the notification permission can be denied.</string>
+    <string name="permission_dialog_positive">Request again</string>
+    <string name="permission_dialog_negative">Cancel</string>
+    <string name="permission_permanently_denied_title">Permissions permanently denied</string>
+    <string name="permission_permanently_denied_message">You will now be redirected to the app settings. Please enable all required permissions except „Notifications“ if you don\'t need them, and return to the app afterwards. Otherwise the app will not work as it should.</string>
+    <string name="permission_go_to_settings">Go to settings</string>
+
+    <!-- Notification Helper section -->
+    <string name="notification_title">Reminders for this week</string>
+    <string name="notification_text">You can remind %1$d contacts for the next week.</string>
+
 </resources>
