@@ -33,6 +33,7 @@
     <string name="instructions">Instructions</string>
     <string name="search_contacts">Search Contacts</string>
     <string name="back">Back</string>
+    <string name="show_actives">Show actives</string>
 
     <!-- Help section -->
     <string name="help_title_functionality">📲 App Functionality</string>
@@ -75,7 +76,11 @@
     <!-- Message Templates -->
     <string name="help_template_check">
         - Select contacts and add them to the SMS queue with one click.\n
-        • You can preview and edit the message before sending.
+        • You can preview and edit the message before sending.\n
+        • When the „Show actives“ button is pressed, only contacts with an actual event are displayed.\n
+        • The remaining time until the next event is displayed for each contact.
+        Only events that are scheduled from today up to seven days in the future are considered.
+        If additional events exist beyond this range, they will be shown automatically once the earlier ones have expired.
     </string>
     <string name="help_template_edit">
         - Each contact receives a default message when added.\n

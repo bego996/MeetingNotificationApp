@@ -100,10 +100,15 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
         }
     }
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         supportActionBar?.hide()
         Log.d(TAG,"onCreate() - MainActivity")
+
+        val destinationWhenClickNotification = intent?.getStringExtra("destination")
+        Log.d(TAG,"onCreate() - destination = $destinationWhenClickNotification")
+
 
         //checkAndRequestPermissions()                                   // Überprüft und fordert erforderliche Berechtigungen an
         contactBuffer.smsServiceInteractor = this                      // Verknüpft das ViewModel mit dem Dienst-Interface. Wichtige schnittstelle , weil im viewmodel kein service erstellt werden darf.
@@ -114,10 +119,14 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
                 color = MaterialTheme.colorScheme.background
             ) {
                 NotificationApp(
-                    viewModel = contactBuffer
+                    viewModel = contactBuffer,
+                    initialDestination = destinationWhenClickNotification
                 )
             }
         }
+
+        //Nötig um Intent zurückzusetzen, das diese Activity geöffnet hat (Notification Click), weil bei bilschirmrotation ansonsten die Route immer genutzt werden würde.
+        intent?.replaceExtras(Bundle())
     }
 
     override fun onRestart() {

@@ -28,6 +28,7 @@ import kotlinx.parcelize.Parcelize
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
+import java.time.ZoneOffset
 import java.util.TimeZone
 import kotlin.system.measureTimeMillis
 import kotlin.time.Duration.Companion.milliseconds
@@ -398,14 +399,19 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
         val eventList = mutableListOf<EventDateTitle>()       // Liste der geladenen Ereignisse
         val contentResolver = context.contentResolver // Holt den Content Resolver für Datenbank-Abfragen
 
-        val todayMillis = System.currentTimeMillis()
+        val now = LocalDateTime.now()
+        val of = ZoneOffset.systemDefault().rules.getOffset(LocalDateTime.now())
+
+        val todayMillis = now.toInstant(of).toEpochMilli()
+        val todayPlusSevenDaysMillis = LocalDateTime.now().plusDays(7).toInstant(of).toEpochMilli()
+
 
         // Führt eine Abfrage auf die Kalender-Datenbank durch, um alle zukünftigen Ereignisse ab dem heutigen Tag zu erhalten, sortiert nach Startzeit
         val cursor = contentResolver.query(
             CalendarContract.Events.CONTENT_URI,                         // URI, die auf die Kalenderereignisse verweist
             null,                                              // Spalten, die zurückgegeben werden sollen (null bedeutet alle Spalten)
-            "${CalendarContract.Events.DTSTART} >= ? AND ${CalendarContract.Events.DELETED} != 1",         // WHERE-Klausel, um Ereignisse ab dem heutigen Tag zu filtern. Das ? ist der platzhalter.
-            arrayOf(todayMillis.toString()),                           // Argumente für die Platzhalter in der WHERE-Klausel (heutiges Datum in Millisekunden)
+            "${CalendarContract.Events.DTSTART} BETWEEN ? AND ? AND ${CalendarContract.Events.DELETED} != 1",         // WHERE-Klausel, um Ereignisse ab dem heutigen Tag zu filtern. Das ? ist der platzhalter.
+            arrayOf(todayMillis.toString(),todayPlusSevenDaysMillis.toString()),                           // Argumente für die Platzhalter in der WHERE-Klausel (heutiges Datum in Millisekunden)
             CalendarContract.Events.DTSTART + " ASC"          // ORDER BY-Klausel, um die Ereignisse nach Startzeit aufsteigend zu sortieren
         )                                                             //Die ganze abfrage oben ist äquvivalent zu dieser SQL abfrage : SELECT * FROM events WHERE DTSTART >= 1704115200000 ORDER BY DTSTART ASC;
 

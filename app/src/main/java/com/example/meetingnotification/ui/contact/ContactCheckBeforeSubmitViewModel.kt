@@ -299,8 +299,7 @@ class ContactCheckBeforeSubmitViewModel(
 
     // Berechnet die Anzahl der Tage bis zum angegebenen Datum
     fun getDayDuration(meetingDate: String): String {
-        val meetingDateFormat =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd") // Datumsformat für die Berechnung
+        val meetingDateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd") // Datumsformat für die Berechnung
         val daysBeetweenNowAndMeetingDate = LocalDate.now().until(
             LocalDate.parse(
                 meetingDate,

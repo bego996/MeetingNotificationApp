@@ -1,6 +1,7 @@
 package com.example.meetingnotification.ui
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
@@ -14,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -21,19 +23,28 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.example.meetingnotification.ui.contact.BeforeTemplateDestination
 import com.example.meetingnotification.ui.contact.ContactsSearchScreenViewModel
 import com.example.meetingnotification.ui.navigation.MettingNavHost
+
+
+private val TAG = "NotificationApp"
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun NotificationApp(
     navController: NavHostController = rememberNavController(),
-    viewModel: ContactsSearchScreenViewModel
+    viewModel: ContactsSearchScreenViewModel,
+    initialDestination: String? = null
 ) {
-    MettingNavHost(
-        navController = navController,
-        viewModel = viewModel
-    )
+    LaunchedEffect(initialDestination) {
+        when (initialDestination){
+            BeforeTemplateDestination.route -> navController.navigate(BeforeTemplateDestination.route)
+        }
+        Log.i(TAG,"InitialDestination name : $initialDestination")
+    }
+
+    MettingNavHost(navController = navController, viewModel = viewModel)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

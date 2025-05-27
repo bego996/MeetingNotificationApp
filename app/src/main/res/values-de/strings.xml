@@ -33,6 +33,7 @@
     <string name="instructions">Anleitung</string>
     <string name="search_contacts">Suche Kontakt/e</string>
     <string name="back">Zurück</string>
+    <string name="show_actives">Zeige Aktive</string>
 
     <!-- help section -->
     <string name="help_title_functionality">📲 Funktionweise der App</string>
@@ -77,7 +78,11 @@
     <!-- Nachrichtenvorlagen -->
     <string name="help_template_check">
         - Kontakte auswählen und per Button zur SMS-Warteschlange hinzufügen.\n
-        • Vor dem Versenden kannst du die Nachricht bearbeiten.
+        • Vor dem Versenden kannst du die Nachricht bearbeiten.\n
+        • Wenn der Button „Zeige Aktive“ gedrückt wird, werden nur Kontakte angezeigt, bei denen tatsächlich ein Ereignis vorhanden ist.\n
+        • Zu jedem Kontakt wird die verbleibende Zeit bis zum nächsten Ereignis angezeigt.
+        Es werden nur Ereignisse berücksichtigt, die ab dem heutigen Tag maximal sieben Tage in der Zukunft liegen.
+        Falls weitere Ereignisse vorhanden sind, werden diese automatisch angezeigt, sobald die vorherigen abgelaufen sind.
     </string>
     <string name="help_template_edit">
         - Jeder Kontakt erhält beim Hinzufügen eine standardisierte Nachricht.\n

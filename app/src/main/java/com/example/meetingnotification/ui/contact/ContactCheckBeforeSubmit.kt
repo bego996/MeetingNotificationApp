@@ -154,12 +154,19 @@ fun ContactCheckScreenContent(
     val defaultBackgroundPicture = viewModel.selectedBackgroundPictureId.collectAsState()
     var text by rememberSaveable { mutableStateOf("") }               // Suchtext-State für das Eingabefeld
     val debouncedText = rememberDebounceText(text)
+    var showNotifyables by rememberSaveable { mutableStateOf(false) } //Toogles when user press button to show just notifyable Contact for the next 10 days.
 
-    val contactBufferSorted by remember(debouncedText,uiState.value) {
+
+    val contactBufferSorted by remember(debouncedText,uiState.value,showNotifyables) {
         derivedStateOf {
-            if (debouncedText.isBlank()) uiState.value.contactUiState
-            else uiState.value.contactUiState.filter {
-                it.firstName.contains(debouncedText, ignoreCase = true) // Filtert Kontakte nach Vornamen
+            if (debouncedText.isBlank() && !showNotifyables) {
+                uiState.value.contactUiState
+            } else if (debouncedText.isBlank() && showNotifyables) {
+                uiState.value.contactUiState.filter { contact -> contactsZipedWithDate.any { it.contactId == contact.id } }
+            } else if (debouncedText.isNotBlank() && showNotifyables) {
+                uiState.value.contactUiState.filter { contact -> contactsZipedWithDate.any { it.contactId == contact.id } }.filter { it.firstName.contains(debouncedText, ignoreCase = true) }
+            } else {
+                uiState.value.contactUiState.filter { it.firstName.contains(debouncedText, ignoreCase = true)} // Filtert Kontakte nach Vornamen
             }
         }
     }
@@ -235,12 +242,29 @@ fun ContactCheckScreenContent(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Text(
-                "${uiState.value.contactUiState.size} ${stringResource(R.string.contacts)}",
-                color = Color.White.copy(alpha = 0.8f),
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.End
-            )
+
+            Row (modifier = Modifier) {
+                Button(
+                    modifier = Modifier
+                        .weight(1f)
+                        .align(Alignment.CenterVertically),
+                    onClick = {showNotifyables = !showNotifyables},
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (showNotifyables) Color(0xFF1BB625) else Color(0xFF046406), // Grün
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text(stringResource(R.string.show_actives))
+                }
+                Text(
+                    "${uiState.value.contactUiState.size} ${stringResource(R.string.contacts)}",
+                    color = Color.White.copy(alpha = 0.8f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .align(Alignment.CenterVertically),
+                    textAlign = TextAlign.End
+                )
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
 
