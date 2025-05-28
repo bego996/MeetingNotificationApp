@@ -47,7 +47,8 @@
     <string name="help_functionality">
         Diese App verknüpft automatisch deine gespeicherten Kontakte mit passenden Kalendereinträgen und erstellt individuelle SMS-Erinnerungen.
         Du kannst Kontakte auswählen, Termine überprüfen, die Nachricht anpassen und sie mit nur einem Klick versenden.
-        Zusätzlich wirst du wöchentlich benachrichtigt, wie viele Kontakte für eine Benachrichtigung in den nächsten sieben Tagen bereitstehen.
+        Zusätzlich wirst du wöchentlich benachrichtigt, wie viele Kontakte für eine Benachrichtigung in den nächsten sieben Tagen bereitstehen.\n\n
+        ⚠️ Um diese Anleitung nicht bei jedem Start der App erneut angezeigt zu bekommen, scrolle ganz nach unten und bestätige, dass du die Anleitung gelesen hast.
     </string>
     <!-- Erste Schritte -->
     <string name="help_first_steps_contacts">
@@ -104,6 +105,8 @@
         - Änderungen an Kontakten oder Kalendereinträgen werden übernommen, sobald du zum Startbildschirm zurückkehrst.\n
         • Wird die App komplett geschlossen (nicht nur in den Hintergrund gelegt), erfolgt die Aktualisierung beim nächsten Öffnen automatisch.
     </string>
+    <string name="acknowledge">Verstanden</string>
+
 
     <!-- Permission section -->
     <string name="permission_dialog_title">Berechtigungen erforderlich</string>

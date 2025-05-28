@@ -47,7 +47,8 @@
     <string name="help_functionality">
         This app automatically links your saved contacts with matching calendar events and generates personalized SMS reminders.
         You can select contacts, review calendar entries, customize the message, and send it with a single tap.
-        Additionally, you’ll be notified weekly about how many contacts are ready to receive a message within the next 7 days.
+        Additionally, you’ll be notified weekly about how many contacts are ready to receive a message within the next 7 days.\n\n
+        ⚠️ To avoid seeing this guide every time you launch the app, scroll to the very bottom and confirm that you’ve read the instructions.
     </string>
     <!-- First Steps -->
     <string name="help_first_steps_contacts">
@@ -102,6 +103,7 @@
         - Changes in contacts or calendar entries are synced when returning to the home screen.\n
         • If the app was fully closed, all data will automatically refresh upon reopening.
     </string>
+    <string name="acknowledge">Acknowledge</string>
 
     <!-- Permission section -->
     <string name="permission_dialog_title">Permissions required</string>

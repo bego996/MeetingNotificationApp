@@ -89,7 +89,8 @@ fun MettingNavHost(                                           // Hauptfunktion f
         composable(route = InstructionsDestination.route) {
             InstructionsScreen(
                 modifier = Modifier,
-                onBack = {navController.popBackStack()}
+                onBack = {navController.popBackStack() },
+                navigateToHome = {navController.popBackStack()}
             )
         }
     }

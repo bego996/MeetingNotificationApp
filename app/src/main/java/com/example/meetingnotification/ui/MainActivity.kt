@@ -21,11 +21,16 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.example.meetingnotification.ui.contact.BeforeTemplateDestination
 import com.example.meetingnotification.ui.contact.ContactReadyForSms
 import com.example.meetingnotification.ui.contact.ContactsSearchScreenViewModel
+import com.example.meetingnotification.ui.home.HomeDestination
+import com.example.meetingnotification.ui.home.InstructionsDestination
 import com.example.meetingnotification.ui.services.ServiceAction
 import com.example.meetingnotification.ui.services.SmsSendingService
 import com.example.meetingnotification.ui.services.SmsSendingServiceInteractor
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 
 private val TAG = MainActivity::class.simpleName
 
@@ -109,6 +114,23 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
         val destinationWhenClickNotification = intent?.getStringExtra("destination")
         Log.d(TAG,"onCreate() - destination = $destinationWhenClickNotification")
 
+        val app = application as MeetingNotificationApplication
+        val instructionRepoState = app.instructionReadStateRepository
+
+        val instructionAllreadyAccepted = runBlocking {
+            instructionRepoState.get().first()
+        }
+
+        var initialDestination: String = HomeDestination.route
+
+        if (!instructionAllreadyAccepted){
+            initialDestination = InstructionsDestination.route
+        }else if (destinationWhenClickNotification != null){
+            initialDestination = BeforeTemplateDestination.route
+        }
+
+        Log.d(TAG,"instructionRepoState = $instructionAllreadyAccepted")
+
 
         //checkAndRequestPermissions()                                   // Überprüft und fordert erforderliche Berechtigungen an
         contactBuffer.smsServiceInteractor = this                      // Verknüpft das ViewModel mit dem Dienst-Interface. Wichtige schnittstelle , weil im viewmodel kein service erstellt werden darf.
@@ -120,13 +142,13 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
             ) {
                 NotificationApp(
                     viewModel = contactBuffer,
-                    initialDestination = destinationWhenClickNotification
+                    initialDestination = initialDestination
                 )
             }
         }
 
         //Nötig um Intent zurückzusetzen, das diese Activity geöffnet hat (Notification Click), weil bei bilschirmrotation ansonsten die Route immer genutzt werden würde.
-        intent?.replaceExtras(Bundle())
+        intent?.replaceExtras(Intent())
     }
 
     override fun onRestart() {

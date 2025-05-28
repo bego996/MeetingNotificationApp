@@ -2,6 +2,7 @@ package com.example.meetingnotification.ui.home
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -9,18 +10,24 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.meetingnotification.ui.AppViewModelProvider
 import com.example.meetingnotification.ui.MettingTopAppBar
 import com.example.meetingnotification.ui.R
 import com.example.meetingnotification.ui.navigation.NavigationDestination
@@ -37,8 +44,11 @@ object InstructionsDestination : NavigationDestination {
 fun InstructionsScreen(
     onBack: () -> Unit,
     modifier: Modifier,
+    viewModel: InstructionsScreenViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    navigateToHome: () -> Unit
 ) {
     val currentLocale = Locale.getDefault().language
+    val instructionReadState = viewModel.instructionReadState.collectAsState()
 
     Scaffold(
         topBar = {
@@ -70,6 +80,23 @@ fun InstructionsScreen(
             HelpSectionChangeMessage(stringResource(R.string.help_template_edit).trimIndent(),if (currentLocale == "de") R.drawable.templatechange else R.drawable.templatechangeen)
             HelpSection("\n${stringResource(R.string.help_title_home)}", stringResource(R.string.help_home_screen).trimIndent(),if (currentLocale == "de")  R.drawable.homescreen else R.drawable.homescreenen)
             HelpSection("\n${stringResource(R.string.help_title_refresh)}", stringResource(R.string.help_refresh_info).trimIndent(),null)
+
+            Spacer(modifier = Modifier.height(15.dp))
+            Row(modifier = Modifier.fillMaxWidth()) {
+                Button(
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1BB625)),
+                    onClick = {
+                        if (!instructionReadState.value) {
+                            viewModel.setInstructionToReaden()
+                            navigateToHome()
+                        } else
+                            navigateToHome()
+                    },
+                ) {
+                    Text(stringResource(R.string.acknowledge))
+                }
+            }
         }
     }
 }

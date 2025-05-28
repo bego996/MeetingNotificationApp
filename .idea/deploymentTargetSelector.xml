@@ -4,10 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-05-27T18:24:18.022056600Z">
+        <DropdownSelection timestamp="2025-05-28T14:59:57.386976Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\begoj\.android\avd\API_34_Simulator_UpsideDownCake.avd" />
+              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\begoj\.android\avd\API_33_Simulator_Tiramisu.avd" />
             </handle>
           </Target>
         </DropdownSelection>

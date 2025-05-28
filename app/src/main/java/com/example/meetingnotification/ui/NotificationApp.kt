@@ -25,6 +25,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.meetingnotification.ui.contact.BeforeTemplateDestination
 import com.example.meetingnotification.ui.contact.ContactsSearchScreenViewModel
+import com.example.meetingnotification.ui.home.InstructionsDestination
 import com.example.meetingnotification.ui.navigation.MettingNavHost
 
 
@@ -35,11 +36,12 @@ private val TAG = "NotificationApp"
 fun NotificationApp(
     navController: NavHostController = rememberNavController(),
     viewModel: ContactsSearchScreenViewModel,
-    initialDestination: String? = null
+    initialDestination: String
 ) {
     LaunchedEffect(initialDestination) {
         when (initialDestination){
             BeforeTemplateDestination.route -> navController.navigate(BeforeTemplateDestination.route)
+            InstructionsDestination.route -> navController.navigate(InstructionsDestination.route)
         }
         Log.i(TAG,"InitialDestination name : $initialDestination")
     }

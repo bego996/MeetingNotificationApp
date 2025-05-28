@@ -8,6 +8,7 @@ import com.example.meetingnotification.ui.contact.ContactCheckBeforeSubmitViewMo
 import com.example.meetingnotification.ui.contact.ContactsScreenViewModel
 import com.example.meetingnotification.ui.contact.ContactsSearchScreenViewModel
 import com.example.meetingnotification.ui.home.HomeScreenViewModel
+import com.example.meetingnotification.ui.home.InstructionsScreenViewModel
 
 
 //Object um ein viewmodel factory provider zu nutzen.
@@ -37,6 +38,11 @@ object AppViewModelProvider {
                 inventoryApplication().container.contactRepository,
                 inventoryApplication().container.eventRepository,
                 inventoryApplication().backgroundImageRepository
+            )
+        }
+        initializer {
+            InstructionsScreenViewModel(
+                inventoryApplication().instructionReadStateRepository
             )
         }
     }

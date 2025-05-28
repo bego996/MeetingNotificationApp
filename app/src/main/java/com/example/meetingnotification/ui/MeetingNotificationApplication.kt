@@ -8,6 +8,7 @@ import androidx.work.WorkManager
 import com.example.meetingnotification.ui.data.AppContainer
 import com.example.meetingnotification.ui.data.AppDataContainer
 import com.example.meetingnotification.ui.data.repositories.BackgroundImageManagerRepository
+import com.example.meetingnotification.ui.data.repositories.InstructionReadRepository
 import com.example.meetingnotification.ui.worker.WeeklyReminderWorker
 import java.time.Duration
 import java.time.LocalDateTime
@@ -19,12 +20,14 @@ class  MeetingNotificationApplication :Application() {
 
     lateinit var container: AppContainer
     lateinit var backgroundImageRepository: BackgroundImageManagerRepository
+    lateinit var instructionReadStateRepository: InstructionReadRepository
 
     override fun onCreate() {
         super.onCreate()
         container = AppDataContainer(this)
         Log.d(TAG,"AppContainerCreated() in MeetingNotificationApplication.")
         backgroundImageRepository = BackgroundImageManagerRepository(this)
+        instructionReadStateRepository = InstructionReadRepository(this)
 
         scheduleWeeklyReminder()    //Worker Registration
     }
