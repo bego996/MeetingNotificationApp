@@ -112,7 +112,7 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
         Log.d(TAG,"onCreate() - MainActivity")
 
         val destinationWhenClickNotification = intent?.getStringExtra("destination")
-        Log.d(TAG,"onCreate() - destination = $destinationWhenClickNotification")
+        Log.d(TAG,"Intent destination = $destinationWhenClickNotification")
 
         val app = application as MeetingNotificationApplication
         val instructionRepoState = app.instructionReadStateRepository
@@ -128,9 +128,7 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
         }else if (destinationWhenClickNotification != null){
             initialDestination = BeforeTemplateDestination.route
         }
-
         Log.d(TAG,"instructionRepoState = $instructionAllreadyAccepted")
-
 
         //checkAndRequestPermissions()                                   // Überprüft und fordert erforderliche Berechtigungen an
         contactBuffer.smsServiceInteractor = this                      // Verknüpft das ViewModel mit dem Dienst-Interface. Wichtige schnittstelle , weil im viewmodel kein service erstellt werden darf.
@@ -183,6 +181,7 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
             unbindService(smsServiceConnection)                        // Hebt die Dienstverbindung auf
             isSmsServiceBound = false                                  // Setzt den Verbindungsstatus auf "nicht gebunden"
         }
+        contactBuffer._isLoading.value = true
         Log.d(TAG,"onStop() - MainActivity")                             // Debug-Nachricht
     }
 
@@ -214,7 +213,7 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
 
         if (permissionsToRequest.size == 1 && permissionsToRequest[0] == Manifest.permission.POST_NOTIFICATIONS) {
             contactBuffer.loadContactsWrapper(this)
-            contactBuffer.loadCalender(this)
+            contactBuffer.loadCalenderWrapper(this)
             Log.d(TAG, "Permissions granted for all except the Post_Notifications. Loading Calender and Contacts...")
         } else if (permissionsToRequest.isNotEmpty()) {
             ActivityCompat.requestPermissions(
@@ -225,7 +224,7 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
         } else {
             // Nur wenn ALLE Berechtigungen erteilt wurden, App starten
             contactBuffer.loadContactsWrapper(this)
-            contactBuffer.loadCalender(this)
+            contactBuffer.loadCalenderWrapper(this)
             Log.d(TAG, "Permissions granted for all. Loading data...")
         }
     }
@@ -262,7 +261,7 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
 
             if (deniedPermissions.isEmpty() || (deniedPermissions.size == 1 && deniedPermissions[0] == Manifest.permission.POST_NOTIFICATIONS) ) {
                 contactBuffer.loadContactsWrapper(this)
-                contactBuffer.loadCalender(this)
+                contactBuffer.loadCalenderWrapper(this)
                 Log.d(TAG, "Alle Berechtigungen akzeptiert oder nur Benachrichtigungen abgelehnt")
             } else {
                 val shouldShowRationale = deniedPermissions.any {

@@ -24,7 +24,8 @@ object AppViewModelProvider {
         initializer {
             ContactsSearchScreenViewModel(
                 inventoryApplication().container.contactRepository,
-                inventoryApplication().backgroundImageRepository
+                inventoryApplication().backgroundImageRepository,
+                inventoryApplication().resources
             )
         }
         initializer {

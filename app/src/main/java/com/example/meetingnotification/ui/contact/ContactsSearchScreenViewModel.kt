@@ -4,13 +4,15 @@ import android.annotation.SuppressLint
 import android.content.ContentProviderOperation
 import android.content.ContentValues
 import android.content.Context
+import android.content.res.Resources
 import android.net.Uri
 import android.os.Parcelable
 import android.provider.CalendarContract
 import android.provider.ContactsContract
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.text.intl.Locale
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.meetingnotification.ui.R
@@ -19,6 +21,9 @@ import com.example.meetingnotification.ui.data.repositories.BackgroundImageManag
 import com.example.meetingnotification.ui.data.repositories.ContactRepository
 import com.example.meetingnotification.ui.services.ServiceAction
 import com.example.meetingnotification.ui.services.SmsSendingServiceInteractor
+import com.example.meetingnotification.ui.utils.DebugUtils
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -30,19 +35,16 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.util.TimeZone
-import kotlin.system.measureTimeMillis
-import kotlin.time.Duration.Companion.milliseconds
 
 private val TAG = ContactsSearchScreenViewModel::class.simpleName
 
 class ContactsSearchScreenViewModel(                          // ViewModel zur Verwaltung von Kontakten im Suchbildschirm
     private val contactRepository: ContactRepository,         // Repository für den Zugriff auf die Kontakt-Datenbank
-    backgroundImageManagerRepository: BackgroundImageManagerRepository
+    backgroundImageManagerRepository: BackgroundImageManagerRepository,
+    resources: Resources
 ) : ViewModel() {
 
-    init {
-        Log.i(TAG,"viewmodel loaded")
-    }
+    private val resourcesR = resources
 
     val selectedBackgroundPictureId: StateFlow<Int> =
         backgroundImageManagerRepository.get()
@@ -60,12 +62,15 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
 
 
 
-    private val contactsWriteOnly = MutableLiveData<List<Contact>>() // MutableLiveData zum Schreiben von Kontakten
-    private val contactsReadOnly: LiveData<List<Contact>> get() = contactsWriteOnly // Nur lesbarer Zugriff auf Kontakte von zeile 38.
+    private var contactsWriteOnly = MutableStateFlow<List<Contact>>(emptyList()) // MutableLiveData zum Schreiben von Kontakten
+    val contactsReadOnly: StateFlow<List<Contact>> = contactsWriteOnly // Nur lesbarer Zugriff auf Kontakte von zeile 38.
 
     private var calenderEvents = listOf<EventDateTitle>()    // Liste der Kalenderereignisse
 
     var smsServiceInteractor: SmsSendingServiceInteractor? = null // Interaktor für den SMS-Versanddienst
+
+    val _isLoading = mutableStateOf(true)
+    val isLoading: State<Boolean> = _isLoading
 
 
     fun insertContactsToSmsQueue(contacts: List<ContactReadyForSms>) { // Fügt Kontakte zur SMS-Warteschlange hinzu
@@ -104,81 +109,169 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
 
     //Nötig um loadContacts asynchron laufen zu lassen, um darrin suspende funktionen auf die datenbank aufzurufen um einen contact zu erhalten.
     fun loadContactsWrapper(context: Context){
-        viewModelScope.launch {
-            loadContacts(context)
+        viewModelScope.launch (Dispatchers.IO) {
+            DebugUtils.logExecutionTime(TAG,"loadContacts()"){
+                loadContacts(context)
+                _isLoading.value = false
+            }
         }
     }
 
-    @SuppressLint("Range", "CheckResult")
-    suspend fun loadContacts(context: Context) {                     // Lädt die Kontakte aus dem System-Kontaktbuch
-        val duration = measureTimeMillis {
-            val contactList = mutableListOf<Contact>()           // Liste für die geladenen Kontakte
-            val contentResolver = context.contentResolver        // Holt den Content Resolver für Datenbank-Abfragen
-            var isContactJustToUpdate = false
+    fun loadCalenderWrapper(context: Context){
+        viewModelScope.launch(Dispatchers.IO) {
+            DebugUtils.logExecutionTime(TAG,"loadCalender()"){
+                loadCalender(context)
+            }
+        }
+    }
 
-            val cursor = contentResolver.query(
-                ContactsContract.Contacts.CONTENT_URI,
-                null,
-                null,
-                null,
-                ContactsContract.Contacts.DISPLAY_NAME.split(" ")[0] + " ASC"     // Sortierung nach Vorname
-            )                                                                                       // Abfrage aller Kontakte aus der Standard-Kontaktdatenbank des Systems
 
-            if (cursor != null && cursor.count > 0) {            // Wenn es Ergebnisse gibt
-                while (cursor.moveToNext()) { // Durchläuft jeden Kontakt im Cursor
+    @SuppressLint("Range")
+    fun loadContacts(context: Context) {                     // Lädt die Kontakte aus dem System-Kontaktbuch
+                val contactList = mutableListOf<Contact>()           // Liste für die geladenen Kontakte
+                val contentResolver = context.contentResolver        // Holt den Content Resolver für Datenbank-Abfragen
+                var isContactJustToUpdate = false
+                val localLanguage = Locale.current.language
+                val nameOfUndefienedFields = resourcesR.getString(R.string.deufault_message_status)
+                val contactsFromDatabase = contactsUiState.value.contactList.associateBy { it.id }
+                Log.d(TAG, "localLanguage = $localLanguage")
 
-                    val id = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID)) // Kontakt-ID
+                val cursor = contentResolver.query(
+                    ContactsContract.Contacts.CONTENT_URI,
+                    null,
+                    null,
+                    null,
+                    null     // Sortierung nach Vorname
+                )                                                                                       // Abfrage aller Kontakte aus der Standard-Kontaktdatenbank des Systems
 
-                    val fullname = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME)).split(" ")           // Aufteilen des vollen Namens in Vor- und Nachname
+                if (cursor != null && cursor.count > 0) {            // Wenn es Kontakte gibt
+                    while (cursor.moveToNext()) { // Durchläuft jeden Kontakt im Cursor
 
-                    val firstname = fullname[0]                               // Vorname
+                        val id: String
 
-                    val surname = fullname[if (fullname.size > 2) 2 else 1]   // Nachname, abhängig von der Namensstruktur
+                        if (cursor.getColumnIndex(ContactsContract.Contacts._ID) != -1) {
+                            try {
+                                id = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID)) // Kontakt-ID
+                            }catch (e: NullPointerException){
+                                e.printStackTrace()
+                                continue
+                            }
+                        } else {
+                            continue
+                        }
 
-                    val sex = if (fullname.size > 2) fullname[1] else "X"     // Geschlecht (männlich/weiblich/unspezifisch)
+                        val fullname: String
 
-                    val orgCursor = contentResolver.query(
-                        ContactsContract.Data.CONTENT_URI,
-                        null,
-                        ContactsContract.Data.CONTACT_ID + " = ? AND " + ContactsContract.Data.MIMETYPE + " = ?",
-                        arrayOf(id, ContactsContract.CommonDataKinds.Organization.CONTENT_ITEM_TYPE),
-                        null
-                    )// Abfrage der Organisation des Kontakts
+                        if (cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME_ALTERNATIVE) != -1) {
+                            try {
+                                fullname = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME)).trim()
+                            }catch (e:NullPointerException){
+                                e.printStackTrace()
+                                continue
+                            }
+                        } else {
+                            continue
+                        }
+                        Log.d(TAG, "fullname = $fullname")
 
-                    var title = "none"                            // Standardwert für den Titel
-                    if (orgCursor != null && orgCursor.moveToFirst()) {
-                        title = orgCursor.getString(orgCursor.getColumnIndex(ContactsContract.CommonDataKinds.Organization.TITLE)) // Titel der Organisation
-                    }
-                    orgCursor?.close()
 
-                    // Abfrage der Telefonnummer(n)
-                    if (cursor.getInt(cursor.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER)) > 0) {
-                        val phoneCursor = contentResolver.query(
-                            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                        var firstname = nameOfUndefienedFields
+                        var surname = nameOfUndefienedFields
+                        var sex = "M"
+
+                        val fullnNameSplited = fullname.split(" ")
+
+                        if (localLanguage == "de") {
+                            when (fullnNameSplited.size) {
+                                1 -> {
+                                    firstname = fullname
+                                }
+
+                                2 -> {
+                                    firstname = fullnNameSplited[0]
+                                    surname = fullnNameSplited[1]
+                                }
+
+                                3 -> {
+                                    firstname = fullnNameSplited[0]
+                                    sex = fullnNameSplited[1]
+                                    surname = fullnNameSplited[2]
+                                }
+                            }
+                        } else {
+                            when (fullnNameSplited.size) {
+                                1 -> {
+                                    firstname = fullname
+                                }
+
+                                2 -> {
+                                    firstname = fullnNameSplited[0]
+                                    surname = fullnNameSplited[1]
+                                }
+                            }
+                        }
+
+                        // Abfrage der Organisation des Kontakts
+                        val orgCursor = contentResolver.query(
+                            ContactsContract.Data.CONTENT_URI,
                             null,
-                            ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
-                            arrayOf(id),
+                            ContactsContract.Data.CONTACT_ID + " = ? AND " + ContactsContract.Data.MIMETYPE + " = ?",
+                            arrayOf(
+                                id,
+                                ContactsContract.CommonDataKinds.Organization.CONTENT_ITEM_TYPE
+                            ),
                             null
                         )
-                        while (phoneCursor?.moveToNext() == true) {
-                            val phoneNumber = phoneCursor.getString(
-                                phoneCursor.getColumnIndex(
-                                    ContactsContract.CommonDataKinds.Phone.NUMBER
-                                )
+
+                        var title = nameOfUndefienedFields
+
+                        if (orgCursor != null && orgCursor.moveToFirst()) {
+                            if (orgCursor.getColumnIndex(ContactsContract.CommonDataKinds.Organization.TITLE) != -1) {
+                                val titleBuffer = orgCursor.getString(orgCursor.getColumnIndex(ContactsContract.CommonDataKinds.Organization.TITLE)) // Titel der Organisation
+                                titleBuffer?.let { title = titleBuffer }
+                            }
+                        }
+                        orgCursor?.close()
+
+                        var phoneNumber = nameOfUndefienedFields
+
+                        // Abfrage der Telefonnummer(n)
+                        if (cursor.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER) != -1 && cursor.getInt(cursor.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER)) > 0) {
+                            val phoneCursor = contentResolver.query(
+                                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                                null,
+                                ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
+                                arrayOf(id),
+                                null
                             )
-                            val isMale = sex.lowercase() == "m"               // Prüft, ob das Geschlecht männlich ist
-                            val defaultMessage = context.resources.getString( // Standardnachricht für jeden Kontakt mit Platzhaltern
+
+                            if (phoneCursor?.moveToFirst() == true) {
+
+                                if (phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER) != -1) {
+                                    try {
+                                        phoneNumber = phoneCursor.getString(phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
+                                    }catch (e:NullPointerException){
+                                        e.printStackTrace()
+                                    }
+                                }
+                            }
+                            phoneCursor?.close()
+                        }
+
+                        val isMale = sex.lowercase() == "m"               // Prüft, ob das Geschlecht männlich ist
+                        val defaultMessage =
+                            context.resources.getString( // Standardnachricht für jeden Kontakt mit Platzhaltern
                                 R.string.default_message_without_gender,
                                 if (isMale) "r" else "",
                                 if (isMale) "Herr" else "Frau",
-                                if (title != "none") "$title " else "",
+                                if (title != nameOfUndefienedFields) "$title " else "",
                                 surname,
                                 "dd.MM.yyyy",
                                 "HH:mm"
                             )
 
-                            contactList.add(Contact
-                                (                                      // Fügt den Kontakt zur Liste hinzu
+                        contactList.add(
+                            Contact(                                      // Fügt den Kontakt zur Liste hinzu
                                 id.toInt(),
                                 title,
                                 firstname,
@@ -187,42 +280,41 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
                                 phoneNumber,
                                 defaultMessage
                             )
-                            )
-                            //Hier wird geprüft ob contact schon in der datenbank eingetragen ist.
-                            val contactFromDatabaseIfExists = contactRepository.getContactStream(id.toInt())
+                        )
+                        //Hier wird geprüft ob contact schon in der datenbank eingetragen ist.
+                        val existingContacts = contactsFromDatabase[id.toInt()]
 
-                            //Wenn sich name von kontakt ändert im Telefon dann wird dieser in der datenbank room geupdated.
-                            contactFromDatabaseIfExists?.let {
-                                if (contactFromDatabaseIfExists.lastName != surname ||
-                                    contactFromDatabaseIfExists.firstName != firstname ||
-                                    contactFromDatabaseIfExists.sex.toString() != sex ||
-                                    contactFromDatabaseIfExists.title != title ||
-                                    contactFromDatabaseIfExists.phone != phoneNumber){
-                                    Log.d(TAG,"Contact is just to update in database()")
-                                    isContactJustToUpdate = true
-                                }
-                                if (isContactJustToUpdate){
-                                    updateContactInDatabase(Contact(id.toInt(),title,firstname,surname,sex[0],phoneNumber,defaultMessage))
-                                    isContactJustToUpdate = false
-                                }
+
+                        //Wenn sich name von kontakt ändert im Telefon dann wird dieser in der datenbank room geupdated.
+                        existingContacts?.let {
+                            if (existingContacts.lastName != surname ||
+                                existingContacts.firstName != firstname ||
+                                existingContacts.sex != sex[0].uppercaseChar() ||
+                                existingContacts.title != title ||
+                                existingContacts.phone != phoneNumber
+                            ) {
+                                Log.d(TAG, "Contact is just to update in database()")
+                                isContactJustToUpdate = true
                             }
-
+                            if (isContactJustToUpdate) {
+                                updateContactInDatabase(
+                                    Contact(
+                                        id.toInt(),
+                                        title,
+                                        firstname,
+                                        surname,
+                                        sex[0],
+                                        phoneNumber,
+                                        defaultMessage
+                                    )
+                                )
+                                isContactJustToUpdate = false
+                            }
                         }
-                        phoneCursor?.close()
                     }
+                    cursor.close()                                                //Schließt den cursor wenn fertig, wichtig!
                 }
-                cursor.close()                                                //Schließt den cursor wenn fertig, wichtig!
-            }
-
-            // Aktualisiert die Kontakte in der Live-Datenstruktur. Wichtig : postValue() überschreibt immer alle alten Werte.
-            //Wenn wir neue Werte anhängen wollen, bleibt keine andere Möglichkeit, als die alte liste irgendwo abzuspeichern und dann neue einfügen und am schluss wiieder mit postValue() updaten.
-            contactsWriteOnly.postValue(contactList)
-        }.milliseconds
-        Log.d(TAG,"Ausführungszeit von loadContacts() = $duration ")
-    }
-
-    fun getContacts(): LiveData<List<Contact>> {                          // Gibt die Live-Datenstruktur für Kontakte zurück
-        return contactsReadOnly
+                contactsWriteOnly.value = contactList.sorted() //Natürliche sort order wird genutzt, weil wir die klasse contact mit comparable erweitert haben.
     }
 
     //region Test Insert Contacts/Events in Phone. Remove in Release
@@ -396,46 +488,73 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
 
     @SuppressLint("Range")
     fun loadCalender(context: Context) { // Lädt Kalenderereignisse aus der Systemdatenbank
-        val eventList = mutableListOf<EventDateTitle>()       // Liste der geladenen Ereignisse
-        val contentResolver = context.contentResolver // Holt den Content Resolver für Datenbank-Abfragen
 
-        val now = LocalDateTime.now()
-        val of = ZoneOffset.systemDefault().rules.getOffset(LocalDateTime.now())
+            val eventList = mutableListOf<EventDateTitle>()       // Liste der geladenen Ereignisse
+            val contentResolver = context.contentResolver // Holt den Content Resolver für Datenbank-Abfragen
 
-        val todayMillis = now.toInstant(of).toEpochMilli()
-        val todayPlusSevenDaysMillis = LocalDateTime.now().plusDays(7).toInstant(of).toEpochMilli()
+            val now = LocalDateTime.now()
+            val of = ZoneOffset.systemDefault().rules.getOffset(LocalDateTime.now())
+
+            val todayMillis = now.toInstant(of).toEpochMilli()
+            val todayPlusSevenDaysMillis = LocalDateTime.now().plusDays(7).toInstant(of).toEpochMilli()
 
 
-        // Führt eine Abfrage auf die Kalender-Datenbank durch, um alle zukünftigen Ereignisse ab dem heutigen Tag zu erhalten, sortiert nach Startzeit
-        val cursor = contentResolver.query(
-            CalendarContract.Events.CONTENT_URI,                         // URI, die auf die Kalenderereignisse verweist
-            null,                                              // Spalten, die zurückgegeben werden sollen (null bedeutet alle Spalten)
-            "${CalendarContract.Events.DTSTART} BETWEEN ? AND ? AND ${CalendarContract.Events.DELETED} != 1",         // WHERE-Klausel, um Ereignisse ab dem heutigen Tag zu filtern. Das ? ist der platzhalter.
-            arrayOf(todayMillis.toString(),todayPlusSevenDaysMillis.toString()),                           // Argumente für die Platzhalter in der WHERE-Klausel (heutiges Datum in Millisekunden)
-            CalendarContract.Events.DTSTART + " ASC"          // ORDER BY-Klausel, um die Ereignisse nach Startzeit aufsteigend zu sortieren
-        )                                                             //Die ganze abfrage oben ist äquvivalent zu dieser SQL abfrage : SELECT * FROM events WHERE DTSTART >= 1704115200000 ORDER BY DTSTART ASC;
+            // Führt eine Abfrage auf die Kalender-Datenbank durch, um alle zukünftigen Ereignisse ab dem heutigen Tag zu erhalten, sortiert nach Startzeit
+            val cursor = contentResolver.query(
+                CalendarContract.Events.CONTENT_URI,                         // URI, die auf die Kalenderereignisse verweist
+                null,                                              // Spalten, die zurückgegeben werden sollen (null bedeutet alle Spalten)
+                "${CalendarContract.Events.DTSTART} BETWEEN ? AND ? AND ${CalendarContract.Events.DELETED} != 1",         // WHERE-Klausel, um Ereignisse ab dem heutigen Tag zu filtern. Das ? ist der platzhalter.
+                arrayOf(
+                    todayMillis.toString(),
+                    todayPlusSevenDaysMillis.toString()
+                ),                           // Argumente für die Platzhalter in der WHERE-Klausel (heutiges Datum in Millisekunden)
+                CalendarContract.Events.DTSTART + " ASC"          // ORDER BY-Klausel, um die Ereignisse nach Startzeit aufsteigend zu sortieren
+            )                                                             //Die ganze abfrage oben ist äquvivalent zu dieser SQL abfrage : SELECT * FROM events WHERE DTSTART >= 1704115200000 ORDER BY DTSTART ASC;
 
-        if (cursor != null && cursor.count > 0) {             // Wenn Ereignisse gefunden werden
-            while (cursor.moveToNext()) { // Durchläuft die Ereignisse im Cursor
+            if (cursor != null && cursor.count > 0) {             // Wenn Ereignisse gefunden werden
+                while (cursor.moveToNext()) { // Durchläuft die Ereignisse im Cursor
 
-                val title = cursor.getString(cursor.getColumnIndex(CalendarContract.Events.TITLE)) // Titel des Ereignisses
+                    var title: String
 
-                val startTimeMilis = cursor.getLong(cursor.getColumnIndex(CalendarContract.Events.DTSTART))         // Startzeit in Millisekunden
+                    if (cursor.getColumnIndex(CalendarContract.Events.TITLE) != -1) {
+                        try {
+                            title = cursor.getString(cursor.getColumnIndex(CalendarContract.Events.TITLE)) // Titel des Ereignisses
+                        }catch (e: NullPointerException){
+                            e.printStackTrace()
+                            continue
+                        }
+                    }else {
+                        continue
+                    }
 
-                val startEvent = Instant.ofEpochMilli(startTimeMilis)                              // Konvertiert in ein LocalDateTime-Objekt
-                        .atZone(ZoneId.systemDefault())
-                        .toLocalDateTime()
+                    var startTimeMilis:Long
 
-                eventList.add(EventDateTitle
-                    (
-                        startEvent,                            // Startzeit als LocalDateTime
-                        title                                  // Titel des Ereignisses
+                    if (cursor.getColumnIndex(CalendarContract.Events.DTSTART) != -1) {
+                        try {
+                            startTimeMilis = cursor.getLong(cursor.getColumnIndex(CalendarContract.Events.DTSTART))         // Startzeit in Millisekunden
+                        }catch (e: NullPointerException){
+                            e.printStackTrace()
+                            continue
+                        }
+                    }else{
+                        continue
+                    }
+
+                    val startEvent =
+                        Instant.ofEpochMilli(startTimeMilis)                              // Konvertiert in ein LocalDateTime-Objekt
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDateTime()
+
+                    eventList.add(
+                        EventDateTitle
+                            (startEvent,                            // Startzeit als LocalDateTime
+                            title                                  // Titel des Ereignisses
+                        )
                     )
-                )
+                }
+                cursor.close()                                    //cursor wider schließen wenn fertig, wiichtig!
             }
-            cursor.close()                                    //cursor wider schließen wenn fertig, wiichtig!
-        }
-        calenderEvents = eventList                            // Aktualisiert die Kalenderereignisliste
+            calenderEvents = eventList                            // Aktualisiert die Kalenderereignisliste
     }
 
     fun getCalender(): List<EventDateTitle> {                 // Gibt die aktuelle Liste der Kalenderereignisse zurück

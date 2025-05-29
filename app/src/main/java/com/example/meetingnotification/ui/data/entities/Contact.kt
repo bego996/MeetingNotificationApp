@@ -13,4 +13,8 @@ data class Contact(
     val sex: Char,
     val phone: String,
     val message: String
-)
+) : Comparable<Contact>{
+    override fun compareTo(other: Contact): Int {
+        return compareValuesBy(this,other,{it.firstName},{it.lastName})
+    }
+}
