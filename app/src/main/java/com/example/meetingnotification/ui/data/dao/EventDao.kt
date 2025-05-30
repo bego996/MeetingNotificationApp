@@ -26,9 +26,15 @@ interface EventDao {
     @Delete
     suspend fun delete(event: Event)
 
+    @Delete
+    suspend fun deleteExpiredEvents(expiredEvents: List<Event>)
+
     //TEST
     @Query("SELECT * from events where eventDate >= :dateNow ")
     suspend fun getEventsAfterToday(dateNow: String): List<Event>
+
+    @Query("SELECT * FROM events WHERE eventDate < :dateNow")
+    suspend fun getExpiredEvents(dateNow: String) : List<Event>
 
     @Query("SELECT * from events where contactOwnerId = :contactOwnerId")
     suspend fun getEvents(contactOwnerId: Int): List<Event>

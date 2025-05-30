@@ -1,6 +1,7 @@
 package com.example.meetingnotification.ui
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
@@ -9,6 +10,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
+import android.os.ext.SdkExtensions
 import android.provider.Settings
 import android.util.Log
 import androidx.activity.compose.setContent
@@ -154,6 +156,7 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
         Log.d(TAG,"onRestart() - MainActivity")
     }
 
+    @SuppressLint("NewApi")
     override fun onStart() {                                           // Wird beim Start der Aktivität aufgerufen
         super.onStart()
         Log.d(TAG,"onStart() - MainActivity")                            // Debug-Nachricht
@@ -163,6 +166,10 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
             .also { intent ->   // Erstellt einen Intent für den SMS-Dienst
             bindService(intent, smsServiceConnection, BIND_AUTO_CREATE)             // Bindet die Aktivität an den Dienst
         }
+
+        Log.i(TAG,"Extension version = ${SdkExtensions.getExtensionVersion(Build.VERSION_CODES.R)}")
+        Log.i(TAG,"SDK Version = ${Build.VERSION.SDK_INT}")
+
     }
 
     override fun onResume() {                                          // Wird beim Fortsetzen der Aktivität aufgerufen

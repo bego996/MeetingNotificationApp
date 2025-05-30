@@ -31,6 +31,10 @@ class OfflineEventRepository(private val eventDao: EventDao) : EventRepository {
         return eventDao.getEvents(contactOwnerId)
     }
 
+    override suspend fun getExpiredEvents(dateNow: String): List<Event> {
+        return eventDao.getExpiredEvents(dateNow)
+    }
+
     override suspend fun insertItem(event: Event) {
         eventDao.insert(event)
     }
@@ -41,6 +45,10 @@ class OfflineEventRepository(private val eventDao: EventDao) : EventRepository {
 
     override suspend fun deleteItem(event: Event) {
         eventDao.delete(event)
+    }
+
+    override suspend fun deleteExpiredEvents(expiredEvents: List<Event>) {
+        eventDao.deleteExpiredEvents(expiredEvents)
     }
 
     override suspend fun updateItem(event: Event) {

@@ -19,6 +19,8 @@ interface EventRepository {
 
     suspend fun getEvents(contactOwnerId: Int): List<Event>
 
+    suspend fun getExpiredEvents(dateNow: String) : List<Event>
+
     /**
      * Insert item in the data source
      */
@@ -30,6 +32,8 @@ interface EventRepository {
      * Delete item from the data source
      */
     suspend fun deleteItem(event: Event)
+
+    suspend fun deleteExpiredEvents(expiredEvents: List<Event>)
 
     /**
      * Update item in the data source
