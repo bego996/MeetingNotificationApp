@@ -15,10 +15,11 @@ private val TAG = SmsSentReceiver::class.simpleName     // Deklariert eine priva
 
 class SmsSentReceiver(private val service: SmsSendingService) : BroadcastReceiver() {   // Eine Klasse, die `BroadcastReceiver` erweitert und eine `SmsSendingService`-Instanz empfängt
 
+
     override fun onReceive(context: Context, intent: Intent) { // Überschreibt die `onReceive`-Methode, um auf Broadcasts zu reagieren
         Log.d(TAG, "smsReceiverCalled() with ResultCode: $resultCode")      // Loggt eine Debug-Nachricht, dass der Receiver aktiviert wurde
         if (resultCode == Activity.RESULT_OK || resultCode == 4 || resultCode == 1) {     // Überprüft, ob die SMS erfolgreich gesendet wurde, indem das `resultCode` mit `RESULT_OK` verglichen wird. 4 war für ein anderes Device als OK.
-
+            
             val contactId = intent.getIntExtra("contactId",-1)  //Hier wird der Integer Extra entnommen der im intent übergeben wurde.
             val messageQueueSize = intent.getIntExtra("SmsQueueSize",-1)
             val actualDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))

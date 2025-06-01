@@ -1,6 +1,5 @@
 package com.example.meetingnotification.ui.services
 
-import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.app.PendingIntent
 import android.app.Service
@@ -14,6 +13,7 @@ import android.telephony.SmsManager
 import android.telephony.SubscriptionManager
 import android.util.Log
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import com.example.meetingnotification.ui.R
 import com.example.meetingnotification.ui.broadcastReceiver.SmsSentReceiver
 import com.example.meetingnotification.ui.contact.ContactReadyForSms
@@ -59,7 +59,7 @@ class SmsSendingService : Service() {                         // Dienst(Service)
 
 
 
-    @SuppressLint("InlinedApi")
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate() { // Wird beim Erstellen des Dienstes aufgerufen
         
         super.onCreate()
@@ -144,7 +144,11 @@ class SmsSendingService : Service() {                         // Dienst(Service)
             )
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {    // Für neuere Android-Versionen
-                getSystemService(SmsManager::class.java).sendTextMessage(
+
+                val subscriptionId = SubscriptionManager.getDefaultSmsSubscriptionId()
+                val smsManager = getSystemService(SmsManager::class.java).createForSubscriptionId(subscriptionId)
+
+                smsManager.sendTextMessage(
                     nextMessage.phoneNumber,                  // Telefonnummer des Empfängers
                     null,
                     nextMessage.message,                      // Nachrichtentext

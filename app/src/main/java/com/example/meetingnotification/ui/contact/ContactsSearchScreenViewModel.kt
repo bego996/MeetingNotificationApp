@@ -172,7 +172,7 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
                         } else {
                             continue
                         }
-                        Log.d(TAG, "fullname = $fullname")
+                        //Log.d(TAG, "fullname = $fullname")
 
 
                         var firstname = nameOfUndefienedFields
@@ -207,6 +207,10 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
                                 2 -> {
                                     firstname = fullnNameSplited[0]
                                     surname = fullnNameSplited[1]
+                                }
+                                3 -> {
+                                    firstname = "${fullnNameSplited[0]} ${fullnNameSplited[1]}"
+                                    surname = fullnNameSplited[2]
                                 }
                             }
                         }

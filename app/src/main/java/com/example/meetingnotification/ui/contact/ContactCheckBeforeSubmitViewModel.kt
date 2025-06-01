@@ -222,7 +222,7 @@ class ContactCheckBeforeSubmitViewModel(
 
             upcomingEventNotified = upcomingEventSortedOut.firstOrNull()?.isNotified ?: return false
         }.milliseconds
-        Log.d(TAG, "isContactNotifiedForUpcomingEvent() executionTime = $duration")
+        //Log.d(TAG, "isContactNotifiedForUpcomingEvent() executionTime = $duration")
         return upcomingEventNotified
     }
 

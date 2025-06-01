@@ -10,6 +10,7 @@ plugins {
 android {
     namespace = "com.example.meetingnotification.ui"
     compileSdk = 34
+    compileSdkExtension = 12
 
     defaultConfig {
         applicationId = "com.example.meetingnotification.ui"
