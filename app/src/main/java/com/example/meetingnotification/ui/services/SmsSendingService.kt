@@ -5,8 +5,6 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
-import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import android.telephony.SmsManager
@@ -15,7 +13,6 @@ import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import com.example.meetingnotification.ui.R
-import com.example.meetingnotification.ui.broadcastReceiver.SmsSentReceiver
 import com.example.meetingnotification.ui.contact.ContactReadyForSms
 import com.example.meetingnotification.ui.data.entities.DateMessageSent
 import com.example.meetingnotification.ui.data.entities.Event
@@ -34,14 +31,18 @@ import java.time.format.DateTimeFormatter
 private val TAG = SmsSendingService::class.simpleName
 
 class SmsSendingService : Service() {                         // Dienst(Service), der SMS-Nachrichten versendet
-    private lateinit var receiver: SmsSentReceiver            // Deklariert einen SMS-Empfänger(Broadcast)
     private lateinit var contactRepository: ContactRepository
     private lateinit var eventRepository: EventRepository
     private lateinit var dateMessageSendRepository: DateMessageSendRepository
 
     private val serviceScope = CoroutineScope(Dispatchers.IO)
-    private val binder = LocalBinder()                        // Binder für die Client-Anbindung an den Dienst
     var messageQueue = ArrayDeque<SmsMessage>()               // Warteschlange für SMS-Nachrichten
+
+    companion object {
+        private var instance: SmsSendingService? = null
+        fun getInstance(): SmsSendingService? = instance
+    }
+
 
     fun initialize(contactRepository: ContactRepository,eventRepository: EventRepository,dateMessageSendRepository: DateMessageSendRepository){
         this.contactRepository = contactRepository
@@ -49,33 +50,25 @@ class SmsSendingService : Service() {                         // Dienst(Service)
         this.dateMessageSendRepository = dateMessageSendRepository
     }
 
-    inner class LocalBinder : Binder() {                                // Innere Klasse, die den Binder für den lokalen Dienst bereitstellt
-        fun getService(): SmsSendingService = this@SmsSendingService    // Gibt die aktuelle Instanz des Dienstes zurück
+    override fun onBind(p0: Intent?): IBinder? {
+        return null
     }
-
-    override fun onBind(intent: Intent): IBinder {            // Methode zum Binden des Dienstes an einen Client
-        return binder                                         // Gibt den Binder zurück
-    }
-
-
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate() { // Wird beim Erstellen des Dienstes aufgerufen
         
         super.onCreate()
         println("ServiceOnCreate()")
-        receiver = SmsSentReceiver(this)                      // Initialisiert den SMS-Empfänger
-        val intentFilter = IntentFilter("SMS_SENT")            // Filtert nach dem Broadcast "SMS_SENT"
-        registerReceiver(receiver, intentFilter, RECEIVER_NOT_EXPORTED)              // Registriert den Empfänger für das entsprechende Intent
-        println("Receiver is registered")
+        instance = this
     }
 
 
     override fun onDestroy() {                                // Wird beim Zerstören des Dienstes aufgerufen
-        unregisterReceiver(receiver)                          // Hebt die Registrierung des Empfängers auf
+        instance = null
         super.onDestroy()
-        println("Receiver is unregistere an SmS service Destroyed")
     }
+
+
 
     //Callback function. Function to get the upcoming event for specific contact from the database.
     fun getUpcomingEventForContact(contactId: Int,callback: (Event) -> Unit){
@@ -136,7 +129,10 @@ class SmsSendingService : Service() {                         // Dienst(Service)
             val uniqueRequestCode = nextMessage.contactId       //diesen unique code brauce ich weil ab api 31 nicht mehr FlAG_IMUTABLE (mit dem konnte man vor api 31 die extras aktualisieren im gleichen intent) verwendet werden kann.
 
             val smsIntent = PendingIntent.getBroadcast(
-                context, uniqueRequestCode, Intent("SMS_SENT").apply {  //hier kommt der unique requestcode rein. In meinem fall die contact id sowie unten (aber mit echtem namen contactId).
+                context,
+                uniqueRequestCode,
+                Intent("SMS_SENT").apply {  //hier kommt der unique requestcode rein. In meinem fall die contact id sowie unten (aber mit echtem namen contactId).
+                    `package` = context.packageName
                     putExtra("contactId",nextMessage.contactId)     //Fügt die contactId zum Intent hinzu um den Receiver die id des erfolgreich gesendeten nachricht an contacts zu geben.
                     putExtra("SmsQueueSize",messageQueue.size)
                 },     // Erzeugt ein PendingIntent für das "SMS_SENT"-Broadcast

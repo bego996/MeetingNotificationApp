@@ -1,14 +1,13 @@
 package com.example.meetingnotification.ui
 
 import android.Manifest
-import android.content.ComponentName
 import android.content.Intent
-import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.IBinder
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import android.util.Log
 import androidx.activity.compose.setContent
@@ -43,44 +42,21 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
     private val contactBuffer by viewModels<ContactsSearchScreenViewModel> { AppViewModelProvider.Factory }     // ViewModel für die Kontaktsuche
 
     private lateinit var smsService: SmsSendingService                 // Später zu initialisierender SMS-Dienst
-    private var isSmsServiceBound = false                              // Status, ob der SMS-Dienst gebunden ist
 
-    private val smsServiceConnection =
-        object : ServiceConnection {    // Objekt für die Verbindung zum SMS-Dienst
-            override fun onServiceConnected(
-                className: ComponentName,
-                service: IBinder
-            ) { // Wird aufgerufen, wenn die Verbindung hergestellt ist
-                val binder = service as SmsSendingService.LocalBinder      // Holt den Binder vom SMS-Dienst
-                smsService = binder.getService()                           // Holt die Dienstinstanz
-                isSmsServiceBound = true                                   // Setzt den Verbindungsstatus auf "gebunden"
+    private lateinit var applicationMain: MeetingNotificationApplication
 
-                val application = applicationContext as MeetingNotificationApplication
-                smsService.initialize(
-                    application.container.contactRepository,
-                    application.container.eventRepository,
-                    application.container.dateMessageSendRepository
-                )
-                Log.d(TAG,"serviceConnected() and Repositories initialized.")                              // Debug-Nachricht zur Bestätigung
-            }
-
-            override fun onServiceDisconnected(arg0: ComponentName) {      // Wird aufgerufen, wenn die Verbindung getrennt wird
-                isSmsServiceBound = false                                  // Setzt den Verbindungsstatus auf "nicht gebunden"
-                Log.d(TAG,"serviceDisconected()")
-            }
-        }
 
 
     //Action to push contacts in servive or to send message to all contacts or to get Contacts from ServiceQueue.
     override fun performServiceActionToAddOrSend(action: ServiceAction, contacts: List<ContactReadyForSms>)
     {
-        if (isSmsServiceBound && action == ServiceAction.PushContact && contacts.isNotEmpty()) { // Prüft, ob der Dienst gebunden und die Aktion gültig ist. Action to insert Contact to Queue.
+        if (::smsService.isInitialized && action == ServiceAction.PushContact && contacts.isNotEmpty()) { // Prüft, ob der Dienst gebunden und die Aktion gültig ist. Action to insert Contact to Queue.
             val allContacts = mutableListOf<ContactReadyForSms>()                                // Liste für alle Kontakte
             contacts.forEach { contact ->                                                        // Fügt die Kontakte zur Liste hinzu
                 allContacts.add(contact)
             }
             smsService.addMessageToQueue(allContacts)                  // Fügt die Kontakte zur Warteschlange des Dienstes hinzu
-        } else if (isSmsServiceBound && action == ServiceAction.SendMessage) { //Action to Send Messages
+        } else if (::smsService.isInitialized && action == ServiceAction.SendMessage) { //Action to Send Messages
             smsService.showMessageSendDialog(
                 this@MainActivity,
                 smsService.messageQueue.takeIf { it.isNotEmpty() }?.map { it.fullName }.toString()
@@ -93,7 +69,7 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
     }
 
     override fun performServiceActionToGetContactFromQueue(action: ServiceAction): List<Int> {
-        return if (isSmsServiceBound && action == ServiceAction.GetContactsFromQueue)
+        return if (SmsSendingService.getInstance() != null && action == ServiceAction.GetContactsFromQueue)
             smsService.getContactsInSmsQueueWithId()
         else
             emptyList()
@@ -114,8 +90,10 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
         val destinationWhenClickNotification = intent?.getStringExtra("destination")
         Log.d(TAG,"Intent destination = $destinationWhenClickNotification")
 
-        val app = application as MeetingNotificationApplication
-        val instructionRepoState = app.instructionReadStateRepository
+
+        applicationMain = application as MeetingNotificationApplication
+
+        val instructionRepoState = applicationMain.instructionReadStateRepository
 
         val instructionAllreadyAccepted = runBlocking {
             instructionRepoState.get().first()
@@ -154,19 +132,14 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
         Log.d(TAG,"onRestart() - MainActivity")
     }
 
-//    @SuppressLint("NewApi")
     override fun onStart() {                                           // Wird beim Start der Aktivität aufgerufen
         super.onStart()
         Log.d(TAG,"onStart() - MainActivity")                            // Debug-Nachricht
         checkAndRequestPermissions()
 
-        Intent(this, SmsSendingService::class.java)
-            .also { intent ->   // Erstellt einen Intent für den SMS-Dienst
-            bindService(intent, smsServiceConnection, BIND_AUTO_CREATE)             // Bindet die Aktivität an den Dienst
-        }
-
-
-//        Log.i(TAG,"Extension version = ${SdkExtensions.getExtensionVersion(Build.VERSION_CODES.R)}")
+        val serviceIntent = Intent(this, SmsSendingService::class.java)
+        startService(serviceIntent)
+        waitForServiceAndInit()
         Log.i(TAG,"SDK Version = ${Build.VERSION.SDK_INT}")
 
     }
@@ -174,6 +147,7 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
     override fun onResume() {                                          // Wird beim Fortsetzen der Aktivität aufgerufen
         super.onResume()
         Log.d(TAG,"onResume() - MainActivity")                           // Debug-Nachricht
+
     }
 
     override fun onPause() {                                           // Wird beim Pausieren der Aktivität aufgerufen
@@ -183,10 +157,12 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
 
     override fun onStop() {                                            // Wird beim Stoppen der Aktivität aufgerufen
         super.onStop()
-        if (isSmsServiceBound) {                                       // Prüft, ob der Dienst gebunden ist
-            unbindService(smsServiceConnection)                        // Hebt die Dienstverbindung auf
-            isSmsServiceBound = false                                  // Setzt den Verbindungsstatus auf "nicht gebunden"
+
+        if (SmsSendingService.getInstance()?.messageQueue?.isEmpty() == true){
+            stopService(Intent(this,SmsSendingService::class.java))
+            Log.d(TAG, "Service stopped in onStop() because queue was empty")
         }
+
         contactBuffer._isLoading.value = true
         Log.d(TAG,"onStop() - MainActivity")                             // Debug-Nachricht
     }
@@ -195,6 +171,20 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
         super.onDestroy()
         contactBuffer.smsServiceInteractor = null                      // Entfernt die Verbindung zwischen Dienst und ViewModel
         Log.d(TAG,"onDestroy() - MainActivity")                         // Debug-Nachricht
+    }
+
+    private fun waitForServiceAndInit() {
+        val service = SmsSendingService.getInstance()
+        if (service != null) {
+            service.initialize(
+                applicationMain.container.contactRepository,
+                applicationMain.container.eventRepository,
+                applicationMain.container.dateMessageSendRepository
+            )
+            smsService = service
+        } else {
+            Handler(Looper.getMainLooper()).postDelayed({ waitForServiceAndInit() }, 100)
+        }
     }
 
     private fun checkAndRequestPermissions() {
