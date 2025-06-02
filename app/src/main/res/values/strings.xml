@@ -116,6 +116,6 @@
 
     <!-- Notification Helper section -->
     <string name="notification_title">Reminders for this week</string>
-    <string name="notification_text">You can remind %1$d contacts for the next week.</string>
+    <string name="notification_text">You can remind %1$d contacts for the next 7 days.</string>
 
 </resources>

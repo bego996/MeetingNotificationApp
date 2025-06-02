@@ -108,7 +108,6 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
         }
         Log.d(TAG,"instructionRepoState = $instructionAllreadyAccepted")
 
-        //checkAndRequestPermissions()                                   // Überprüft und fordert erforderliche Berechtigungen an
         contactBuffer.smsServiceInteractor = this                      // Verknüpft das ViewModel mit dem Dienst-Interface. Wichtige schnittstelle , weil im viewmodel kein service erstellt werden darf.
 
         setContent {
@@ -173,6 +172,8 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
         Log.d(TAG,"onDestroy() - MainActivity")                         // Debug-Nachricht
     }
 
+    private var retriesLeft = 30
+
     private fun waitForServiceAndInit() {
         val service = SmsSendingService.getInstance()
         if (service != null) {
@@ -182,8 +183,13 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
                 applicationMain.container.dateMessageSendRepository
             )
             smsService = service
-        } else {
+            Log.i(TAG,"Service has ben started succesfully()")
+            retriesLeft = 30
+        }else if (retriesLeft > 0) {
+            retriesLeft--
             Handler(Looper.getMainLooper()).postDelayed({ waitForServiceAndInit() }, 100)
+        } else {
+            Log.w(TAG,"Sms service initialization attempts timeout, service is not initialized()")
         }
     }
 

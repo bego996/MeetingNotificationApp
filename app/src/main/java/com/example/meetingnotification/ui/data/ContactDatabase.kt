@@ -16,7 +16,7 @@ import com.example.meetingnotification.ui.data.entities.Event
 // entities = [Contact::class]: Enthält die Entität `Contact` (Tabelle in der Datenbank)
 // version = 2: Setzt die aktuelle Version der Datenbank auf 2
 // exportSchema = false: Verhindert, dass das Datenbankschema als JSON-Datei exportiert wird
-@Database(entities = [Contact::class, Event::class, DateMessageSent::class], version = 20, exportSchema = false)
+@Database(entities = [Contact::class, Event::class, DateMessageSent::class], version = 21, exportSchema = false)
 abstract class ContactDatabase : RoomDatabase() {
 
     abstract fun contactDao() : ContactDao  // Deklariert eine abstrakte Methode, die eine Instanz des DAO (Data Access Object) für "Contact" zurückgibt.

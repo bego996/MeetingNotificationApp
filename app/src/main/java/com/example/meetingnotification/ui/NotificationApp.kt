@@ -45,7 +45,6 @@ fun NotificationApp(
         }
         Log.i(TAG,"InitialDestination name : $initialDestination")
     }
-
     MettingNavHost(navController = navController, viewModel = viewModel)
 }
 

@@ -1,11 +1,8 @@
 package com.example.meetingnotification.ui.contact
 
 import android.annotation.SuppressLint
-import android.content.ContentProviderOperation
-import android.content.ContentValues
 import android.content.Context
 import android.content.res.Resources
-import android.net.Uri
 import android.os.Parcelable
 import android.provider.CalendarContract
 import android.provider.ContactsContract
@@ -34,7 +31,6 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
-import java.util.TimeZone
 
 private val TAG = ContactsSearchScreenViewModel::class.simpleName
 
@@ -323,171 +319,170 @@ class ContactsSearchScreenViewModel(                          // ViewModel zur V
 
     //region Test Insert Contacts/Events in Phone. Remove in Release
 
-    fun insertContacts(context: Context) {
-        fun loadAllValidRecords(): List<ContactSimpleTest> {
-            val contacts = mutableListOf<ContactSimpleTest>()
-
-            try {
-                context.assets.open("insertContactsTestData.txt").bufferedReader().useLines { lines ->
-                    lines.forEach { line ->
-                        val parts = line.split(";")
-                        if (parts.size == 4) {
-                            val contact = ContactSimpleTest(
-                                firstName = parts[0],
-                                surname = parts[1],
-                                title = parts[2],
-                                number = parts[3]
-                            )
-                            contacts.add(contact)
-                            Log.d(TAG, "Kontakt geladen: $contact")
-                        } else {
-                            Log.w(TAG, "Ungültiges Format in Zeile: $line")
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Fehler beim Laden der Kontakte aus Assets", e)
-            }
-            return contacts
-        }
-
-        val listOfDummyContactsExtracted = loadAllValidRecords()
-
-        listOfDummyContactsExtracted.forEach { dummyContact ->
-
-            val ops = ArrayList<ContentProviderOperation>()
-
-            // 1. Leeren RawContact erzeugen
-            ops.add(
-                ContentProviderOperation.newInsert(ContactsContract.RawContacts.CONTENT_URI)
-                    .withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, null)
-                    .withValue(ContactsContract.RawContacts.ACCOUNT_NAME, null)
-                    .build()
-            )
-
-            // 2. Titel (prefix)
-            ops.add(
-                ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
-                    .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
-                    .withValue(
-                        ContactsContract.Data.MIMETYPE,
-                        ContactsContract.CommonDataKinds.Organization.CONTENT_ITEM_TYPE
-                    )
-                    .withValue(ContactsContract.CommonDataKinds.Organization.TITLE, dummyContact.title)
-                    .build()
-            )
-
-            // 3. Vor- & Nachname
-            ops.add(
-                ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
-                    .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
-                    .withValue(
-                        ContactsContract.Data.MIMETYPE,
-                        ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE
-                    )
-                    .withValue(
-                        ContactsContract.CommonDataKinds.StructuredName.GIVEN_NAME,
-                        dummyContact.firstName
-                    )
-                    .withValue(
-                        ContactsContract.CommonDataKinds.StructuredName.FAMILY_NAME,
-                        dummyContact.surname
-                    )
-                    .build()
-            )
-
-            // 4. Telefonnummer
-            ops.add(
-                ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
-                    .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
-                    .withValue(
-                        ContactsContract.Data.MIMETYPE,
-                        ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE
-                    )
-                    .withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, dummyContact.number)
-                    .withValue(
-                        ContactsContract.CommonDataKinds.Phone.TYPE,
-                        ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE
-                    )
-                    .build()
-            )
-
-            // Ausführen
-            try {
-                context.contentResolver.applyBatch(ContactsContract.AUTHORITY, ops)
-                Log.d(TAG,"Contact $dummyContact hinzugefügt!")
-            } catch (e: Exception) {
-                e.printStackTrace()
-                Log.d(TAG,"Kontakt $dummyContact hinzufügen fehlgeschlagen!")
-            }
-
-        }
-    }
-
-
-    fun insertEvents(context: Context) {
-        fun getCalendarId(context: Context): Long? {
-            val projection = arrayOf(
-                CalendarContract.Calendars._ID,
-                CalendarContract.Calendars.CALENDAR_DISPLAY_NAME
-            )
-            val uri = CalendarContract.Calendars.CONTENT_URI
-            val cursor = context.contentResolver.query(uri, projection, null, null, null)
-
-            cursor?.use {
-                while (it.moveToNext()) {
-                    val id = it.getLong(0)
-                    val name = it.getString(1)
-                    Log.d(TAG, "ID: $id, Name: $name")
-                    if (name.contains("Google") || name.contains("Kalender") || name.contains("simba.ibrahimovic6@gmail.com")) {
-                        return id
-                    }
-                }
-            }
-            return null
-        }
-
-        fun loadAllValidRecords(): List<EventSimpleTest> {
-            val events = mutableListOf<EventSimpleTest>()
-            try {
-                context.assets.open("insertEventsTestData.txt").bufferedReader().useLines { lines ->
-                    lines.forEach { line ->
-                        val parts = line.split(";")
-                        if (parts.size == 3) {
-                            val event = EventSimpleTest(
-                                title = parts[0],
-                                startTime = LocalDateTime.parse(parts[1]).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() ,
-                                endTime = LocalDateTime.parse(parts[2]).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
-                            )
-                            events.add(event)
-                            Log.d(TAG, "Events geladen: $event")
-                        } else {
-                            Log.w(TAG, "Ungültiges Format in Zeile: $line")
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Fehler beim Laden der Evente aus Assets", e)
-            }
-            return events
-        }
-
-        val listOfDummyEventsExtracted = loadAllValidRecords()
-
-        listOfDummyEventsExtracted.forEach { event ->
-            val calendarId = getCalendarId(context)
-
-            val values = ContentValues().apply {
-                put(CalendarContract.Events.DTSTART, event.startTime)
-                put(CalendarContract.Events.DTEND, event.endTime)
-                put(CalendarContract.Events.TITLE, event.title)
-                put(CalendarContract.Events.CALENDAR_ID, calendarId)
-                put(CalendarContract.Events.EVENT_TIMEZONE, TimeZone.getDefault().id)
-            }
-            val uri: Uri? = context.contentResolver.insert(CalendarContract.Events.CONTENT_URI, values)
-        }
-    }
-
+//    fun insertContacts(context: Context) {
+//        fun loadAllValidRecords(): List<ContactSimpleTest> {
+//            val contacts = mutableListOf<ContactSimpleTest>()
+//
+//            try {
+//                context.assets.open("insertContactsTestData.txt").bufferedReader().useLines { lines ->
+//                    lines.forEach { line ->
+//                        val parts = line.split(";")
+//                        if (parts.size == 4) {
+//                            val contact = ContactSimpleTest(
+//                                firstName = parts[0],
+//                                surname = parts[1],
+//                                title = parts[2],
+//                                number = parts[3]
+//                            )
+//                            contacts.add(contact)
+//                            Log.d(TAG, "Kontakt geladen: $contact")
+//                        } else {
+//                            Log.w(TAG, "Ungültiges Format in Zeile: $line")
+//                        }
+//                    }
+//                }
+//            } catch (e: Exception) {
+//                Log.e(TAG, "Fehler beim Laden der Kontakte aus Assets", e)
+//            }
+//            return contacts
+//        }
+//
+//        val listOfDummyContactsExtracted = loadAllValidRecords()
+//
+//        listOfDummyContactsExtracted.forEach { dummyContact ->
+//
+//            val ops = ArrayList<ContentProviderOperation>()
+//
+//            // 1. Leeren RawContact erzeugen
+//            ops.add(
+//                ContentProviderOperation.newInsert(ContactsContract.RawContacts.CONTENT_URI)
+//                    .withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, null)
+//                    .withValue(ContactsContract.RawContacts.ACCOUNT_NAME, null)
+//                    .build()
+//            )
+//
+//            // 2. Titel (prefix)
+//            ops.add(
+//                ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+//                    .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
+//                    .withValue(
+//                        ContactsContract.Data.MIMETYPE,
+//                        ContactsContract.CommonDataKinds.Organization.CONTENT_ITEM_TYPE
+//                    )
+//                    .withValue(ContactsContract.CommonDataKinds.Organization.TITLE, dummyContact.title)
+//                    .build()
+//            )
+//
+//            // 3. Vor- & Nachname
+//            ops.add(
+//                ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+//                    .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
+//                    .withValue(
+//                        ContactsContract.Data.MIMETYPE,
+//                        ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE
+//                    )
+//                    .withValue(
+//                        ContactsContract.CommonDataKinds.StructuredName.GIVEN_NAME,
+//                        dummyContact.firstName
+//                    )
+//                    .withValue(
+//                        ContactsContract.CommonDataKinds.StructuredName.FAMILY_NAME,
+//                        dummyContact.surname
+//                    )
+//                    .build()
+//            )
+//
+//            // 4. Telefonnummer
+//            ops.add(
+//                ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+//                    .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
+//                    .withValue(
+//                        ContactsContract.Data.MIMETYPE,
+//                        ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE
+//                    )
+//                    .withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, dummyContact.number)
+//                    .withValue(
+//                        ContactsContract.CommonDataKinds.Phone.TYPE,
+//                        ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE
+//                    )
+//                    .build()
+//            )
+//
+//            // Ausführen
+//            try {
+//                context.contentResolver.applyBatch(ContactsContract.AUTHORITY, ops)
+//                Log.d(TAG,"Contact $dummyContact hinzugefügt!")
+//            } catch (e: Exception) {
+//                e.printStackTrace()
+//                Log.d(TAG,"Kontakt $dummyContact hinzufügen fehlgeschlagen!")
+//            }
+//
+//        }
+//    }
+//
+//
+//    fun insertEvents(context: Context) {
+//        fun getCalendarId(context: Context): Long? {
+//            val projection = arrayOf(
+//                CalendarContract.Calendars._ID,
+//                CalendarContract.Calendars.CALENDAR_DISPLAY_NAME
+//            )
+//            val uri = CalendarContract.Calendars.CONTENT_URI
+//            val cursor = context.contentResolver.query(uri, projection, null, null, null)
+//
+//            cursor?.use {
+//                while (it.moveToNext()) {
+//                    val id = it.getLong(0)
+//                    val name = it.getString(1)
+//                    Log.d(TAG, "ID: $id, Name: $name")
+//                    if (name.contains("Google") || name.contains("Kalender") || name.contains("simba.ibrahimovic6@gmail.com")) {
+//                        return id
+//                    }
+//                }
+//            }
+//            return null
+//        }
+//
+//        fun loadAllValidRecords(): List<EventSimpleTest> {
+//            val events = mutableListOf<EventSimpleTest>()
+//            try {
+//                context.assets.open("insertEventsTestData.txt").bufferedReader().useLines { lines ->
+//                    lines.forEach { line ->
+//                        val parts = line.split(";")
+//                        if (parts.size == 3) {
+//                            val event = EventSimpleTest(
+//                                title = parts[0],
+//                                startTime = LocalDateTime.parse(parts[1]).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() ,
+//                                endTime = LocalDateTime.parse(parts[2]).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+//                            )
+//                            events.add(event)
+//                            Log.d(TAG, "Events geladen: $event")
+//                        } else {
+//                            Log.w(TAG, "Ungültiges Format in Zeile: $line")
+//                        }
+//                    }
+//                }
+//            } catch (e: Exception) {
+//                Log.e(TAG, "Fehler beim Laden der Evente aus Assets", e)
+//            }
+//            return events
+//        }
+//
+//        val listOfDummyEventsExtracted = loadAllValidRecords()
+//
+//        listOfDummyEventsExtracted.forEach { event ->
+//            val calendarId = getCalendarId(context)
+//
+//            val values = ContentValues().apply {
+//                put(CalendarContract.Events.DTSTART, event.startTime)
+//                put(CalendarContract.Events.DTEND, event.endTime)
+//                put(CalendarContract.Events.TITLE, event.title)
+//                put(CalendarContract.Events.CALENDAR_ID, calendarId)
+//                put(CalendarContract.Events.EVENT_TIMEZONE, TimeZone.getDefault().id)
+//            }
+//            val uri: Uri? = context.contentResolver.insert(CalendarContract.Events.CONTENT_URI, values)
+//        }
+//    }
     //endregion
 
     @SuppressLint("Range")
@@ -575,4 +570,4 @@ data class EventDateTitle(val eventDate: LocalDateTime, val eventName: String) /
 
 data class ContactSimpleTest(val firstName: String, val surname: String, val title: String, val number: String) //Test, remove on release.
 
-data class EventSimpleTest(val startTime: Long,val endTime: Long,val title: String)
+data class EventSimpleTest(val startTime: Long,val endTime: Long,val title: String) //Test, remove on release.

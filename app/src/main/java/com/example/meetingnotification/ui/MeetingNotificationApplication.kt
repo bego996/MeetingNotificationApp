@@ -2,7 +2,6 @@ package com.example.meetingnotification.ui
 
 import android.app.Application
 import android.util.Log
-import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
@@ -12,6 +11,7 @@ import com.example.meetingnotification.ui.data.repositories.BackgroundImageManag
 import com.example.meetingnotification.ui.data.repositories.InstructionReadRepository
 import com.example.meetingnotification.ui.worker.MonthlyEventDbCleaner
 import com.example.meetingnotification.ui.worker.WeeklyReminderWorker
+import java.time.DayOfWeek
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
@@ -40,7 +40,7 @@ class  MeetingNotificationApplication :Application() {
 
     //region Background Notification Helper
     private fun scheduleWeeklyReminder() {
-        val workRequest = PeriodicWorkRequestBuilder<WeeklyReminderWorker>(16, TimeUnit.MINUTES)
+        val workRequest = PeriodicWorkRequestBuilder<WeeklyReminderWorker>(7, TimeUnit.DAYS)
             .setInitialDelay(calculateInitialDelay(), TimeUnit.MILLISECONDS)
             .build()
 
@@ -53,7 +53,16 @@ class  MeetingNotificationApplication :Application() {
 
     private fun calculateInitialDelay(): Long {
         val now = LocalDateTime.now()
-        val nextRun = now.plusMinutes(5)
+        val nextRun = when(now.dayOfWeek){
+            DayOfWeek.MONDAY -> LocalDateTime.of(now.year,now.month,now.dayOfMonth,12,0,0).plusDays(6)
+            DayOfWeek.TUESDAY -> LocalDateTime.of(now.year,now.month,now.dayOfMonth,12,0,0).plusDays(5)
+            DayOfWeek.WEDNESDAY -> LocalDateTime.of(now.year,now.month,now.dayOfMonth,12,0,0).plusDays(4)
+            DayOfWeek.THURSDAY -> LocalDateTime.of(now.year,now.month,now.dayOfMonth,12,0,0).plusDays(3)
+            DayOfWeek.FRIDAY -> LocalDateTime.of(now.year,now.month,now.dayOfMonth,12,0,0).plusDays(2)
+            DayOfWeek.SATURDAY -> LocalDateTime.of(now.year,now.month,now.dayOfMonth,12,0,0).plusDays(1)
+            DayOfWeek.SUNDAY -> LocalDateTime.of(now.year,now.month,now.dayOfMonth,12,0,0).plusDays(7)
+            else -> LocalDateTime.now().plusDays(7)
+        }
 
         val delay = Duration.between(now, nextRun)
         return delay.toMillis()
@@ -62,12 +71,7 @@ class  MeetingNotificationApplication :Application() {
 
     //region Monthly Event in Database Cleaner.
     private fun sheduleMonthlyDatabaseCleaner(){
-        val workRequest = PeriodicWorkRequestBuilder<MonthlyEventDbCleaner>(
-            16,TimeUnit.MINUTES)
-            .setConstraints(
-            Constraints.Builder()
-                .build()
-        ).build()
+        val workRequest = PeriodicWorkRequestBuilder<MonthlyEventDbCleaner>(30,TimeUnit.DAYS).build()
 
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
             "cleanup_old_events",

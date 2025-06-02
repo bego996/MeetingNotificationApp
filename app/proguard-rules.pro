@@ -1,21 +1,21 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# 🧼 Entfernt alle Aufrufe von android.util.Log im Release-Build
+-assumenosideeffects class android.util.Log {
+    public static *** v(...);
+    public static *** d(...);
+    public static *** i(...);
+    public static *** w(...);
+    public static *** e(...);
+    public static *** println(...);
+}
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# 🧼 Entfernt System.out / System.err (z. B. println)
+-assumenosideeffects class java.lang.System {
+    public static java.io.PrintStream out;
+    public static java.io.PrintStream err;
+}
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# 🧠 Hinweis:
+# Diese Regeln verhindern nicht, dass die Klassen an sich vorhanden sind,
+# sondern sorgen nur dafür, dass ihre Methoden **keine Nebeneffekte** haben
+# → dadurch entfernt R8 sie komplett aus dem Bytecode
