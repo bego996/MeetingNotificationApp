@@ -55,23 +55,6 @@ Die App erkennt automatisch alle passenden Kontakte und verknüpft sie mit Kalen
 
 ---
 
-## 📂 Projektstruktur
-
-```
-/app
-  ├─┤ ui/
-  │    ├─┤ home/, screens/, components/
-  ├─┤ data/
-  │    ├─┤ dao/, entities/, repositories/
-  ├─┤ services/
-  │    └─┤ SmsSendingService.kt
-  ├─┤ workers/
-  │    └─┤ WeeklyReminderWorker.kt
-  └─┤ MainActivity.kt, App.kt
-```
-
----
-
 ## ⚙️ Tech Stack
 
 * **Kotlin**, **Jetpack Compose**, **Material 3**
@@ -98,9 +81,6 @@ Die App erkennt automatisch alle passenden Kontakte und verknüpft sie mit Kalen
 * `compileSdk`: 34
 * Appgröße: \~20 MB (optimiert mit .webp Assets)
 
----
-
-## ❓ Lizenz / Autor
 
 
 
