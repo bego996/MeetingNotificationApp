@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "968076011294",
+    "project_id": "ui-4f41e167",
+    "storage_bucket": "ui-4f41e167.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:968076011294:android:24ce4195e7c86e94428b0f",
+        "android_client_info": {
+          "package_name": "com.example.meetingnotification.ui"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDtx1vWVRsnOoPlR1Skc3OqBxTDizYHV2E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

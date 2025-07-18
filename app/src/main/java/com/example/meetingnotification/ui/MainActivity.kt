@@ -28,6 +28,9 @@ import com.example.meetingnotification.ui.home.InstructionsDestination
 import com.example.meetingnotification.ui.services.ServiceAction
 import com.example.meetingnotification.ui.services.SmsSendingService
 import com.example.meetingnotification.ui.services.SmsSendingServiceInteractor
+import com.google.firebase.Firebase
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.analytics
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 
@@ -44,6 +47,8 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
     private lateinit var smsService: SmsSendingService                 // Später zu initialisierender SMS-Dienst
 
     private lateinit var applicationMain: MeetingNotificationApplication
+
+    private lateinit var analytics: FirebaseAnalytics
 
 
 
@@ -86,6 +91,9 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
         super.onCreate(savedInstanceState)
         supportActionBar?.hide()
         Log.d(TAG,"onCreate() - MainActivity")
+
+        analytics = Firebase.analytics
+
 
         val destinationWhenClickNotification = intent?.getStringExtra("destination")
         Log.d(TAG,"Intent destination = $destinationWhenClickNotification")
@@ -141,6 +149,7 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
         waitForServiceAndInit()
         Log.i(TAG,"SDK Version = ${Build.VERSION.SDK_INT}")
 
+
     }
 
     override fun onResume() {                                          // Wird beim Fortsetzen der Aktivität aufgerufen
@@ -184,10 +193,10 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
             )
             smsService = service
             Log.i(TAG,"Service has ben started succesfully()")
-            retriesLeft = 30
+            retriesLeft = 33
         }else if (retriesLeft > 0) {
             retriesLeft--
-            Handler(Looper.getMainLooper()).postDelayed({ waitForServiceAndInit() }, 100)
+            Handler(Looper.getMainLooper()).postDelayed({ waitForServiceAndInit() }, 300)
         } else {
             Log.w(TAG,"Sms service initialization attempts timeout, service is not initialized()")
         }

@@ -1,3 +1,4 @@
+import java.util.Properties
 
 
 plugins {
@@ -5,6 +6,14 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp") version "1.9.21-1.0.16"
     id("kotlin-parcelize")
+    id("com.google.firebase.crashlytics")
+    id("com.google.gms.google-services")
+}
+
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+if (keystorePropertiesFile.exists()){
+    keystoreProperties.load(keystorePropertiesFile.inputStream())
 }
 
 android {
@@ -22,8 +31,19 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("release"){
+            storeFile = file(keystoreProperties["storeFile"] as String)
+            storePassword = keystoreProperties["storePassword"] as String
+            keyAlias = keystoreProperties["keyAlias"] as String
+            keyPassword = keystoreProperties["keyPassword"] as String
+        }
+    }
+
     buildTypes {
+
         release {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -31,7 +51,11 @@ android {
                 "proguard-rules.pro"
             )
             isDebuggable = false
+            firebaseCrashlytics {
+                mappingFileUploadEnabled = true
+            }
         }
+
         debug {
             isDebuggable = true
         }
@@ -70,6 +94,10 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3:1.3.2")
     implementation ("com.google.android.material:material:1.12.0")
+
+    //Firebase Crahlytics
+    implementation("com.google.firebase:firebase-crashlytics-ktx:18.5.1")
+    implementation("com.google.firebase:firebase-analytics-ktx:21.5.0") // optional
 
     //Nötig um auf älteren apis room korrekt zu nutzen.
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.3")
