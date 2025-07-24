@@ -11,7 +11,6 @@ import android.telephony.SmsManager
 import android.telephony.SubscriptionManager
 import android.util.Log
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import com.example.meetingnotification.ui.R
 import com.example.meetingnotification.ui.contact.ContactReadyForSms
 import com.example.meetingnotification.ui.data.entities.DateMessageSent
@@ -48,13 +47,17 @@ class SmsSendingService : Service() {                         // Dienst(Service)
         this.contactRepository = contactRepository
         this.eventRepository = eventRepository
         this.dateMessageSendRepository = dateMessageSendRepository
+        Log.d(TAG,"Initialize repositories in SmsSendingService block done()")
+        Log.d(TAG, "contactRepository initialized: ${::contactRepository.isInitialized}")
+        Log.d(TAG, "eventRepository initialized: ${::eventRepository.isInitialized}")
+        Log.d(TAG, "dateMessageSendRepository initialized: ${::dateMessageSendRepository.isInitialized}")
     }
 
     override fun onBind(p0: Intent?): IBinder? {
         return null
     }
 
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    //@RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate() { // Wird beim Erstellen des Dienstes aufgerufen
         
         super.onCreate()
