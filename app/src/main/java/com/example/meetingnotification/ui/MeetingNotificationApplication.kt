@@ -3,7 +3,6 @@ package com.example.meetingnotification.ui
 import android.app.AlarmManager
 import android.app.Application
 import android.app.PendingIntent
-import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.util.Log
@@ -11,6 +10,7 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.meetingnotification.ui.broadcastReceiver.WeeklyAlarmReceiver
+import com.example.meetingnotification.ui.broadcastReceiver.WeeklyEventDbUpdater
 import com.example.meetingnotification.ui.data.AppContainer
 import com.example.meetingnotification.ui.data.AppDataContainer
 import com.example.meetingnotification.ui.data.repositories.BackgroundImageManagerRepository
@@ -36,16 +36,54 @@ class  MeetingNotificationApplication :Application() {
         instructionReadStateRepository = InstructionReadRepository(this)
 
         sheduleWeeklyAlarm()
-
         Log.d(TAG,"Weekly Notification Reminder registered()")
+
         sheduleMonthlyDatabaseCleaner() //Worker registration for event db cleaner.
         Log.d(TAG,"Monthly Database Cleaner for expired Events registered()")
+
+        sheduleWeeklyEventUpdate()
+        Log.d(TAG,"Weekly event db updater registered()")
     }
 
-    //region Background Notification Helper
+    //region
+
+    //region Weekly background event updater. With Alarm Manager.
+    private fun sheduleWeeklyEventUpdate(){
+        Log.d(TAG,"sheduleWeeklyEventUpdate called()")
+        val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
+
+        val intent = Intent(this, WeeklyEventDbUpdater::class.java)
+        intent.action = "SET_ALARM_FOR_EVENT_DB_UPDATER"
+
+        val nextIntent = PendingIntent.getBroadcast(
+            this,
+            0,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val calendar = Calendar.getInstance().apply {
+            set(Calendar.DAY_OF_WEEK, Calendar.FRIDAY) // Oder beliebigen Tag
+            set(Calendar.HOUR_OF_DAY, 22) // Deine gewünschte Uhrzeit
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+            if (before(Calendar.getInstance())) add(Calendar.DATE, 7)
+        }
+
+        alarmManager.setAndAllowWhileIdle(
+            AlarmManager.RTC_WAKEUP,
+            calendar.timeInMillis,
+            nextIntent
+        )
+
+    }
+    //endregion
+
+    //region Weekly notification to inform about notifyable contacts at exact time with Alarm Manager.
     private fun sheduleWeeklyAlarm() {
         Log.d(TAG,"sheduleWeeklyAlarm called()")
-        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
 
         val intent = Intent(this, WeeklyAlarmReceiver::class.java)
         intent.action = "ALARM_SET_AFTER_BOOT_OR_ON_FIRST_START"
@@ -57,9 +95,9 @@ class  MeetingNotificationApplication :Application() {
         )
 
         val calendar = Calendar.getInstance().apply {
-            set(Calendar.DAY_OF_WEEK, Calendar.THURSDAY) // Oder beliebigen Tag
-            set(Calendar.HOUR_OF_DAY, 19) // Deine gewünschte Uhrzeit
-            set(Calendar.MINUTE, 36)
+            set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY) // Oder beliebigen Tag
+            set(Calendar.HOUR_OF_DAY, 12) // Deine gewünschte Uhrzeit
+            set(Calendar.MINUTE, 0)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
             if (before(Calendar.getInstance())) add(Calendar.DATE, 7)

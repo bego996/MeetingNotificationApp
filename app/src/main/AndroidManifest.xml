@@ -42,7 +42,6 @@
                 <action android:name="SMS_SENT"/>
             </intent-filter>
         </receiver>
-
         <receiver
             android:name=".broadcastReceiver.WeeklyAlarmReceiver"
             android:exported="false">
@@ -50,9 +49,14 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
                 <action android:name="ALARM_SET_AFTER_BOOT_OR_ON_FIRST_START"/>
             </intent-filter>
-
         </receiver>
-
+        <receiver android:name=".broadcastReceiver.WeeklyEventDbUpdater"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="SET_ALARM_FOR_EVENT_DB_UPDATER"/>
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>
