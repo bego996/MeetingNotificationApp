@@ -1,14 +1,19 @@
 package com.example.meetingnotification.ui.broadcastReceiver
 
 import android.annotation.SuppressLint
+import android.app.AlarmManager
+import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Context.ALARM_SERVICE
 import android.content.Intent
 import android.provider.CalendarContract
 import android.util.Log
 import com.example.meetingnotification.ui.contact.EventDateTitle
 import com.example.meetingnotification.ui.data.ContactDatabase
 import com.example.meetingnotification.ui.data.entities.Contact
+import com.example.meetingnotification.ui.data.entities.Event
+import com.example.meetingnotification.ui.utils.DebugUtils
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -18,6 +23,8 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
+import java.util.Calendar
 
 
 private val TAG = WeeklyEventDbUpdater::class.simpleName
@@ -30,28 +37,95 @@ class WeeklyEventDbUpdater: BroadcastReceiver() {
         if (intent.action == Intent.ACTION_BOOT_COMPLETED || intent.action == "SET_ALARM_FOR_EVENT_DB_UPDATER") {
 
             CoroutineScope(Dispatchers.IO).launch {
-                val eventsInCalender = loadCalender(context).toSet()
-                if (eventsInCalender.isEmpty()) return@launch
-                Log.d(TAG, "eventsInCalender loaded()")
-                Log.d(TAG, "eventsInCalender data $eventsInCalender")
-                val contacsInDatabase = loadContactsFromDatabase(context).toSet()
-                if (contacsInDatabase.isEmpty()) return@launch
-                Log.d(TAG, "contactsInDatabase loaded()")
-                Log.d(TAG, "contactsInDatabase data: $contacsInDatabase")
+                DebugUtils.logExecutionTime(TAG,"Performance measure()"){
+
+                    val eventsInCalender = loadCalender(context)
+                    if (eventsInCalender.isEmpty()) return@launch
+                    Log.d(TAG, "eventsInCalender loaded()")
+                    Log.d(TAG, "eventsInCalender data $eventsInCalender")
+
+                    val contacsInDatabase = loadContactsFromDatabase(context)
+                    if (contacsInDatabase.isEmpty()) return@launch
+                    Log.d(TAG, "contactsInDatabase loaded()")
+                    Log.d(TAG, "contactsInDatabase data: $contacsInDatabase")
+
+                    val contactsMap = contacsInDatabase.associateBy { it.firstName to it.lastName }
+
+                    val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                    val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
+
+                    val matchedContacts = eventsInCalender.mapNotNull { event ->
+                        val parts = event.eventName.split(" ")
+                        if (parts.size < 2) return@mapNotNull null
+                        val key = parts[0] to parts[1]
+                        val contact = contactsMap[key]
+                        if (contact != null) {
+                            ContactEvent(
+                                id = contact.id,
+                                firstName = contact.firstName,
+                                lastName = contact.lastName,
+                                eventDate = event.eventDate.format(dateFormatter),
+                                eventTime = event.eventDate.format(timeFormatter)
+                            )
+                        } else null
+                    }.toSet()
+                    Log.d(TAG,"matchedContacts : $matchedContacts")
+
+                    insertEventsOffline(context,matchedContacts)
+                    Log.d(TAG,"Events inserted()")
+
+
+                    Log.d(TAG,"New alarm register started()")
+
+                    val alarmManager = context.getSystemService(ALARM_SERVICE) as AlarmManager
+
+                    val intent = Intent(context, WeeklyEventDbUpdater::class.java)
+                    intent.action = "SET_ALARM_FOR_EVENT_DB_UPDATER"
+
+                    val nextIntent = PendingIntent.getBroadcast(
+                        context,
+                        0,
+                        intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    )
+
+                    val calendar = Calendar.getInstance().apply {
+                        set(Calendar.DAY_OF_WEEK, Calendar.SATURDAY) // Oder beliebigen Tag
+                        set(Calendar.HOUR_OF_DAY, 18) // Deine gewünschte Uhrzeit
+                        set(Calendar.MINUTE, 30)
+                        set(Calendar.SECOND, 0)
+                        set(Calendar.MILLISECOND, 0)
+                        if (before(Calendar.getInstance())) add(Calendar.DATE, 7)
+                    }
+
+                    alarmManager.setAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        calendar.timeInMillis,
+                        nextIntent
+                    )
+                    Log.d(TAG,"New alarm registered()")
+                }
             }
 
         }
         Log.d(TAG,"WeeklyEventDbUpdater finished()")
     }
 
-    suspend fun loadContactsFromDatabase(context: Context): List<Contact>{
+    private suspend fun loadContactsFromDatabase(context: Context): List<Contact>{
         try {
             val dao = ContactDatabase.getDatabase(context).contactDao().getAllContacts().first()
             return dao
         }catch (e: NoSuchElementException){
             FirebaseCrashlytics.getInstance().recordException(e)
+            Log.e(TAG,"Geting contacts from db failed, bcs no contact was inserted yet. Empty list will be returned.")
         }
         return emptyList()
+    }
+
+    private suspend fun insertEventsOffline(context: Context, eventsRaw: Set<ContactEvent>){
+        val dao = ContactDatabase.getDatabase(context).eventDAO()
+        val eventsConverted = eventsRaw.map { event -> Event(eventDate = event.eventDate, eventTime = event.eventTime, contactOwnerId = event.id) }
+        dao.insertAll(eventsConverted)
     }
 
     @SuppressLint("Range")
@@ -126,3 +200,11 @@ class WeeklyEventDbUpdater: BroadcastReceiver() {
     }
 
 }
+
+data class ContactEvent(
+    val id: Int,
+    val firstName: String,
+    val lastName: String,
+    val eventDate: String,   // Format: yyyy-MM-dd
+    val eventTime: String    // Format: HH:mm
+)
