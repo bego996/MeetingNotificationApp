@@ -20,6 +20,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
@@ -39,11 +40,28 @@ class WeeklyEventDbUpdater: BroadcastReceiver() {
             CoroutineScope(Dispatchers.IO).launch {
                 DebugUtils.logExecutionTime(TAG,"Performance measure()"){
 
+                    //Events from the Calendar to right format.
                     val eventsInCalender = loadCalender(context)
                     if (eventsInCalender.isEmpty()) return@launch
                     Log.d(TAG, "eventsInCalender loaded()")
                     Log.d(TAG, "eventsInCalender data $eventsInCalender")
+                    val eventDateTimeSetInCalender = eventsInCalender.map {
+                        it.eventDate.toLocalDate().toString() to it.eventDate.toLocalTime().toString()
+                    }.toSet()
 
+                    //Filter events that arent existing in calender anymore but still in Database.
+                    val dateFrom = LocalDate.now().toString()
+                    val dateTo = LocalDate.parse(dateFrom).plusDays(8).toString()
+                    val eventsInDb = loadEventsFromDb(context,dateFrom,dateTo)
+                    val eventsNotExistingAnymoreInCalender = eventsInDb.filter { eventDb ->
+                        (eventDb.eventDate to eventDb.eventDate) !in eventDateTimeSetInCalender
+                    }
+
+                    //delete first the non existing events from the database to be able later to insert fresh events.
+                    deleteNonExistingEventsOffline(context,eventsNotExistingAnymoreInCalender)
+
+
+                    //Get contacts from database to be able to connect their ids with the not yet inserted events in db from the calender (actuall).
                     val contacsInDatabase = loadContactsFromDatabase(context)
                     if (contacsInDatabase.isEmpty()) return@launch
                     Log.d(TAG, "contactsInDatabase loaded()")
@@ -71,17 +89,19 @@ class WeeklyEventDbUpdater: BroadcastReceiver() {
                     }.toSet()
                     Log.d(TAG,"matchedContacts : $matchedContacts")
 
+
+                    //Insert the events in the db that are in Calendar but missing in the database.
                     insertEventsOffline(context,matchedContacts)
                     Log.d(TAG,"Events inserted()")
 
 
                     Log.d(TAG,"New alarm register started()")
-
                     val alarmManager = context.getSystemService(ALARM_SERVICE) as AlarmManager
 
                     val intent = Intent(context, WeeklyEventDbUpdater::class.java)
                     intent.action = "SET_ALARM_FOR_EVENT_DB_UPDATER"
 
+                    //create an new pending intent and a new alarm (delayed), that triggers this broadcastReceiver again.
                     val nextIntent = PendingIntent.getBroadcast(
                         context,
                         0,
@@ -91,8 +111,8 @@ class WeeklyEventDbUpdater: BroadcastReceiver() {
 
                     val calendar = Calendar.getInstance().apply {
                         set(Calendar.DAY_OF_WEEK, Calendar.SATURDAY) // Oder beliebigen Tag
-                        set(Calendar.HOUR_OF_DAY, 18) // Deine gewünschte Uhrzeit
-                        set(Calendar.MINUTE, 30)
+                        set(Calendar.HOUR_OF_DAY, 20) // Deine gewünschte Uhrzeit
+                        set(Calendar.MINUTE, 27)
                         set(Calendar.SECOND, 0)
                         set(Calendar.MILLISECOND, 0)
                         if (before(Calendar.getInstance())) add(Calendar.DATE, 7)
@@ -122,10 +142,21 @@ class WeeklyEventDbUpdater: BroadcastReceiver() {
         return emptyList()
     }
 
+    private suspend fun loadEventsFromDb(context: Context,dateFrom: String,dateTo: String): List<Event>{
+        val dao = ContactDatabase.getDatabase(context).eventDAO()
+        val allEventsInRange = dao.getAllEventsAndFromActualDateTime(dateFrom,dateTo)
+        return allEventsInRange
+    }
+
     private suspend fun insertEventsOffline(context: Context, eventsRaw: Set<ContactEvent>){
         val dao = ContactDatabase.getDatabase(context).eventDAO()
         val eventsConverted = eventsRaw.map { event -> Event(eventDate = event.eventDate, eventTime = event.eventTime, contactOwnerId = event.id) }
         dao.insertAll(eventsConverted)
+    }
+
+    private suspend fun deleteNonExistingEventsOffline(context: Context, events: List<Event>){
+        val dao = ContactDatabase.getDatabase(context).eventDAO()
+        dao.deleteExpiredEvents(events)
     }
 
     @SuppressLint("Range")

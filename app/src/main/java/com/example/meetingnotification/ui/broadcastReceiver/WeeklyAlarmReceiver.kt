@@ -42,8 +42,8 @@ class WeeklyAlarmReceiver : BroadcastReceiver() {
 
                     val calendar = Calendar.getInstance().apply {
                         set(Calendar.DAY_OF_WEEK, Calendar.SATURDAY) // Oder beliebigen Tag
-                        set(Calendar.HOUR_OF_DAY, 18) // Deine gewünschte Uhrzeit
-                        set(Calendar.MINUTE,26)
+                        set(Calendar.HOUR_OF_DAY, 21) // Deine gewünschte Uhrzeit
+                        set(Calendar.MINUTE,23)
                         set(Calendar.SECOND, 0)
                         set(Calendar.MILLISECOND, 0)
                         if (before(Calendar.getInstance())) add(Calendar.DATE, 7)
@@ -57,7 +57,12 @@ class WeeklyAlarmReceiver : BroadcastReceiver() {
                                 nextPendingIntent
                             )
                         } else {
-                            Log.d(TAG, "No permissions granted for WeeklyAlarmNotification in BroadcastReceiver!")
+                            Log.d(TAG,"No permissions granted for WeeklyAlarmNotification in BroadcastReceiver, normal Alarm will be initiated!")
+                            alarmManager.setAndAllowWhileIdle(
+                                AlarmManager.RTC_WAKEUP,
+                                calendar.timeInMillis,
+                                nextPendingIntent
+                            )
                         }
                     } else {
                         alarmManager.setExactAndAllowWhileIdle(
@@ -66,12 +71,10 @@ class WeeklyAlarmReceiver : BroadcastReceiver() {
                             nextPendingIntent
                         )
                     }
-
                 } catch (e: Exception) {
                     FirebaseCrashlytics.getInstance().recordException(e)
                 }
             }
         }
     }
-
 }

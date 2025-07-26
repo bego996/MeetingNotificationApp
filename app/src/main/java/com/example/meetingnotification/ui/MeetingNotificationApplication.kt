@@ -45,8 +45,6 @@ class  MeetingNotificationApplication :Application() {
         Log.d(TAG,"Weekly event db updater registered()")
     }
 
-    //region
-
     //region Weekly background event updater. With Alarm Manager.
     private fun sheduleWeeklyEventUpdate(){
         Log.d(TAG,"sheduleWeeklyEventUpdate called()")
@@ -64,8 +62,8 @@ class  MeetingNotificationApplication :Application() {
 
         val calendar = Calendar.getInstance().apply {
             set(Calendar.DAY_OF_WEEK, Calendar.SATURDAY) // Oder beliebigen Tag
-            set(Calendar.HOUR_OF_DAY, 18) // Deine gewünschte Uhrzeit
-            set(Calendar.MINUTE, 23)
+            set(Calendar.HOUR_OF_DAY, 21) // Deine gewünschte Uhrzeit
+            set(Calendar.MINUTE, 20)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
             if (before(Calendar.getInstance())) add(Calendar.DATE, 7)
@@ -96,8 +94,8 @@ class  MeetingNotificationApplication :Application() {
 
         val calendar = Calendar.getInstance().apply {
             set(Calendar.DAY_OF_WEEK, Calendar.SATURDAY) // Oder beliebigen Tag
-            set(Calendar.HOUR_OF_DAY, 18) // Deine gewünschte Uhrzeit
-            set(Calendar.MINUTE, 20)
+            set(Calendar.HOUR_OF_DAY, 21) // Deine gewünschte Uhrzeit
+            set(Calendar.MINUTE, 15)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
             if (before(Calendar.getInstance())) add(Calendar.DATE, 7)
@@ -114,7 +112,12 @@ class  MeetingNotificationApplication :Application() {
                 Log.d(TAG,"Alarm set for Notification and permission granted.")
                 FirebaseCrashlytics.getInstance().log("Alarm set for Notification and permission granted.")
             } else {
-                Log.d(TAG,"No permissions granted for WeeklyAlarmNotification in BroadcastReceiver!")
+                Log.d(TAG,"No permissions granted for WeeklyAlarmNotification in BroadcastReceiver, normal Alarm will be initiated!")
+                alarmManager.setAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    calendar.timeInMillis,
+                    nextIntent
+                )
             }
         }else{
             alarmManager.setExactAndAllowWhileIdle(
