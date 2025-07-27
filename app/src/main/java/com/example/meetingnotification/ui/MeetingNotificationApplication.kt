@@ -50,31 +50,51 @@ class  MeetingNotificationApplication :Application() {
         Log.d(TAG,"sheduleWeeklyEventUpdate called()")
         val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
 
-        val intent = Intent(this, WeeklyEventDbUpdater::class.java)
-        intent.action = "SET_ALARM_FOR_EVENT_DB_UPDATER"
+        val nextIntent = Intent(this, WeeklyEventDbUpdater::class.java)
+        nextIntent.action = "SET_ALARM_FOR_EVENT_DB_UPDATER"
 
-        val nextIntent = PendingIntent.getBroadcast(
+        val nextPendingIntent = PendingIntent.getBroadcast(
             this,
             0,
-            intent,
+            nextIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
         val calendar = Calendar.getInstance().apply {
-            set(Calendar.DAY_OF_WEEK, Calendar.SATURDAY) // Oder beliebigen Tag
-            set(Calendar.HOUR_OF_DAY, 21) // Deine gewünschte Uhrzeit
-            set(Calendar.MINUTE, 20)
+            set(Calendar.DAY_OF_WEEK, Calendar.MONDAY) // Oder beliebigen Tag
+            set(Calendar.HOUR_OF_DAY, 15) // Deine gewünschte Uhrzeit
+            set(Calendar.MINUTE,0)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
             if (before(Calendar.getInstance())) add(Calendar.DATE, 7)
         }
 
-        alarmManager.setAndAllowWhileIdle(
-            AlarmManager.RTC_WAKEUP,
-            calendar.timeInMillis,
-            nextIntent
-        )
-
+        //Shedule new Alarm for weekly notification.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (alarmManager.canScheduleExactAlarms()) {
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    calendar.timeInMillis,
+                    nextPendingIntent
+                )
+                Log.d(TAG,"Alarm set for Notification and permission granted.")
+                FirebaseCrashlytics.getInstance().log("Alarm set for Notification and permission granted.")
+            } else {
+                Log.d(TAG,"No permissions granted for WeeklyAlarmNotification in BroadcastReceiver, normal Alarm will be initiated!")
+                alarmManager.setAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    calendar.timeInMillis,
+                    nextPendingIntent
+                )
+            }
+        }else{
+            alarmManager.setExactAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                calendar.timeInMillis,
+                nextPendingIntent
+            )
+            Log.d(TAG,"Alarm set for Notification and permission dont needed because api < 33.")
+        }
     }
     //endregion
 
@@ -93,9 +113,9 @@ class  MeetingNotificationApplication :Application() {
         )
 
         val calendar = Calendar.getInstance().apply {
-            set(Calendar.DAY_OF_WEEK, Calendar.SATURDAY) // Oder beliebigen Tag
-            set(Calendar.HOUR_OF_DAY, 21) // Deine gewünschte Uhrzeit
-            set(Calendar.MINUTE, 15)
+            set(Calendar.DAY_OF_WEEK, Calendar.MONDAY) // Oder beliebigen Tag
+            set(Calendar.HOUR_OF_DAY, 12) // Deine gewünschte Uhrzeit
+            set(Calendar.MINUTE, 0)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
             if (before(Calendar.getInstance())) add(Calendar.DATE, 7)

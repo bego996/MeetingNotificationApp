@@ -41,9 +41,9 @@ class WeeklyAlarmReceiver : BroadcastReceiver() {
                     val nextPendingIntent = PendingIntent.getBroadcast(context, 0, nextIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
                     val calendar = Calendar.getInstance().apply {
-                        set(Calendar.DAY_OF_WEEK, Calendar.SATURDAY) // Oder beliebigen Tag
-                        set(Calendar.HOUR_OF_DAY, 21) // Deine gewünschte Uhrzeit
-                        set(Calendar.MINUTE,23)
+                        set(Calendar.DAY_OF_WEEK, Calendar.MONDAY) // Oder beliebigen Tag
+                        set(Calendar.HOUR_OF_DAY, 18) // Deine gewünschte Uhrzeit
+                        set(Calendar.MINUTE,0)
                         set(Calendar.SECOND, 0)
                         set(Calendar.MILLISECOND, 0)
                         if (before(Calendar.getInstance())) add(Calendar.DATE, 7)

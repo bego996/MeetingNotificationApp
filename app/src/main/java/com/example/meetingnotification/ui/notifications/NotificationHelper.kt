@@ -36,7 +36,7 @@ object NotificationHelper {
             .setSmallIcon(R.drawable.baseline_email_24) // Stelle sicher, dass du ein Icon hast
             .setContentTitle(context.getString(R.string.notification_title))
             .setContentText(context.getString(R.string.notification_text,count))
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setPriority(NotificationCompat.PRIORITY_MAX)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .build()
