@@ -1,6 +1,11 @@
 package com.example.meetingnotification.ui.home
 
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -22,9 +27,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.meetingnotification.ui.AppViewModelProvider
@@ -67,6 +76,20 @@ fun InstructionsScreen(
                 .verticalScroll(rememberScrollState())
         ) {
             HelpSection(stringResource(R.string.help_title_functionality), stringResource(R.string.help_functionality).trimIndent(), null)
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                InstructionsScreenSettingsLink()
+                Image(
+                    painter = painterResource(if (currentLocale == "de") R.drawable.app_settings_de else R.drawable.app_settings_en),
+                    contentDescription = "title",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.Crop
+                )
+                Spacer(modifier = Modifier.height(14.dp))
+            }
+
             HelpSectionFirstSteps(
                 stringResource(R.string.help_title_first_steps),
                 stringResource(R.string.help_first_steps_contacts).trimIndent(),
@@ -110,6 +133,33 @@ fun HelpSection(title: String,description: String,picRes:Int?) {
         Text(description, style = MaterialTheme.typography.bodyMedium)
         ImageHelper(picRes)
     }
+}
+
+@Composable
+fun InstructionsScreenSettingsLink() {
+    val context = LocalContext.current
+    Text(
+        buildAnnotatedString {
+            append(stringResource(R.string.help_settings_for_alarm_notification))
+            pushStyle(
+                SpanStyle(
+                    color = Color(0xFF1BB625),
+                    textDecoration = TextDecoration.Underline,
+                    fontWeight = FontWeight.Bold
+                )
+            )
+            append(stringResource(R.string.help_settings_for_alarm_notification_link_redirect))
+            pop()
+        },
+        modifier = Modifier
+            .clickable {
+                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                    data = Uri.fromParts("package", context.packageName, null)
+                }
+                context.startActivity(intent)
+            }
+            .padding(vertical = 8.dp)
+    )
 }
 
 @Composable

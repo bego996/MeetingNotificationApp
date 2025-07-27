@@ -50,6 +50,13 @@
         Zusätzlich wirst du wöchentlich benachrichtigt, wie viele Kontakte für eine Benachrichtigung in den nächsten sieben Tagen bereitstehen.\n\n
         ⚠️ Um diese Anleitung nicht bei jedem Start der App erneut angezeigt zu bekommen, scrolle ganz nach unten und bestätige, dass du die Anleitung gelesen hast.
     </string>
+    <string name="help_settings_for_alarm_notification">
+        ️⚠️ Um exaxte Alarme (Benachrichtigungen) nutzen zu können, aktiviere sie bitte in den Einstellungen. Nur nötig wenn du Android 14 oder höher hast.
+    </string>
+    <string name="help_settings_for_alarm_notification_link_redirect">
+        ️Jetzt zu den Einstellungen
+    </string>
+
     <!-- Erste Schritte -->
     <string name="help_first_steps_contacts">
         - Erstelle einen Kontakt in deinem Telefonbuch.\n

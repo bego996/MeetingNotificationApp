@@ -10,6 +10,8 @@ interface EventRepository {
 
     fun getNotNotifiedEventsAndFromActualDateTime(dateNow: String,dateTo: String): Int
 
+    suspend fun getAllEventsAndFromActualDateTime(dateNow: String,dateTo: String): List<Event>
+
     fun getEventFromDateAndTimeParam(eventDate: String,eventTime: String): Flow<List<Event>>
 
     //Nur für testzweck aktivieren.

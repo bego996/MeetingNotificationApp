@@ -74,14 +74,14 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
     }
 
     override fun performServiceActionToGetContactFromQueue(action: ServiceAction): List<Int> {
-        return if (SmsSendingService.getInstance() != null && action == ServiceAction.GetContactsFromQueue)
+        return if (::smsService.isInitialized && SmsSendingService.getInstance() != null && action == ServiceAction.GetContactsFromQueue)
             smsService.getContactsInSmsQueueWithId()
         else
             emptyList()
     }
 
     override fun performServiceActionToRemoveFromQueue(action: ServiceAction, contactId: Int) {
-        if (action == ServiceAction.DeleteContactFromQueue){
+        if (action == ServiceAction.DeleteContactFromQueue && ::smsService.isInitialized){
             smsService.removeContactFromQueue(contactId)
         }
     }
@@ -149,7 +149,6 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
         waitForServiceAndInit()
         Log.i(TAG,"SDK Version = ${Build.VERSION.SDK_INT}")
 
-
     }
 
     override fun onResume() {                                          // Wird beim Fortsetzen der Aktivität aufgerufen
@@ -193,8 +192,10 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
             )
             smsService = service
             Log.i(TAG,"Service has ben started succesfully()")
-            retriesLeft = 33
+
+            retriesLeft = 30
         }else if (retriesLeft > 0) {
+            Log.i(TAG,"Service start failed. New try() attemps left: $retriesLeft")
             retriesLeft--
             Handler(Looper.getMainLooper()).postDelayed({ waitForServiceAndInit() }, 300)
         } else {

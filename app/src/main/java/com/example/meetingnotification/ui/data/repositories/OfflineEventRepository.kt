@@ -15,6 +15,10 @@ class OfflineEventRepository(private val eventDao: EventDao) : EventRepository {
         return eventDao.getNotNotifiedEventsAndFromActualDateTime(dateNow,dateTo)
     }
 
+    override suspend fun getAllEventsAndFromActualDateTime(dateNow: String, dateTo: String): List<Event> {
+        return eventDao.getAllEventsAndFromActualDateTime(dateNow,dateTo)
+    }
+
     override fun getEventFromDateAndTimeParam(eventDate: String, eventTime: String): Flow<List<Event>> {
         return eventDao.getEventFromDateAndTimeParam(eventDate,eventTime)
     }

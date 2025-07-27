@@ -50,6 +50,12 @@
         Additionally, you’ll be notified weekly about how many contacts are ready to receive a message within the next 7 days.\n\n
         ⚠️ To avoid seeing this guide every time you launch the app, scroll to the very bottom and confirm that you’ve read the instructions.
     </string>
+    <string name="help_settings_for_alarm_notification">
+    ⚠️ To use exact alarms (notifications), please enable them in the settings. Only necessary if you have Android 14 or higher.
+    </string>
+    <string name="help_settings_for_alarm_notification_link_redirect">
+    Go to settings now
+    </string>
     <!-- First Steps -->
     <string name="help_first_steps_contacts">
         - Create a contact in your phonebook.\n
