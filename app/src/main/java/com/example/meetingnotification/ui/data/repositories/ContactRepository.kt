@@ -15,7 +15,6 @@ interface ContactRepository {
      */
     suspend fun getContactStream(id: Int): Contact?
 
-
     /**
      * Insert item in the data source
      */

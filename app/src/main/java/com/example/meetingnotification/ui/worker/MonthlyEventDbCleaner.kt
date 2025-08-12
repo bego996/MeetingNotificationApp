@@ -9,6 +9,7 @@ import java.time.LocalDate
 
 private val TAG = MonthlyEventDbCleaner::class.simpleName
 
+//This is an coroutine worker which can execute operations anynchronously. Used to clean the DB from old Events monthly.
 class MonthlyEventDbCleaner(context: Context, workerParams:WorkerParameters) : CoroutineWorker(context,workerParams) {
 
     override suspend fun doWork(): Result {
@@ -23,5 +24,4 @@ class MonthlyEventDbCleaner(context: Context, workerParams:WorkerParameters) : C
         }
         return Result.success()
     }
-
 }

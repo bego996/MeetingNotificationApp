@@ -21,32 +21,37 @@ class HomeScreenViewModel(
     private val backgroundImageManagerRepository: BackgroundImageManagerRepository
 ) : ViewModel() {
 
+    //region Properties
     //Resources for strings and so on, direct from the factory injected.
     val resourcesState = resources
 
-    val selectedBackgroundPictureId: StateFlow<Int> =
-        backgroundImageManagerRepository.get()
+    val selectedBackgroundPictureId: StateFlow<Int> = backgroundImageManagerRepository.get()
             .stateIn(viewModelScope,SharingStarted.WhileSubscribed(5000),R.drawable.background_picture_1)
-
-    fun changeDefaultImageInDatastore(){
-        viewModelScope.launch {
-            backgroundImageManagerRepository.save()
-        }
-    }
 
     val dateMessageSendUiState: StateFlow<MessageSendDateTimeUiState> =
         // StateFlow zur Überwachung des UI-Zustands der Kontakte. Für events ist kein zur Überwachung nötig. Ich kann auch so insert,delete und updaten von events.
         dateMessageSendRepository.getLastSendetInfos()
             .map { data ->
                 MessageSendDateTimeUiState(
-                lastTimeSendet = data?.lastTimeSendet ?: "",
-                lastDateSendet = data?.lastDateSendet ?: ""
-            )} // Wandelt die Daten in das UI-Format um
+                    lastTimeSendet = data?.lastTimeSendet ?: "",
+                    lastDateSendet = data?.lastDateSendet ?: ""
+                )} // Wandelt die Daten in das UI-Format um
             .stateIn(
                 scope = viewModelScope,                       // Coroutine-Bereich des ViewModels für Nebenläufigkeit
                 started = SharingStarted.WhileSubscribed(5_000L), // Teilt die Daten weiter, solange abonniert
                 initialValue = MessageSendDateTimeUiState()            // Anfangszustand der Kontakte ist eine leere Liste
             )
+    //endregion
+
+    //region Methods
+    fun changeDefaultImageInDatastore(){
+        viewModelScope.launch {
+            backgroundImageManagerRepository.save()
+        }
+    }
+    //endregion
 }
 
+//region Data classes or outer methods
 data class MessageSendDateTimeUiState(val lastTimeSendet:String = "",val lastDateSendet:String = "")
+//endregion

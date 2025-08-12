@@ -11,7 +11,7 @@ import com.example.meetingnotification.ui.home.HomeScreenViewModel
 import com.example.meetingnotification.ui.home.InstructionsScreenViewModel
 
 
-//Object um ein viewmodel factory provider zu nutzen.
+//Object um ein viewmodel factory provider zu nutzen. Wird gebraucht um Viewmodel factories erstellen zu können und um ihnen die DB Repositories bereit zu stellen.
 object AppViewModelProvider {
     val Factory = viewModelFactory {
         initializer {

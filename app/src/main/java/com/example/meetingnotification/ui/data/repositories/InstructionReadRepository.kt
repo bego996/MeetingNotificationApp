@@ -9,10 +9,13 @@ import kotlinx.coroutines.flow.map
 
 class InstructionReadRepository(private val context: Context) {
 
+    //region Properties
     private var instructionAllreadyReaden = false
 
     private val instructionKey = booleanPreferencesKey("instruction_readen_id")
+    //endregion
 
+    //region Methods
     suspend fun instructionReaden(){
         context.dataStore.edit { settings ->
             settings[instructionKey] = true
@@ -25,5 +28,5 @@ class InstructionReadRepository(private val context: Context) {
                 preferences[instructionKey] ?: instructionAllreadyReaden
             }
     }
-
+    //endregion
 }

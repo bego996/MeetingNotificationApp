@@ -12,11 +12,13 @@ import com.example.meetingnotification.ui.contact.BeforeTemplateDestination
 
 object NotificationHelper {
 
+    //region Properties
     private const val CHANNEL_ID = "weekly_reminder_channel"
     private const val CHANNEL_NAME = "Wöchentliche Erinnerungen"
     private const val NOTIFICATION_ID = 101
+    //endregion
 
-
+    //region Methods
     fun showWeeklyReminder(context: Context, count: Int) {
         createChannel(context)
 
@@ -51,4 +53,5 @@ object NotificationHelper {
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         manager.createNotificationChannel(channel)
     }
+    //endregion
 }

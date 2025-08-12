@@ -27,9 +27,10 @@ import com.example.meetingnotification.ui.contact.BeforeTemplateDestination
 import com.example.meetingnotification.ui.contact.ContactsSearchScreenViewModel
 import com.example.meetingnotification.ui.home.InstructionsDestination
 import com.example.meetingnotification.ui.navigation.MettingNavHost
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 
 
-private val TAG = "NotificationApp"
+private const val TAG = "NotificationApp"
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -43,7 +44,8 @@ fun NotificationApp(
             BeforeTemplateDestination.route -> navController.navigate(BeforeTemplateDestination.route)
             InstructionsDestination.route -> navController.navigate(InstructionsDestination.route)
         }
-        Log.i(TAG,"InitialDestination name : $initialDestination")
+        Log.d(TAG,"InitialDestination name : $initialDestination")
+        FirebaseCrashlytics.getInstance().log("InitialDestination name : $initialDestination")
     }
     MettingNavHost(navController = navController, viewModel = viewModel)
 }

@@ -69,7 +69,6 @@ object BeforeTemplateDestination : NavigationDestination {
 
 private const val TAG = "ContactCheckBeforeSubmitScreen"
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContactCheckScreen(
@@ -171,7 +170,7 @@ fun ContactCheckScreenContent(
         }
     }
 
-    // Deine originalen LaunchedEffects
+
     LaunchedEffect(uiState.value) {
             Log.d(TAG, "templateIds updated")
             if (templateIdDepencysMailIcon.isEmpty()) {

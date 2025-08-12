@@ -97,6 +97,7 @@ fun SearchListScreen(
     }
 }
 
+
 @Composable
 fun SearchListScreenContent(
     viewModel: ContactsSearchScreenViewModel,                // ViewModel zur Bereitstellung von Daten

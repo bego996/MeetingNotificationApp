@@ -79,8 +79,7 @@ fun HomeScreen(
     LaunchedEffect(dateMessageSentUiState.value) {
         if (dateMessageSentUiState.value.lastDateSendet.isNotBlank()){
             Log.d("HomeScreen","if Statement entered, value is not blank.")
-            dateLastTimeSendetMessages =
-                viewModel.resourcesState
+            dateLastTimeSendetMessages = viewModel.resourcesState
                     .getString(
                         R.string.last_date_time_messages_sendet,
                         LocalDate.parse(dateMessageSentUiState.value.lastDateSendet).format(DateTimeFormatter.ofPattern("dd.MM.yyyy")),dateMessageSentUiState.value.lastTimeSendet

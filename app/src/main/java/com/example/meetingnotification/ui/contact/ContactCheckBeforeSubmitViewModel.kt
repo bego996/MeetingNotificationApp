@@ -15,6 +15,7 @@ import com.example.meetingnotification.ui.data.repositories.BackgroundImageManag
 import com.example.meetingnotification.ui.data.repositories.ContactRepository
 import com.example.meetingnotification.ui.data.repositories.EventRepository
 import com.example.meetingnotification.ui.utils.DebugUtils
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -35,10 +36,13 @@ class ContactCheckBeforeSubmitViewModel(
     backgroundImageManagerRepository: BackgroundImageManagerRepository
 ) : ViewModel() {
 
+    //region Initialize
     init {
         Log.i(TAG,"Viewmode created")
     }
+    //endregion
 
+    //region Properties
     val selectedBackgroundPictureId: StateFlow<Int> = backgroundImageManagerRepository
         .get().stateIn(viewModelScope,SharingStarted.WhileSubscribed(5000), R.drawable.background_picture_1)
 
@@ -68,7 +72,9 @@ class ContactCheckBeforeSubmitViewModel(
 
     private val _isLoading = mutableStateOf(true)
     val isLoading: State<Boolean> = _isLoading
+    //endregion
 
+    //region Methods
 
     // Lädt die Kalenderdaten in das MutableStateFlow
     fun loadCalenderData(events: List<EventDateTitle>) {
@@ -165,6 +171,8 @@ class ContactCheckBeforeSubmitViewModel(
 
                 }
                 Log.i(TAG, "Size of to be deleted Events: ${eventsToDelete.size}")
+                FirebaseCrashlytics.getInstance().log("Size of to be deleted Events: ${eventsToDelete.size}")
+
                 //delete Events that are no more in calender but still in Database.
                 if (eventsToDelete.isNotEmpty()) {
                     eventsToDelete.forEach { eventToDelete ->
@@ -192,7 +200,7 @@ class ContactCheckBeforeSubmitViewModel(
 
 
     suspend fun insertEventForContact(contactZippedWithDate: List<ContactZippedWithDate>) {
-            DebugUtils.logExecutionTime(TAG,"insertEventForContact()") {
+            DebugUtils.logExecutionTime(TAG,"insertEventsForContact()") {
                 val events = contactZippedWithDate.map {
                         event -> Event(
                     eventDate = event.date,
@@ -260,8 +268,10 @@ class ContactCheckBeforeSubmitViewModel(
                 }
             }
     }
+    //endregion
 }
 
+//region Data classes or outer methods
 
 // Ersetzt das Datum und die Uhrzeit in der ursprünglichen Nachricht
 private fun updateMessageWithCorrectDateTime(originMessage: String, dateReplacement: String, timeReplacement: String): String {
@@ -300,3 +310,4 @@ data class ContactReadyForSms(
     val message: String,
     val fullName: String
 )
+//endregion

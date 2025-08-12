@@ -32,19 +32,20 @@ import java.util.Calendar
 private val TAG = WeeklyEventDbUpdater::class.simpleName
 class WeeklyEventDbUpdater: BroadcastReceiver() {
 
-
     override fun onReceive(context: Context, intent: Intent) {
         Log.d(TAG,"WeeklyEventDbUpdater called()")
+        FirebaseCrashlytics.getInstance().log("WeeklyEventDbUpdater called()")
 
         if (intent.action == Intent.ACTION_BOOT_COMPLETED || intent.action == "SET_ALARM_FOR_EVENT_DB_UPDATER") {
 
             CoroutineScope(Dispatchers.IO).launch {
-                DebugUtils.logExecutionTime(TAG,"Performance measure()"){
+                DebugUtils.logExecutionTime(TAG,"weekly_event_db_updater"){
 
                     //Events from the Calendar to right format.
                     val eventsInCalender = loadCalender(context)
                     if (eventsInCalender.isEmpty()) return@launch
                     Log.d(TAG, "eventsInCalender loaded()")
+                    FirebaseCrashlytics.getInstance().log("eventsInCalender loaded()")
                     Log.d(TAG, "eventsInCalender data $eventsInCalender")
                     val eventDateTimeSetInCalender = eventsInCalender.map {
                         it.eventDate.toLocalDate().toString() to it.eventDate.toLocalTime().toString()
@@ -66,6 +67,7 @@ class WeeklyEventDbUpdater: BroadcastReceiver() {
                     val contacsInDatabase = loadContactsFromDatabase(context)
                     if (contacsInDatabase.isEmpty()) return@launch
                     Log.d(TAG, "contactsInDatabase loaded()")
+                    FirebaseCrashlytics.getInstance().log("contactsInDatabase loaded()")
                     Log.d(TAG, "contactsInDatabase data: $contacsInDatabase")
 
                     val contactsMap = contacsInDatabase.associateBy { it.firstName to it.lastName }
@@ -90,13 +92,13 @@ class WeeklyEventDbUpdater: BroadcastReceiver() {
                     }.toSet()
                     Log.d(TAG,"matchedContacts : $matchedContacts")
 
-
                     //Insert the events in the db that are in Calendar but missing in the database.
                     insertEventsOffline(context,matchedContacts)
                     Log.d(TAG,"Events inserted()")
-
+                    FirebaseCrashlytics.getInstance().log("Events inserted()")
 
                     Log.d(TAG,"New alarm register started()")
+                    FirebaseCrashlytics.getInstance().log("New alarm register started()")
                     val alarmManager = context.getSystemService(ALARM_SERVICE) as AlarmManager
 
                     val nextIntent = Intent(context, WeeklyEventDbUpdater::class.java)
@@ -112,8 +114,8 @@ class WeeklyEventDbUpdater: BroadcastReceiver() {
 
 
                     val calendar = Calendar.getInstance().apply {
-                        set(Calendar.DAY_OF_WEEK, Calendar.MONDAY) // Oder beliebigen Tag
-                        set(Calendar.HOUR_OF_DAY, 20) // Deine gewünschte Uhrzeit
+                        set(Calendar.DAY_OF_WEEK, Calendar.SATURDAY) // Oder beliebigen Tag
+                        set(Calendar.HOUR_OF_DAY, 12) // Deine gewünschte Uhrzeit
                         set(Calendar.MINUTE, 0)
                         set(Calendar.SECOND, 0)
                         set(Calendar.MILLISECOND, 0)
@@ -131,12 +133,13 @@ class WeeklyEventDbUpdater: BroadcastReceiver() {
                             Log.d(TAG,"Alarm set for Notification and permission granted.")
                             FirebaseCrashlytics.getInstance().log("Alarm set for Notification and permission granted.")
                         } else {
-                            Log.d(TAG,"No permissions granted for WeeklyAlarmNotification in BroadcastReceiver, normal Alarm will be initiated!")
                             alarmManager.setAndAllowWhileIdle(
                                 AlarmManager.RTC_WAKEUP,
                                 calendar.timeInMillis,
                                 nextPendingIntent
                             )
+                            Log.d(TAG,"No permissions granted for WeeklyAlarmNotification in BroadcastReceiver, normal Alarm will be initiated!")
+                            FirebaseCrashlytics.getInstance().log("No permissions granted for WeeklyAlarmNotification in BroadcastReceiver, normal Alarm will be initiated!")
                         }
                     }else{
                         alarmManager.setExactAndAllowWhileIdle(
@@ -144,14 +147,17 @@ class WeeklyEventDbUpdater: BroadcastReceiver() {
                             calendar.timeInMillis,
                             nextPendingIntent
                         )
+                        Log.d(TAG,"ExaxtAlarmShedule set for Notification and permission dont needed because api < 33.")
+                        FirebaseCrashlytics.getInstance().log("ExactAlarmShedule set for Notification and permission dont needed because api < 33.")
                     }
-
                     Log.d(TAG,"New alarm registered()")
+                    FirebaseCrashlytics.getInstance().log("New alarm registered()")
                 }
             }
 
         }
         Log.d(TAG,"WeeklyEventDbUpdater finished()")
+        FirebaseCrashlytics.getInstance().log("WeeklyEventDbUpdater finished()")
     }
 
     private suspend fun loadContactsFromDatabase(context: Context): List<Contact>{
@@ -159,6 +165,7 @@ class WeeklyEventDbUpdater: BroadcastReceiver() {
             val dao = ContactDatabase.getDatabase(context).contactDao().getAllContacts().first()
             return dao
         }catch (e: NoSuchElementException){
+            FirebaseCrashlytics.getInstance().log("Geting contacts from db failed, bcs no contact was inserted yet. Empty list will be returned.")
             FirebaseCrashlytics.getInstance().recordException(e)
             Log.e(TAG,"Geting contacts from db failed, bcs no contact was inserted yet. Empty list will be returned.")
         }
@@ -183,7 +190,7 @@ class WeeklyEventDbUpdater: BroadcastReceiver() {
     }
 
     @SuppressLint("Range")
-    fun loadCalender(context: Context): List<EventDateTitle> { // Lädt Kalenderereignisse aus der Systemdatenbank
+    private fun loadCalender(context: Context): List<EventDateTitle> { // Lädt Kalenderereignisse aus der Systemdatenbank
 
         val eventList = mutableListOf<EventDateTitle>()       // Liste der geladenen Ereignisse
         val contentResolver = context.contentResolver // Holt den Content Resolver für Datenbank-Abfragen

@@ -31,27 +31,135 @@ import com.example.meetingnotification.ui.services.SmsSendingServiceInteractor
 import com.google.firebase.Firebase
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.analytics
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 
 private val TAG = MainActivity::class.simpleName
 
+//Haupt Activity. Startet direkt nach Application.
 class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
 
+    //region Companion object
     companion object { // Begleitendes statisches Objekt für Konfigurationskonstanten
         private const val REQUEST_CODE_FOR_ALL_NEEDED_PERMISSIONS = 1
     }
+    //endregion
 
+    //region Properties
     private val contactBuffer by viewModels<ContactsSearchScreenViewModel> { AppViewModelProvider.Factory }     // ViewModel für die Kontaktsuche
-
     private lateinit var smsService: SmsSendingService                 // Später zu initialisierender SMS-Dienst
-
     private lateinit var applicationMain: MeetingNotificationApplication
-
     private lateinit var analytics: FirebaseAnalytics
+    private var retriesLeftToInitializeService = 30
+    //endregion
 
+    //region Override methods (main)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        analytics = Firebase.analytics
+        supportActionBar?.hide()
+        Log.d(TAG,"onCreate() - MainActivity")
+        FirebaseCrashlytics.getInstance().log("onCreate() - MainActivity")
 
+        //We receive this Intent always when the Notification is opened through the user.
+        val destinationWhenClickNotification = intent?.getStringExtra("destination")
+        Log.d(TAG,"Intent destination = $destinationWhenClickNotification")
+        FirebaseCrashlytics.getInstance().log("Intent destination = $destinationWhenClickNotification")
 
+        applicationMain = application as MeetingNotificationApplication
+
+        val instructionRepoState = applicationMain.instructionReadStateRepository
+
+        val instructionAllreadyAccepted = runBlocking {
+            instructionRepoState.get().first()
+        }
+
+        //First destination of UI Screen.
+        var initialDestination: String = HomeDestination.route
+
+        //Shows allways the instruction screen until the user acknowledge it.
+        if (!instructionAllreadyAccepted){
+            initialDestination = InstructionsDestination.route
+            Log.d(TAG,"The app instruction was not read!")
+            FirebaseCrashlytics.getInstance().log("The app instruction was not read!")
+        }else if (destinationWhenClickNotification != null){
+            initialDestination = BeforeTemplateDestination.route
+        }
+        Log.d(TAG,"instructionRepoState = $instructionAllreadyAccepted")
+        FirebaseCrashlytics.getInstance().log("instructionRepoState = $instructionAllreadyAccepted")
+
+        // Verknüpft das ViewModel mit dem Dienst-Interface, das wiederum in das Mainactivity eingebunden ist. Wichtige Schnittstelle, weil im viewmodel kein service erstellt werden darf.
+        contactBuffer.smsServiceInteractor = this
+
+        //This is the main entry to the nav-graph and to the composables.
+        setContent {
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+                color = MaterialTheme.colorScheme.background
+            ) {
+                NotificationApp(
+                    viewModel = contactBuffer,
+                    initialDestination = initialDestination
+                )
+            }
+        }
+
+        //Nötig um Intent zurückzusetzen, das diese Activity geöffnet hat (Notification Click), weil bei bilschirmrotation (onCreate() trigger) ansonsten die Route immer genutzt werden würde.
+        intent?.replaceExtras(Intent())
+    }
+
+    override fun onRestart() {
+        super.onRestart()
+        Log.d(TAG,"onRestart() - MainActivity")
+        FirebaseCrashlytics.getInstance().log("onRestart() - MainActivity")
+    }
+
+    // Wird beim Start der Aktivität aufgerufen
+    override fun onStart() {
+        super.onStart()
+        Log.d(TAG,"onStart() - MainActivity")
+        FirebaseCrashlytics.getInstance().log("onStart() - MainActivity")
+        checkAndRequestPermissions()
+
+        val serviceIntent = Intent(this, SmsSendingService::class.java)
+        startService(serviceIntent)
+        waitForServiceAndInit()
+        Log.i(TAG,"SDK Version = ${Build.VERSION.SDK_INT}")
+    }
+    // Wird beim Fortsetzen der Aktivität aufgerufen
+    override fun onResume() {
+        super.onResume()
+        Log.d(TAG,"onResume() - MainActivity")
+        FirebaseCrashlytics.getInstance().log("onResume() - MainActivity")
+    }
+    // Wird beim Pausieren der Aktivität aufgerufen
+    override fun onPause() {
+        super.onPause()
+        Log.d(TAG,"onPause() - MainActivity")
+        FirebaseCrashlytics.getInstance().log("onPause() - MainActivity")
+    }
+    // Wird beim Stoppen der Aktivität aufgerufen
+    override fun onStop() {
+        super.onStop()
+        if (SmsSendingService.getInstance()?.messageQueue?.isEmpty() == true){
+            stopService(Intent(this,SmsSendingService::class.java))
+            Log.d(TAG, "Service stopped in onStop() because queue was empty")
+        }
+
+        contactBuffer._isLoading.value = true
+        Log.d(TAG,"onStop() - MainActivity")
+        FirebaseCrashlytics.getInstance().log("onStop() - MainActivity")
+    }
+    // Wird beim Zerstören der Aktivität aufgerufen
+    override fun onDestroy() {
+        super.onDestroy()
+        contactBuffer.smsServiceInteractor = null                      // Entfernt die Verbindung zwischen Dienst und ViewModel
+        Log.d(TAG,"onDestroy() - MainActivity")
+    }
+    //endregion
+
+    //region Override methods (other)
     //Action to push contacts in servive or to send message to all contacts or to get Contacts from ServiceQueue.
     override fun performServiceActionToAddOrSend(action: ServiceAction, contacts: List<ContactReadyForSms>)
     {
@@ -86,102 +194,51 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
         }
     }
 
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        supportActionBar?.hide()
-        Log.d(TAG,"onCreate() - MainActivity")
+        if (requestCode == REQUEST_CODE_FOR_ALL_NEEDED_PERMISSIONS) {
 
-        analytics = Firebase.analytics
+            val deniedPermissions = permissions.filterIndexed { index, _ -> grantResults[index] != PackageManager.PERMISSION_GRANTED }
 
+            if (deniedPermissions.isEmpty() || (deniedPermissions.size == 1 && deniedPermissions[0] == Manifest.permission.POST_NOTIFICATIONS) ) {
+                contactBuffer.loadContactsWrapper(this)
+                contactBuffer.loadCalenderWrapper(this)
+                Log.d(TAG, "Alle Berechtigungen akzeptiert oder nur Benachrichtigungen abgelehnt")
+                FirebaseCrashlytics.getInstance().log("Alle Berechtigungen akzeptiert oder nur Benachrichtigungen abgelehnt")
+            } else {
+                val shouldShowRationale = deniedPermissions.any {
+                    ActivityCompat.shouldShowRequestPermissionRationale(this, it)
+                }
+                Log.d(TAG,"Denied permissions : $deniedPermissions")
+                FirebaseCrashlytics.getInstance().log("Denied permissions : $deniedPermissions")
+                FirebaseCrashlytics.getInstance().recordException(IllegalStateException("Some permissions denied"))
 
-        val destinationWhenClickNotification = intent?.getStringExtra("destination")
-        Log.d(TAG,"Intent destination = $destinationWhenClickNotification")
-
-
-        applicationMain = application as MeetingNotificationApplication
-
-        val instructionRepoState = applicationMain.instructionReadStateRepository
-
-        val instructionAllreadyAccepted = runBlocking {
-            instructionRepoState.get().first()
-        }
-
-        var initialDestination: String = HomeDestination.route
-
-        if (!instructionAllreadyAccepted){
-            initialDestination = InstructionsDestination.route
-        }else if (destinationWhenClickNotification != null){
-            initialDestination = BeforeTemplateDestination.route
-        }
-        Log.d(TAG,"instructionRepoState = $instructionAllreadyAccepted")
-
-        contactBuffer.smsServiceInteractor = this                      // Verknüpft das ViewModel mit dem Dienst-Interface. Wichtige schnittstelle , weil im viewmodel kein service erstellt werden darf.
-
-        setContent {
-            Surface(
-                modifier = Modifier.fillMaxSize(),
-                color = MaterialTheme.colorScheme.background
-            ) {
-                NotificationApp(
-                    viewModel = contactBuffer,
-                    initialDestination = initialDestination
-                )
+                if (shouldShowRationale) {
+                    showPermissionExplanationDialog(deniedPermissions)
+                } else {
+                    AlertDialog.Builder(this)
+                        .setTitle(getString(R.string.permission_permanently_denied_title))
+                        .setMessage(getString(R.string.permission_permanently_denied_message))
+                        .setPositiveButton(getString(R.string.permission_go_to_settings)) { _, _ ->
+                            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                            intent.data = Uri.fromParts("package", packageName, null)
+                            startActivity(intent)
+                        }
+                        .setNegativeButton(getString(R.string.permission_dialog_negative), null)
+                        .show()
+                }
             }
         }
-
-        //Nötig um Intent zurückzusetzen, das diese Activity geöffnet hat (Notification Click), weil bei bilschirmrotation ansonsten die Route immer genutzt werden würde.
-        intent?.replaceExtras(Intent())
     }
+    //endregion
 
-    override fun onRestart() {
-        super.onRestart()
-        Log.d(TAG,"onRestart() - MainActivity")
-    }
-
-    override fun onStart() {                                           // Wird beim Start der Aktivität aufgerufen
-        super.onStart()
-        Log.d(TAG,"onStart() - MainActivity")                            // Debug-Nachricht
-        checkAndRequestPermissions()
-
-        val serviceIntent = Intent(this, SmsSendingService::class.java)
-        startService(serviceIntent)
-        waitForServiceAndInit()
-        Log.i(TAG,"SDK Version = ${Build.VERSION.SDK_INT}")
-
-    }
-
-    override fun onResume() {                                          // Wird beim Fortsetzen der Aktivität aufgerufen
-        super.onResume()
-        Log.d(TAG,"onResume() - MainActivity")                           // Debug-Nachricht
-
-    }
-
-    override fun onPause() {                                           // Wird beim Pausieren der Aktivität aufgerufen
-        super.onPause()
-        Log.d(TAG,"onPause() - MainActivity")                           // Debug-Nachricht
-    }
-
-    override fun onStop() {                                            // Wird beim Stoppen der Aktivität aufgerufen
-        super.onStop()
-
-        if (SmsSendingService.getInstance()?.messageQueue?.isEmpty() == true){
-            stopService(Intent(this,SmsSendingService::class.java))
-            Log.d(TAG, "Service stopped in onStop() because queue was empty")
-        }
-
-        contactBuffer._isLoading.value = true
-        Log.d(TAG,"onStop() - MainActivity")                             // Debug-Nachricht
-    }
-
-    override fun onDestroy() {                                         // Wird beim Zerstören der Aktivität aufgerufen
-        super.onDestroy()
-        contactBuffer.smsServiceInteractor = null                      // Entfernt die Verbindung zwischen Dienst und ViewModel
-        Log.d(TAG,"onDestroy() - MainActivity")                         // Debug-Nachricht
-    }
-
-    private var retriesLeft = 30
-
+    //region Methods
+    //Trying to initialize the service with a Looper, because it wont start immediately in the release build.
     private fun waitForServiceAndInit() {
         val service = SmsSendingService.getInstance()
         if (service != null) {
@@ -192,14 +249,16 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
             )
             smsService = service
             Log.i(TAG,"Service has ben started succesfully()")
+            FirebaseCrashlytics.getInstance().log("Service has ben started succesfully()")
 
-            retriesLeft = 30
-        }else if (retriesLeft > 0) {
-            Log.i(TAG,"Service start failed. New try() attemps left: $retriesLeft")
-            retriesLeft--
+            retriesLeftToInitializeService = 30
+        }else if (retriesLeftToInitializeService > 0) {
+            Log.e(TAG,"Service start failed. New try() attemps left: $retriesLeftToInitializeService")
+            retriesLeftToInitializeService--
             Handler(Looper.getMainLooper()).postDelayed({ waitForServiceAndInit() }, 300)
         } else {
             Log.w(TAG,"Sms service initialization attempts timeout, service is not initialized()")
+            FirebaseCrashlytics.getInstance().log("Sms service initialization attempts timeout, service is not initialized()")
         }
     }
 
@@ -259,44 +318,7 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
     private fun isPermissionGranted(permission: String): Boolean {    // Überprüft, ob eine Berechtigung erteilt wurde
         return ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
     }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-
-        if (requestCode == REQUEST_CODE_FOR_ALL_NEEDED_PERMISSIONS) {
-
-            val deniedPermissions = permissions.filterIndexed { index, _ -> grantResults[index] != PackageManager.PERMISSION_GRANTED }
-
-            if (deniedPermissions.isEmpty() || (deniedPermissions.size == 1 && deniedPermissions[0] == Manifest.permission.POST_NOTIFICATIONS) ) {
-                contactBuffer.loadContactsWrapper(this)
-                contactBuffer.loadCalenderWrapper(this)
-                Log.d(TAG, "Alle Berechtigungen akzeptiert oder nur Benachrichtigungen abgelehnt")
-            } else {
-                val shouldShowRationale = deniedPermissions.any {
-                    ActivityCompat.shouldShowRequestPermissionRationale(this, it)
-                }
-
-                if (shouldShowRationale) {
-                    showPermissionExplanationDialog(deniedPermissions)
-                } else {
-                    AlertDialog.Builder(this)
-                        .setTitle(getString(R.string.permission_permanently_denied_title))
-                        .setMessage(getString(R.string.permission_permanently_denied_message))
-                        .setPositiveButton(getString(R.string.permission_go_to_settings)) { _, _ ->
-                            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                            intent.data = Uri.fromParts("package", packageName, null)
-                            startActivity(intent)
-                        }
-                        .setNegativeButton(getString(R.string.permission_dialog_negative), null)
-                        .show()
-                }
-            }
-        }
-    }
+    //endregion
 }
 
 

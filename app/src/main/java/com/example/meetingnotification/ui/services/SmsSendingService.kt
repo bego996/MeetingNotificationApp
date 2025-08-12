@@ -18,6 +18,7 @@ import com.example.meetingnotification.ui.data.entities.Event
 import com.example.meetingnotification.ui.data.repositories.ContactRepository
 import com.example.meetingnotification.ui.data.repositories.DateMessageSendRepository
 import com.example.meetingnotification.ui.data.repositories.EventRepository
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -30,19 +31,43 @@ import java.time.format.DateTimeFormatter
 private val TAG = SmsSendingService::class.simpleName
 
 class SmsSendingService : Service() {                         // Dienst(Service), der SMS-Nachrichten versendet
+
+    //region Properties
     private lateinit var contactRepository: ContactRepository
     private lateinit var eventRepository: EventRepository
     private lateinit var dateMessageSendRepository: DateMessageSendRepository
 
     private val serviceScope = CoroutineScope(Dispatchers.IO)
     var messageQueue = ArrayDeque<SmsMessage>()               // Warteschlange für SMS-Nachrichten
+    //endregion
 
+    //region Companion object
     companion object {
         private var instance: SmsSendingService? = null
         fun getInstance(): SmsSendingService? = instance
     }
+    //endregion
 
+    //region OverrideMethods
+    override fun onBind(p0: Intent?): IBinder? {
+        return null
+    }
 
+    //@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    // Wird beim Erstellen des Dienstes aufgerufen
+    override fun onCreate() {
+        super.onCreate()
+        Log.d(TAG,"serviceOnCreate()")
+        instance = this
+    }
+
+    override fun onDestroy() {                                // Wird beim Zerstören des Dienstes aufgerufen
+        instance = null
+        super.onDestroy()
+    }
+    //endregion
+
+    //region Methods
     fun initialize(contactRepository: ContactRepository,eventRepository: EventRepository,dateMessageSendRepository: DateMessageSendRepository){
         this.contactRepository = contactRepository
         this.eventRepository = eventRepository
@@ -53,40 +78,20 @@ class SmsSendingService : Service() {                         // Dienst(Service)
         Log.d(TAG, "dateMessageSendRepository initialized: ${::dateMessageSendRepository.isInitialized}")
     }
 
-    override fun onBind(p0: Intent?): IBinder? {
-        return null
-    }
-
-    //@RequiresApi(Build.VERSION_CODES.TIRAMISU)
-    override fun onCreate() { // Wird beim Erstellen des Dienstes aufgerufen
-        
-        super.onCreate()
-        println("ServiceOnCreate()")
-        instance = this
-    }
-
-
-    override fun onDestroy() {                                // Wird beim Zerstören des Dienstes aufgerufen
-        instance = null
-        super.onDestroy()
-    }
-
-
-
     //Callback function. Function to get the upcoming event for specific contact from the database.
     fun getUpcomingEventForContact(contactId: Int,callback: (Event) -> Unit){
         val dateTimeNow = LocalDateTime.now()
         val dateFormated = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-
         serviceScope.launch {
             try {
                 val allEventsForChoosenContact = contactRepository.getContactWithEvents(contactId).first().events
-
                 val upcomingEventSortedOut = allEventsForChoosenContact.filter { event ->
                     LocalDateTime.of(LocalDate.parse(event.eventDate,dateFormated), LocalTime.parse(event.eventTime)).isAfter(dateTimeNow) }.sortedBy { event -> event.eventDate }[0]
 
                 callback(upcomingEventSortedOut)
             }catch (e: NoSuchElementException){
+                Log.e(TAG,"Exception",e)
+                FirebaseCrashlytics.getInstance().recordException(e)
                 throw NoSuchElementException("No events found for contactId: $contactId")
             }
         }
@@ -124,9 +129,8 @@ class SmsSendingService : Service() {                         // Dienst(Service)
         }
     }
 
-
     fun sendNextMessage(context: Context) {                   // Sendet die nächste Nachricht aus der Warteschlange
-        println("sendNextMessage is called()")
+        Log.d(TAG,"sendNextMessage() is called.")
         if (messageQueue.isNotEmpty()) {                      // Prüft, ob die Warteschlange leer ist
             val nextMessage = messageQueue.removeFirst()      // Holt die erste Nachricht und entfernt sie aus der Warteschlange
             val uniqueRequestCode = nextMessage.contactId       //diesen unique code brauce ich weil ab api 31 nicht mehr FlAG_IMUTABLE (mit dem konnte man vor api 31 die extras aktualisieren im gleichen intent) verwendet werden kann.
@@ -143,7 +147,6 @@ class SmsSendingService : Service() {                         // Dienst(Service)
             )
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {    // Für neuere Android-Versionen
-
                 val subscriptionId = SubscriptionManager.getDefaultSmsSubscriptionId()
                 val smsManager = getSystemService(SmsManager::class.java).createForSubscriptionId(subscriptionId)
 
@@ -169,7 +172,6 @@ class SmsSendingService : Service() {                         // Dienst(Service)
         }
     }
 
-
     fun showMessageSendDialog(context: Context, fullName: String, onResult: (Boolean) -> Unit) {            // Zeigt einen Bestätigungsdialog an
         val builder = AlertDialog.Builder(context)           // Erstellt einen Dialog-Builder
         builder.setTitle(context.resources.getString(R.string.sms_send_request))                  // Setzt den Titel des Dialogs
@@ -187,8 +189,11 @@ class SmsSendingService : Service() {                         // Dienst(Service)
 
         builder.create().show()                                                      // Erstellt und zeigt den Dialog an
     }
+    //endregion
 
+    //region Dataclasses
     data class SmsMessage(val contactId: Int,val phoneNumber: String, val message: String, val fullName: String)   // Datenklasse für eine SMS-Nachricht
+    //endregion
 }
 
 

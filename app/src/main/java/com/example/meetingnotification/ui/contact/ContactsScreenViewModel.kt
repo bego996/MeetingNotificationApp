@@ -17,8 +17,8 @@ class ContactsScreenViewModel(                             // ViewModel zur Verw
     backgroundImageManagerRepository: BackgroundImageManagerRepository
 ) : ViewModel() {
 
-    val selectedBackgroundPictureId: StateFlow<Int> =
-        backgroundImageManagerRepository.get()
+    //region Properties
+    val selectedBackgroundPictureId: StateFlow<Int> = backgroundImageManagerRepository.get()
             .stateIn(viewModelScope,SharingStarted.WhileSubscribed(5000), R.drawable.background_picture_1)
 
     val contactsUiState: StateFlow<ContactUiState> =       // StateFlow zur Bereitstellung des Kontaktzustands in der UI
@@ -28,14 +28,18 @@ class ContactsScreenViewModel(                             // ViewModel zur Verw
                 started = SharingStarted.WhileSubscribed(5_000L), // Teilt Daten für 5 Sekunden nach dem Abbestellen weiter
                 initialValue = ContactUiState()             // Initialwert des StateFlow ist ein leerer Zustand
             )
+    //endregion
 
+    //region Methods
     fun deleteContact(contact: Contact) {          // Kein supsend nötig weil courtinescope innerhalb ausgeführt wird die sowieso asynchron ist.
         viewModelScope.launch {                            // Startet eine neue Coroutine im Bereich des ViewModels
             contactRepository.deleteItem(contact)          // Löscht den angegebenen Kontakt aus dem Repository (Database)
         }
     }
-
+    //endregion
 }
 
+//region Data classes or outer methods
 data class ContactUiState(val contactUiState: List<Contact> = listOf()) // Datenklasse zur Darstellung des UI-Zustands mit einer leeren Liste als Standard
+//endregion
 

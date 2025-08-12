@@ -10,14 +10,17 @@ import kotlinx.coroutines.launch
 
 class InstructionsScreenViewModel(private val instructionReadRepository: InstructionReadRepository) : ViewModel(){
 
+    //region Properties
     val instructionReadState: StateFlow<Boolean> =
         instructionReadRepository.get()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000),false)
+    //endregion
 
+    //region Methods
     fun setInstructionToReaden(){
         viewModelScope.launch {
             instructionReadRepository.instructionReaden()
         }
     }
-
+    //endregion
 }

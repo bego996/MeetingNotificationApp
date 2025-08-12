@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.map
 
 class BackgroundImageManagerRepository(private val context: Context) {
 
+    //region Properties
     private val picturesInRessource: Array<Int> = arrayOf(
         R.drawable.background_picture_1,
         R.drawable.background_picture_2,
@@ -19,7 +20,9 @@ class BackgroundImageManagerRepository(private val context: Context) {
     )
 
     private val backgroundImageKey = intPreferencesKey("background_image_id")
+    //endregion
 
+    //region Methods
     suspend fun save() {
         context.dataStore.edit { settings ->
 
@@ -36,9 +39,9 @@ class BackgroundImageManagerRepository(private val context: Context) {
     }
 
     fun get(): Flow<Int> {
-        return context.dataStore.data
-            .map { preferences ->
+        return context.dataStore.data.map { preferences ->
                 preferences[backgroundImageKey] ?: picturesInRessource[0]
             }
     }
+    //endregion
 }
