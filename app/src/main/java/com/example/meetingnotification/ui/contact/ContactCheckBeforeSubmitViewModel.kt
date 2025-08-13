@@ -27,6 +27,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 private val TAG = ContactCheckBeforeSubmitViewModel::class.simpleName
 
@@ -216,16 +217,14 @@ class ContactCheckBeforeSubmitViewModel(
     private fun getCalenderState(): List<EventDateTitle> = calenderState.value      // Gibt die aktuelle Liste der Kalenderereignisse zurück
 
 
-    // Berechnet die Anzahl der Tage bis zum angegebenen Datum
+    // Berechnet die Anzahl der Tage bis zum angegebenen Datum von heute weg.
     fun getDayDuration(meetingDate: String): String {
         val meetingDateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd") // Datumsformat für die Berechnung
-        val daysBeetweenNowAndMeetingDate = LocalDate.now().until(
-            LocalDate.parse(
-                meetingDate,
-                meetingDateFormat
-            )
-        ).days // Tage bis zum Datum berechnen
-        return "$daysBeetweenNowAndMeetingDate"    // Gibt die verbleibenden Tage als Zeichenkette zurück
+        val daysBeetweenNowAndMeetingDate = ChronoUnit.DAYS.between(
+            LocalDate.now(),
+            LocalDate.parse(meetingDate,meetingDateFormat)
+        )
+        return "$daysBeetweenNowAndMeetingDate"
     }
 
 

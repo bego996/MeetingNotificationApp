@@ -109,17 +109,14 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
         intent?.replaceExtras(Intent())
     }
 
-    override fun onRestart() {
-        super.onRestart()
-        Log.d(TAG,"onRestart() - MainActivity")
-        FirebaseCrashlytics.getInstance().log("onRestart() - MainActivity")
-    }
+
 
     // Wird beim Start der Aktivität aufgerufen
     override fun onStart() {
         super.onStart()
         Log.d(TAG,"onStart() - MainActivity")
         FirebaseCrashlytics.getInstance().log("onStart() - MainActivity")
+
         checkAndRequestPermissions()
 
         val serviceIntent = Intent(this, SmsSendingService::class.java)
@@ -127,18 +124,21 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
         waitForServiceAndInit()
         Log.i(TAG,"SDK Version = ${Build.VERSION.SDK_INT}")
     }
+
     // Wird beim Fortsetzen der Aktivität aufgerufen
     override fun onResume() {
         super.onResume()
         Log.d(TAG,"onResume() - MainActivity")
         FirebaseCrashlytics.getInstance().log("onResume() - MainActivity")
     }
+
     // Wird beim Pausieren der Aktivität aufgerufen
     override fun onPause() {
         super.onPause()
         Log.d(TAG,"onPause() - MainActivity")
         FirebaseCrashlytics.getInstance().log("onPause() - MainActivity")
     }
+
     // Wird beim Stoppen der Aktivität aufgerufen
     override fun onStop() {
         super.onStop()
@@ -151,11 +151,18 @@ class MainActivity : AppCompatActivity(), SmsSendingServiceInteractor {
         Log.d(TAG,"onStop() - MainActivity")
         FirebaseCrashlytics.getInstance().log("onStop() - MainActivity")
     }
+
     // Wird beim Zerstören der Aktivität aufgerufen
     override fun onDestroy() {
         super.onDestroy()
         contactBuffer.smsServiceInteractor = null                      // Entfernt die Verbindung zwischen Dienst und ViewModel
         Log.d(TAG,"onDestroy() - MainActivity")
+    }
+
+    override fun onRestart() {
+        super.onRestart()
+        Log.d(TAG,"onRestart() - MainActivity")
+        FirebaseCrashlytics.getInstance().log("onRestart() - MainActivity")
     }
     //endregion
 
