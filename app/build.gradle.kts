@@ -19,12 +19,12 @@ if (keystorePropertiesFile.exists()){
 }
 
 android {
-    namespace = "com.example.meetingnotification.ui"
+    namespace = "com.simba.meetingnotification.ui"
     compileSdk = 34
     compileSdkExtension = 12
 
     defaultConfig {
-        applicationId = "com.example.meetingnotification.ui"
+        applicationId = "com.simba.meetingnotification.ui"
         minSdk = 26
         targetSdk = 34
         versionCode = 1

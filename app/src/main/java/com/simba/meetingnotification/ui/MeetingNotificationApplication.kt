@@ -1,0 +1,179 @@
+package com.simba.meetingnotification.ui
+
+import android.app.AlarmManager
+import android.app.Application
+import android.app.PendingIntent
+import android.content.Intent
+import android.os.Build
+import android.util.Log
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import com.simba.meetingnotification.ui.broadcastReceiver.WeeklyAlarmReceiver
+import com.simba.meetingnotification.ui.broadcastReceiver.WeeklyEventDbUpdater
+import com.simba.meetingnotification.ui.data.AppContainer
+import com.simba.meetingnotification.ui.data.AppDataContainer
+import com.simba.meetingnotification.ui.data.repositories.BackgroundImageManagerRepository
+import com.simba.meetingnotification.ui.data.repositories.InstructionReadRepository
+import com.simba.meetingnotification.ui.worker.MonthlyEventDbCleaner
+import com.google.firebase.crashlytics.FirebaseCrashlytics
+import java.util.Calendar
+import java.util.concurrent.TimeUnit
+
+private val TAG = MeetingNotificationApplication::class.simpleName
+
+//This is the main application, the app starts always here first. If allready started it will survive until the app is removed from the tasks (onDestroy() called in mainActivity).
+class  MeetingNotificationApplication :Application() {
+
+    //region Properties
+    lateinit var container: AppContainer
+    lateinit var backgroundImageRepository: BackgroundImageManagerRepository
+    lateinit var instructionReadStateRepository: InstructionReadRepository
+    //endregion
+
+    //region Override methods (main)
+    override fun onCreate() {
+        super.onCreate()
+        container = AppDataContainer(this)
+        Log.d(TAG,"AppContainerCreated() in MeetingNotificationApplication.")
+        FirebaseCrashlytics.getInstance().log("AppContainerCreated() in MeetingNotificationApplication.")
+        backgroundImageRepository = BackgroundImageManagerRepository(this)
+        instructionReadStateRepository = InstructionReadRepository(this)
+
+        sheduleWeeklyAlarm()
+        Log.d(TAG,"Weekly Notification Reminder registered()")
+        FirebaseCrashlytics.getInstance().log("Weekly Notification Reminder registered()")
+
+        sheduleMonthlyDatabaseCleaner() //Worker registration for event db cleaner.
+        Log.d(TAG,"Monthly Database Cleaner for expired Events registered()")
+        FirebaseCrashlytics.getInstance().log("Monthly Database Cleaner for expired Events registered()")
+
+        sheduleWeeklyEventUpdate()
+        Log.d(TAG,"Weekly event db updater registered()")
+        FirebaseCrashlytics.getInstance().log("Weekly event db updater registered()")
+    }
+    //endregion
+
+    //region Weekly background event updater. With Alarm Manager.
+    private fun sheduleWeeklyEventUpdate(){
+        Log.d(TAG,"sheduleWeeklyEventUpdate called()")
+        FirebaseCrashlytics.getInstance().log("sheduleWeeklyEventUpdate called()")
+        val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
+
+        val nextIntent = Intent(this, WeeklyEventDbUpdater::class.java)
+        nextIntent.action = "SET_ALARM_FOR_EVENT_DB_UPDATER"
+
+        val nextPendingIntent = PendingIntent.getBroadcast(
+            this,
+            0,
+            nextIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val calendar = Calendar.getInstance().apply {
+            set(Calendar.DAY_OF_WEEK, Calendar.SATURDAY) // Oder beliebigen Tag
+            set(Calendar.HOUR_OF_DAY, 12) // Deine gewünschte Uhrzeit
+            set(Calendar.MINUTE,0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+            if (before(Calendar.getInstance())) add(Calendar.DATE, 7)
+        }
+
+        //Shedule new Alarm for weekly notification.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (alarmManager.canScheduleExactAlarms()) {
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    calendar.timeInMillis,
+                    nextPendingIntent
+                )
+                Log.d(TAG,"Alarm set for Notification and permission granted.")
+                FirebaseCrashlytics.getInstance().log("Alarm set for Notification and permission granted.")
+            } else {
+                alarmManager.setAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    calendar.timeInMillis,
+                    nextPendingIntent
+                )
+                Log.d(TAG,"No permissions granted for WeeklyAlarmNotification in BroadcastReceiver, normal Alarm will be initiated!")
+                FirebaseCrashlytics.getInstance().log("No permissions granted for WeeklyAlarmNotification in BroadcastReceiver, normal Alarm will be initiated!")
+            }
+        }else{
+            alarmManager.setExactAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                calendar.timeInMillis,
+                nextPendingIntent
+            )
+            Log.d(TAG,"Alarm set for Notification and permission dont needed because api < 33.")
+            FirebaseCrashlytics.getInstance().log("Alarm set for Notification and permission dont needed because api < 33.")
+        }
+    }
+    //endregion
+
+    //region Weekly notification to inform about notifyable contacts at exact time with Alarm Manager.
+    private fun sheduleWeeklyAlarm() {
+        Log.d(TAG,"sheduleWeeklyAlarm called()")
+        FirebaseCrashlytics.getInstance().log("sheduleWeeklyAlarm called()")
+        val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
+
+        val nextIntent = Intent(this, WeeklyAlarmReceiver::class.java)
+        nextIntent.action = "ALARM_SET_AFTER_BOOT_OR_ON_FIRST_START"
+        val nextPendingIntent = PendingIntent.getBroadcast(
+            this,
+            0,
+            nextIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val calendar = Calendar.getInstance().apply {
+            set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY) // Oder beliebigen Tag
+            set(Calendar.HOUR_OF_DAY, 12) // Deine gewünschte Uhrzeit
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+            if (before(Calendar.getInstance())) add(Calendar.DATE, 7)
+        }
+
+        //Shedule new Alarm for weekly notification.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (alarmManager.canScheduleExactAlarms()) {
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    calendar.timeInMillis,
+                    nextPendingIntent
+                )
+                Log.d(TAG,"Alarm set for Notification and permission granted.")
+                FirebaseCrashlytics.getInstance().log("Alarm set for Notification and permission granted.")
+            } else {
+                alarmManager.setAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    calendar.timeInMillis,
+                    nextPendingIntent
+                )
+                Log.d(TAG,"No permissions granted for WeeklyAlarmNotification in BroadcastReceiver, normal Alarm will be initiated!")
+                FirebaseCrashlytics.getInstance().log("No permissions granted for WeeklyAlarmNotification in BroadcastReceiver, normal Alarm will be initiated!")
+            }
+        }else{
+            alarmManager.setExactAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                calendar.timeInMillis,
+                nextPendingIntent
+            )
+            Log.d(TAG,"Alarm set for Notification and permission dont needed because api < 33.")
+            FirebaseCrashlytics.getInstance().log("Alarm set for Notification and permission dont needed because api < 33.")
+        }
+    }
+    //endregion
+
+    //region Monthly Event in Database Cleaner.
+    private fun sheduleMonthlyDatabaseCleaner(){
+        val workRequest = PeriodicWorkRequestBuilder<MonthlyEventDbCleaner>(30,TimeUnit.DAYS).build()
+
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "cleanup_old_events",
+            ExistingPeriodicWorkPolicy.KEEP,
+            workRequest
+        )
+    }
+    //endregion
+}
