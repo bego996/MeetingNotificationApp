@@ -20,6 +20,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.google.firebase.Firebase
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.analytics
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.simba.meetingnotification.ui.contact.BeforeTemplateDestination
 import com.simba.meetingnotification.ui.contact.ContactReadyForSms
 import com.simba.meetingnotification.ui.contact.ContactsSearchScreenViewModel
@@ -28,10 +32,6 @@ import com.simba.meetingnotification.ui.home.InstructionsDestination
 import com.simba.meetingnotification.ui.services.ServiceAction
 import com.simba.meetingnotification.ui.services.SmsSendingService
 import com.simba.meetingnotification.ui.services.SmsSendingServiceInteractor
-import com.google.firebase.Firebase
-import com.google.firebase.analytics.FirebaseAnalytics
-import com.google.firebase.analytics.analytics
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 

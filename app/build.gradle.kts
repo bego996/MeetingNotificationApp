@@ -21,7 +21,7 @@ if (keystorePropertiesFile.exists()){
 android {
     namespace = "com.simba.meetingnotification.ui"
     compileSdk = 34
-    compileSdkExtension = 12
+    //compileSdkExtension = 12
 
     defaultConfig {
         applicationId = "com.simba.meetingnotification.ui"
@@ -56,6 +56,7 @@ android {
             )
             isDebuggable = false
         }
+
 
         debug {
             isDebuggable = true
