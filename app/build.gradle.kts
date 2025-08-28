@@ -20,13 +20,13 @@ if (keystorePropertiesFile.exists()){
 
 android {
     namespace = "com.simba.meetingnotification.ui"
-    compileSdk = 34
+    compileSdk = 35
     //compileSdkExtension = 12
 
     defaultConfig {
         applicationId = "com.simba.meetingnotification.ui"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -69,8 +69,10 @@ android {
         isCoreLibraryDesugaringEnabled = true
     }
 
-    kotlinOptions {
-        jvmTarget = "11"
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+        }
     }
 
     buildFeatures {
@@ -162,6 +164,4 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 //endregion
     testImplementation(kotlin("test"))
-
-
 }

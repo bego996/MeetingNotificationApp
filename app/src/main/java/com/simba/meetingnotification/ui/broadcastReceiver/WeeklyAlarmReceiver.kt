@@ -7,10 +7,10 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.util.Log
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.simba.meetingnotification.ui.data.ContactDatabase
 import com.simba.meetingnotification.ui.notifications.NotificationHelper
 import com.simba.meetingnotification.ui.utils.DebugUtils
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -34,16 +34,14 @@ class WeeklyAlarmReceiver : BroadcastReceiver() {
                         val dao = ContactDatabase.getDatabase(context).eventDAO()
                         val today = LocalDate.now().toString()
                         val endOfWeek = LocalDate.parse(today).plusDays(7).toString()
-                        val eventCountForThisWeek =
-                            dao.getNotNotifiedEventsAndFromActualDateTime(today, endOfWeek)
+
+                        val eventCountForThisWeek = dao.getNotNotifiedEventsAndFromActualDateTime(today, endOfWeek)
 
                         NotificationHelper.showWeeklyReminder(context, eventCountForThisWeek)
 
-                        val alarmManager =
-                            context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+                        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-                        val nextIntent = Intent(context, WeeklyAlarmReceiver::class.java)
-                        nextIntent.action = "ALARM_SET_AFTER_BOOT_OR_ON_FIRST_START"
+                        val nextIntent = Intent(context, WeeklyAlarmReceiver::class.java).setAction("ALARM_SET_AFTER_BOOT_OR_ON_FIRST_START")
                         val nextPendingIntent = PendingIntent.getBroadcast(
                             context,
                             0,
@@ -53,7 +51,7 @@ class WeeklyAlarmReceiver : BroadcastReceiver() {
 
                         val calendar = Calendar.getInstance().apply {
                             set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY) // Oder beliebigen Tag
-                            set(Calendar.HOUR_OF_DAY, 12) // Deine gewünschte Uhrzeit
+                            set(Calendar.HOUR_OF_DAY,12) // Deine gewünschte Uhrzeit
                             set(Calendar.MINUTE, 0)
                             set(Calendar.SECOND, 0)
                             set(Calendar.MILLISECOND, 0)

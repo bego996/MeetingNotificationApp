@@ -9,6 +9,7 @@ import android.util.Log
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.simba.meetingnotification.ui.broadcastReceiver.WeeklyAlarmReceiver
 import com.simba.meetingnotification.ui.broadcastReceiver.WeeklyEventDbUpdater
 import com.simba.meetingnotification.ui.data.AppContainer
@@ -16,7 +17,6 @@ import com.simba.meetingnotification.ui.data.AppDataContainer
 import com.simba.meetingnotification.ui.data.repositories.BackgroundImageManagerRepository
 import com.simba.meetingnotification.ui.data.repositories.InstructionReadRepository
 import com.simba.meetingnotification.ui.worker.MonthlyEventDbCleaner
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
@@ -60,8 +60,7 @@ class  MeetingNotificationApplication :Application() {
         FirebaseCrashlytics.getInstance().log("sheduleWeeklyEventUpdate called()")
         val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
 
-        val nextIntent = Intent(this, WeeklyEventDbUpdater::class.java)
-        nextIntent.action = "SET_ALARM_FOR_EVENT_DB_UPDATER"
+        val nextIntent = Intent(this, WeeklyEventDbUpdater::class.java).setAction("SET_ALARM_FOR_EVENT_DB_UPDATER")
 
         val nextPendingIntent = PendingIntent.getBroadcast(
             this,
@@ -116,8 +115,8 @@ class  MeetingNotificationApplication :Application() {
         FirebaseCrashlytics.getInstance().log("sheduleWeeklyAlarm called()")
         val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
 
-        val nextIntent = Intent(this, WeeklyAlarmReceiver::class.java)
-        nextIntent.action = "ALARM_SET_AFTER_BOOT_OR_ON_FIRST_START"
+        val nextIntent = Intent(this, WeeklyAlarmReceiver::class.java).setAction("ALARM_SET_AFTER_BOOT_OR_ON_FIRST_START")
+
         val nextPendingIntent = PendingIntent.getBroadcast(
             this,
             0,

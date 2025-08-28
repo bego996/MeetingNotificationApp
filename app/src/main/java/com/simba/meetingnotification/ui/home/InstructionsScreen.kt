@@ -1,7 +1,6 @@
 package com.simba.meetingnotification.ui.home
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import androidx.compose.foundation.Image
@@ -79,16 +78,8 @@ fun InstructionsScreen(
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                 InstructionsScreenSettingsLink()
-                Image(
-                    painter = painterResource(if (currentLocale == "de") R.drawable.app_settings_de else R.drawable.app_settings_en),
-                    contentDescription = "title",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp)),
-                    contentScale = ContentScale.Crop
-                )
-                Spacer(modifier = Modifier.height(14.dp))
             }
+            Spacer(modifier = Modifier.height(14.dp))
 
             HelpSectionFirstSteps(
                 stringResource(R.string.help_title_first_steps),
@@ -153,10 +144,10 @@ fun InstructionsScreenSettingsLink() {
         },
         modifier = Modifier
             .clickable {
-                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                    data = Uri.fromParts("package", context.packageName, null)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE){
+                    val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+                    context.startActivity(intent)
                 }
-                context.startActivity(intent)
             }
             .padding(vertical = 8.dp)
     )

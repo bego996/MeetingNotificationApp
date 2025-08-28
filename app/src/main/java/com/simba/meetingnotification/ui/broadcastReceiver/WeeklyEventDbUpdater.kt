@@ -10,12 +10,12 @@ import android.content.Intent
 import android.os.Build
 import android.provider.CalendarContract
 import android.util.Log
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.simba.meetingnotification.ui.contact.EventDateTitle
 import com.simba.meetingnotification.ui.data.ContactDatabase
 import com.simba.meetingnotification.ui.data.entities.Contact
 import com.simba.meetingnotification.ui.data.entities.Event
 import com.simba.meetingnotification.ui.utils.DebugUtils
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -33,7 +33,7 @@ private val TAG = WeeklyEventDbUpdater::class.simpleName
 class WeeklyEventDbUpdater: BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
-        Log.d(TAG,"WeeklyEventDbUpdater called()")
+        Log.d(TAG,"WeeklyEventDbUpdater called() and intent action is: ${intent.action}")
         FirebaseCrashlytics.getInstance().log("WeeklyEventDbUpdater called()")
 
         if (intent.action == Intent.ACTION_BOOT_COMPLETED || intent.action == "SET_ALARM_FOR_EVENT_DB_UPDATER") {
@@ -43,7 +43,7 @@ class WeeklyEventDbUpdater: BroadcastReceiver() {
 
                     //Events from the Calendar to right format.
                     val eventsInCalender = loadCalender(context)
-                    if (eventsInCalender.isEmpty()) return@launch
+
                     Log.d(TAG, "eventsInCalender loaded()")
                     FirebaseCrashlytics.getInstance().log("eventsInCalender loaded()")
                     Log.d(TAG, "eventsInCalender data $eventsInCalender")
@@ -65,7 +65,7 @@ class WeeklyEventDbUpdater: BroadcastReceiver() {
 
                     //Get contacts from database to be able to connect their ids with the not yet inserted events in db from the calender (actuall).
                     val contacsInDatabase = loadContactsFromDatabase(context)
-                    if (contacsInDatabase.isEmpty()) return@launch
+
                     Log.d(TAG, "contactsInDatabase loaded()")
                     FirebaseCrashlytics.getInstance().log("contactsInDatabase loaded()")
                     Log.d(TAG, "contactsInDatabase data: $contacsInDatabase")
@@ -101,8 +101,7 @@ class WeeklyEventDbUpdater: BroadcastReceiver() {
                     FirebaseCrashlytics.getInstance().log("New alarm register started()")
                     val alarmManager = context.getSystemService(ALARM_SERVICE) as AlarmManager
 
-                    val nextIntent = Intent(context, WeeklyEventDbUpdater::class.java)
-                    nextIntent.action = "SET_ALARM_FOR_EVENT_DB_UPDATER"
+                    val nextIntent = Intent(context, WeeklyEventDbUpdater::class.java).setAction("SET_ALARM_FOR_EVENT_DB_UPDATER")
 
                     //create an new pending intent and a new alarm (delayed), that triggers this broadcastReceiver again.
                     val nextPendingIntent = PendingIntent.getBroadcast(
@@ -112,11 +111,10 @@ class WeeklyEventDbUpdater: BroadcastReceiver() {
                         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                     )
 
-
                     val calendar = Calendar.getInstance().apply {
                         set(Calendar.DAY_OF_WEEK, Calendar.SATURDAY) // Oder beliebigen Tag
                         set(Calendar.HOUR_OF_DAY, 12) // Deine gewünschte Uhrzeit
-                        set(Calendar.MINUTE, 0)
+                        set(Calendar.MINUTE,0)
                         set(Calendar.SECOND, 0)
                         set(Calendar.MILLISECOND, 0)
                         if (before(Calendar.getInstance())) add(Calendar.DATE, 7)
