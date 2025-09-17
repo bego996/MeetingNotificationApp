@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Meeting Notification</string>
+    <string name="app_name">Meeting Reminder</string>
     <string name="deufault_message_status">Undefined</string>
     <string name="days_left">Days left</string>
     <string name="default_message_without_gender">Dear %3$s%4$s, your appointment is scheduled for %5$s at %6$s. Best regards</string>
