@@ -1,4 +1,4 @@
-package com.example.meetingnotification.ui.data.dao
+package com.simba.meetingnotification.ui.data.dao
 
 import androidx.room.Dao
 import androidx.room.Delete
